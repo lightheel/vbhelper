@@ -312,9 +312,10 @@ fun BattlesScreen() {
                         opponentsList.forEach { opponent ->
                             Button(
                                 onClick = {
-                                    activeCharacter = opponent
-                                    println("Selected character: ${opponent.name}")
-                                    // You can add battle logic here
+                                    activeCharacter?.let {
+                                        RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 0, 0, opponent.name, 0) { apiResult ->
+                                        }
+                                    }
                                 },
                                 modifier = Modifier.padding(vertical = 4.dp)
                             ) {
@@ -347,8 +348,10 @@ fun BattlesScreen() {
                         opponentsList.forEach { opponent ->
                             Button(
                                 onClick = {
-                                    activeCharacter = opponent
-                                    println("Selected character: ${opponent.name}")
+                                    activeCharacter?.let {
+                                        RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 1, 0, opponent.name, 1) { apiResult ->
+                                        }
+                                    }
                                 },
                                 modifier = Modifier.padding(vertical = 4.dp)
                             ) {
@@ -381,8 +384,10 @@ fun BattlesScreen() {
                         opponentsList.forEach { opponent ->
                             Button(
                                 onClick = {
-                                    activeCharacter = opponent
-                                    println("Selected character: ${opponent.name}")
+                                    activeCharacter?.let {
+                                        RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 2, 0, opponent.name, 2) { apiResult ->
+                                        }
+                                    }
                                 },
                                 modifier = Modifier.padding(vertical = 4.dp)
                             ) {
@@ -415,8 +420,10 @@ fun BattlesScreen() {
                         opponentsList.forEach { opponent ->
                             Button(
                                 onClick = {
-                                    activeCharacter = opponent
-                                    println("Selected character: ${opponent.name}")
+                                    activeCharacter?.let {
+                                        RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 3, 0, opponent.name, 3) { apiResult ->
+                                        }
+                                    }
                                 },
                                 modifier = Modifier.padding(vertical = 4.dp)
                             ) {
