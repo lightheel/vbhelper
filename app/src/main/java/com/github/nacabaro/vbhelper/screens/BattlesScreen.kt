@@ -49,6 +49,9 @@ import com.github.nacabaro.vbhelper.battle.APIBattleCharacter
 import android.util.Log
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.battle.RetrofitHelper
+import com.github.nacabaro.vbhelper.battle.SpriteImage
+import com.github.nacabaro.vbhelper.battle.AttackSpriteImage
+import com.github.nacabaro.vbhelper.battle.SpriteFileManager
 
 class ArenaBattleSystem {
     companion object {
@@ -192,6 +195,7 @@ fun BattleScreen(
     stage: String = "rookie",
     playerName: String = "Player",
     opponentName: String = "Opponent",
+    activeCharacter: APIBattleCharacter? = null,
     onBattleComplete: (String?) -> Unit = {},
     onExitBattle: () -> Unit = {}
 ) {
@@ -243,13 +247,15 @@ fun BattleScreen(
                     battleSystem.startPlayerAttack()
                     // Apply damage after animation
                     battleSystem.applyDamage(false, 20f) // Opponent takes damage
-                }
+                },
+                activeCharacter = activeCharacter
             )
             1 -> OpponentBattleView(
                 battleSystem = battleSystem,
                 stage = stage,
                 opponentName = opponentName,
-                attackAnimationProgress = animationProgress
+                attackAnimationProgress = animationProgress,
+                activeCharacter = activeCharacter
             )
         }
 
@@ -272,7 +278,8 @@ fun PlayerBattleView(
     stage: String,
     playerName: String,
     attackAnimationProgress: Float,
-    onAttackClick: () -> Unit
+    onAttackClick: () -> Unit,
+    activeCharacter: APIBattleCharacter? = null
 ) {
     Column(
         modifier = Modifier
@@ -321,6 +328,21 @@ fun PlayerBattleView(
             modifier = Modifier.size(120.dp),
             contentAlignment = Alignment.Center
         ) {
+            SpriteImage(
+                spriteName = "00", // The sprite number (00, 01, 02, etc.)
+                atlasName = when (stage) {
+                    "rookie" -> "dim000_mon01"
+                    "champion" -> "dim012_mon04"
+                    "ultimate" -> "dim137_mon09"
+                    "mega" -> "dim012_mon14"
+                    else -> "dim000_mon01"
+                },
+                modifier = Modifier
+                    .size(120.dp)
+                    .scale(2f),
+                contentScale = ContentScale.Fit
+            )
+            /*
             Image(
                 painter = painterResource(
                     when (stage) {
@@ -337,9 +359,22 @@ fun PlayerBattleView(
                     .scale(2f),
                 contentScale = ContentScale.Fit
             )
+             */
 
             // Attack animation overlay
             if (attackAnimationProgress > 0) {
+                AttackSpriteImage(
+                    characterId = activeCharacter?.charaId ?: "dim000_mon03",
+                    isLarge = true,
+                    modifier = Modifier
+                        .size(60.dp)
+                        .offset(
+                            x = (attackAnimationProgress * 200 - 100).dp,
+                            y = 0.dp
+                        ),
+                    contentScale = ContentScale.Fit
+                )
+                /*
                 Image(
                     painter = painterResource(R.drawable.atk_l_00),
                     contentDescription = "Attack Animation",
@@ -351,6 +386,7 @@ fun PlayerBattleView(
                         ),
                     contentScale = ContentScale.Fit
                 )
+                 */
             }
         }
 
@@ -387,7 +423,8 @@ fun OpponentBattleView(
     battleSystem: ArenaBattleSystem,
     stage: String,
     opponentName: String,
-    attackAnimationProgress: Float
+    attackAnimationProgress: Float,
+    activeCharacter: APIBattleCharacter? = null
 ) {
     Column(
         modifier = Modifier
@@ -436,6 +473,21 @@ fun OpponentBattleView(
             modifier = Modifier.size(120.dp),
             contentAlignment = Alignment.Center
         ) {
+            SpriteImage(
+                spriteName = "00", // The sprite number (00, 01, 02, etc.)
+                atlasName = when (stage) {
+                    "rookie" -> "dim000_mon01"
+                    "champion" -> "dim012_mon04"
+                    "ultimate" -> "dim137_mon09"
+                    "mega" -> "dim012_mon14"
+                    else -> "dim000_mon01"
+                },
+                modifier = Modifier
+                    .size(120.dp)
+                    .scale(2f),
+                contentScale = ContentScale.Fit
+            )
+            /*
             Image(
                 painter = painterResource(
                     when (stage) {
@@ -452,12 +504,13 @@ fun OpponentBattleView(
                     .scale(-2f, 2f), // Flip horizontally
                 contentScale = ContentScale.Fit
             )
+            */
 
             // Attack animation overlay
             if (attackAnimationProgress > 0) {
-                Image(
-                    painter = painterResource(R.drawable.atk_l_00),
-                    contentDescription = "Attack Animation",
+                AttackSpriteImage(
+                    characterId = activeCharacter?.charaId ?: "dim000_mon03",
+                    isLarge = true,
                     modifier = Modifier
                         .size(60.dp)
                         .offset(
@@ -489,6 +542,17 @@ fun BattlesScreen() {
     var selectedStage by remember { mutableStateOf("") }
 
     val context = LocalContext.current
+    
+    // Initialize sprite files on first load
+    LaunchedEffect(Unit) {
+        val spriteFileManager = SpriteFileManager(context)
+        if (!spriteFileManager.checkSpriteFilesExist()) {
+            println("Copying sprite files to internal storage...")
+            spriteFileManager.copySpriteFilesToInternalStorage()
+        } else {
+            println("Sprite files already exist in internal storage")
+        }
+    }
 
     val rookieButton = @Composable {
         Button(
@@ -772,6 +836,7 @@ fun BattlesScreen() {
                                 onClick = {
                                     activeCharacter?.let {
                                         RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 0, 0, opponent.name, 0) { apiResult ->
+                                            currentView = "battle-main"
                                         }
                                     }
                                 },
@@ -808,6 +873,7 @@ fun BattlesScreen() {
                                 onClick = {
                                     activeCharacter?.let {
                                         RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 1, 0, opponent.name, 1) { apiResult ->
+                                            currentView = "battle-main"
                                         }
                                     }
                                 },
@@ -844,6 +910,7 @@ fun BattlesScreen() {
                                 onClick = {
                                     activeCharacter?.let {
                                         RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 2, 0, opponent.name, 2) { apiResult ->
+                                            currentView = "battle-main"
                                         }
                                     }
                                 },
@@ -880,6 +947,7 @@ fun BattlesScreen() {
                                 onClick = {
                                     activeCharacter?.let {
                                         RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 3, 0, opponent.name, 3) { apiResult ->
+                                            currentView = "battle-main"
                                         }
                                     }
                                 },
@@ -902,11 +970,74 @@ fun BattlesScreen() {
                 }
 
                 "battle-main" -> {
-
+                    var battleSystem by remember { mutableStateOf(ArenaBattleSystem()) }
+                    var currentStage by remember { mutableStateOf("rookie") }
+                    
+                    // Initialize battle with character stats
+                    LaunchedEffect(activeCharacter) {
+                        activeCharacter?.let { character ->
+                            battleSystem.initializeBattle(
+                                playerHP = character.currentHp.toFloat(),
+                                opponentHP = character.currentHp.toFloat(),
+                                playerMaxHP = character.baseHp.toFloat(),
+                                opponentMaxHP = character.baseHp.toFloat()
+                            )
+                        }
+                    }
+                    
+                    BattleScreen(
+                        battleSystem = battleSystem,
+                        stage = currentStage,
+                        playerName = activeCharacter?.name ?: "Player",
+                        opponentName = "Opponent",
+                        activeCharacter = activeCharacter,
+                        onBattleComplete = { winner ->
+                            // Handle battle completion
+                            currentView = "battle-results"
+                        },
+                        onExitBattle = {
+                            currentView = "main"
+                        }
+                    )
                 }
 
                 "battle-results" -> {
-
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Battle Complete!",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Text(
+                            text = "Results will be displayed here",
+                            fontSize = 16.sp,
+                            color = Color.White
+                        )
+                        
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        Button(
+                            onClick = {
+                                currentView = "main"
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Blue
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Back to Main Menu", color = Color.White, fontSize = 16.sp)
+                        }
+                    }
                 }
             }
         }
