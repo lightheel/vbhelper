@@ -196,6 +196,7 @@ fun BattleScreen(
     playerName: String = "Player",
     opponentName: String = "Opponent",
     activeCharacter: APIBattleCharacter? = null,
+    opponentCharacter: APIBattleCharacter? = null,
     onBattleComplete: (String?) -> Unit = {},
     onExitBattle: () -> Unit = {}
 ) {
@@ -232,31 +233,52 @@ fun BattleScreen(
         }
     }
 
+    // Opponent AI - automatically attack back after player attack
+    LaunchedEffect(battleSystem.currentView) {
+        if (battleSystem.currentView == 1 && !battleSystem.isAttacking) {
+            // Wait a bit before opponent attacks
+            delay(1000)
+            if (battleSystem.currentView == 1 && !battleSystem.isBattleOver()) {
+                println("Opponent attacking back!")
+                battleSystem.startOpponentAttack()
+                // Apply damage to player
+                battleSystem.applyDamage(true, 15f) // Player takes damage
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
     ) {
+        println("Current battle view: ${battleSystem.currentView}")
         when (battleSystem.currentView) {
-            0 -> PlayerBattleView(
-                battleSystem = battleSystem,
-                stage = stage,
-                playerName = playerName,
-                attackAnimationProgress = animationProgress,
-                onAttackClick = {
-                    battleSystem.startPlayerAttack()
-                    // Apply damage after animation
-                    battleSystem.applyDamage(false, 20f) // Opponent takes damage
-                },
-                activeCharacter = activeCharacter
-            )
-            1 -> OpponentBattleView(
-                battleSystem = battleSystem,
-                stage = stage,
-                opponentName = opponentName,
-                attackAnimationProgress = animationProgress,
-                activeCharacter = activeCharacter
-            )
+            0 -> {
+                println("Showing PlayerBattleView")
+                PlayerBattleView(
+                    battleSystem = battleSystem,
+                    stage = stage,
+                    playerName = playerName,
+                    attackAnimationProgress = animationProgress,
+                    onAttackClick = {
+                        battleSystem.startPlayerAttack()
+                        // Apply damage after animation
+                        battleSystem.applyDamage(false, 20f) // Opponent takes damage
+                    },
+                    activeCharacter = activeCharacter
+                )
+            }
+            1 -> {
+                println("Showing OpponentBattleView")
+                                 OpponentBattleView(
+                     battleSystem = battleSystem,
+                     stage = stage,
+                     opponentName = opponentName,
+                     attackAnimationProgress = animationProgress,
+                     activeCharacter = opponentCharacter
+                 )
+            }
         }
 
         // Exit button
@@ -330,7 +352,7 @@ fun PlayerBattleView(
         ) {
             SpriteImage(
                 spriteName = "00", // The sprite number (00, 01, 02, etc.)
-                atlasName = when (stage) {
+                atlasName = activeCharacter?.charaId ?: when (stage) {
                     "rookie" -> "dim000_mon01"
                     "champion" -> "dim012_mon04"
                     "ultimate" -> "dim137_mon09"
@@ -401,8 +423,12 @@ fun PlayerBattleView(
         )
 
         // Attack button
+        println("PlayerBattleView: Attack button enabled = ${battleSystem.isAttackButtonEnabled}")
         Button(
-            onClick = onAttackClick,
+            onClick = {
+                println("Attack button clicked!")
+                onAttackClick()
+            },
             enabled = battleSystem.isAttackButtonEnabled,
             modifier = Modifier
                 .fillMaxWidth()
@@ -475,7 +501,7 @@ fun OpponentBattleView(
         ) {
             SpriteImage(
                 spriteName = "00", // The sprite number (00, 01, 02, etc.)
-                atlasName = when (stage) {
+                atlasName = activeCharacter?.charaId ?: when (stage) {
                     "rookie" -> "dim000_mon01"
                     "champion" -> "dim012_mon04"
                     "ultimate" -> "dim137_mon09"
@@ -537,6 +563,7 @@ fun BattlesScreen() {
     var opponentsList by remember { mutableStateOf(ArrayList<APIBattleCharacter>()) }
 
     var activeCharacter by remember { mutableStateOf<APIBattleCharacter?>(null) }
+    var selectedOpponent by remember { mutableStateOf<APIBattleCharacter?>(null) }
 
     var expanded by remember { mutableStateOf(false) }
     var selectedStage by remember { mutableStateOf("") }
@@ -835,6 +862,7 @@ fun BattlesScreen() {
                             Button(
                                 onClick = {
                                     activeCharacter?.let {
+                                        selectedOpponent = opponent
                                         RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 0, 0, opponent.name, 0) { apiResult ->
                                             currentView = "battle-main"
                                         }
@@ -872,6 +900,7 @@ fun BattlesScreen() {
                             Button(
                                 onClick = {
                                     activeCharacter?.let {
+                                        selectedOpponent = opponent
                                         RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 1, 0, opponent.name, 1) { apiResult ->
                                             currentView = "battle-main"
                                         }
@@ -909,6 +938,7 @@ fun BattlesScreen() {
                             Button(
                                 onClick = {
                                     activeCharacter?.let {
+                                        selectedOpponent = opponent
                                         RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 2, 0, opponent.name, 2) { apiResult ->
                                             currentView = "battle-main"
                                         }
@@ -946,6 +976,7 @@ fun BattlesScreen() {
                             Button(
                                 onClick = {
                                     activeCharacter?.let {
+                                        selectedOpponent = opponent
                                         RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 3, 0, opponent.name, 3) { apiResult ->
                                             currentView = "battle-main"
                                         }
@@ -970,35 +1001,47 @@ fun BattlesScreen() {
                 }
 
                 "battle-main" -> {
-                    var battleSystem by remember { mutableStateOf(ArenaBattleSystem()) }
-                    var currentStage by remember { mutableStateOf("rookie") }
-                    
-                    // Initialize battle with character stats
-                    LaunchedEffect(activeCharacter) {
-                        activeCharacter?.let { character ->
-                            battleSystem.initializeBattle(
-                                playerHP = character.currentHp.toFloat(),
-                                opponentHP = character.currentHp.toFloat(),
-                                playerMaxHP = character.baseHp.toFloat(),
-                                opponentMaxHP = character.baseHp.toFloat()
-                            )
-                        }
+                    val battleSystem = remember { ArenaBattleSystem() }
+
+                    // Determine the current stage based on the character's stage
+                    val currentStage = when (activeCharacter?.stage) {
+                        0 -> "rookie"
+                        1 -> "champion"
+                        2 -> "ultimate"
+                        3 -> "mega"
+                        else -> "rookie"
                     }
-                    
-                    BattleScreen(
-                        battleSystem = battleSystem,
-                        stage = currentStage,
-                        playerName = activeCharacter?.name ?: "Player",
-                        opponentName = "Opponent",
-                        activeCharacter = activeCharacter,
-                        onBattleComplete = { winner ->
-                            // Handle battle completion
-                            currentView = "battle-results"
-                        },
-                        onExitBattle = {
-                            currentView = "main"
-                        }
-                    )
+
+                                         // Initialize battle with character stats
+                     LaunchedEffect(activeCharacter, selectedOpponent) {
+                         activeCharacter?.let { playerCharacter ->
+                             selectedOpponent?.let { opponentCharacter ->
+                                 println("Initializing battle with player: ${playerCharacter.name}, opponent: ${opponentCharacter.name}")
+                                 battleSystem.initializeBattle(
+                                     playerHP = playerCharacter.currentHp.toFloat(),
+                                     opponentHP = opponentCharacter.currentHp.toFloat(),
+                                     playerMaxHP = playerCharacter.baseHp.toFloat(),
+                                     opponentMaxHP = opponentCharacter.baseHp.toFloat()
+                                 )
+                             }
+                         }
+                     }
+
+                                         BattleScreen(
+                         battleSystem = battleSystem,
+                         stage = currentStage,
+                         playerName = activeCharacter?.name ?: "Player",
+                         opponentName = selectedOpponent?.name ?: "Opponent",
+                         activeCharacter = activeCharacter,
+                         opponentCharacter = selectedOpponent,
+                         onBattleComplete = { winner ->
+                             println("Battle complete! Winner: $winner")
+                             currentView = "battle-results"
+                         },
+                         onExitBattle = {
+                             currentView = "main"
+                         }
+                     )
                 }
 
                 "battle-results" -> {

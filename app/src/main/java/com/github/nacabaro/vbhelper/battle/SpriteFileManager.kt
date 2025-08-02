@@ -9,16 +9,26 @@ class SpriteFileManager(private val context: Context) {
     
     fun copySpriteFilesToInternalStorage() {
         try {
-            // Create the base directory
-            val baseDir = File(context.filesDir, "Battle_Sprites_Reference/extracted_assets")
-            if (!baseDir.exists()) {
-                baseDir.mkdirs()
+            // Create the base directory for extracted_assets
+            val extractedAssetsDir = File(context.filesDir, "Battle_Sprites_Reference/extracted_assets")
+            if (!extractedAssetsDir.exists()) {
+                extractedAssetsDir.mkdirs()
             }
             
-            // Copy files from assets to internal storage
-            copyAssetDirectory("Battle_Sprites_Reference/extracted_assets", baseDir)
+            // Create the base directory for extracted_digimon_stats
+            val extractedStatsDir = File(context.filesDir, "Battle_Sprites_Reference/extracted_digimon_stats")
+            if (!extractedStatsDir.exists()) {
+                extractedStatsDir.mkdirs()
+            }
             
-            println("Sprite files copied successfully to: ${baseDir.absolutePath}")
+            // Copy extracted_assets files from assets to internal storage
+            copyAssetDirectory("Battle_Sprites_Reference/extracted_assets", extractedAssetsDir)
+            
+            // Copy extracted_digimon_stats files from assets to internal storage
+            copyAssetDirectory("Battle_Sprites_Reference/extracted_digimon_stats", extractedStatsDir)
+            
+            println("Sprite files copied successfully to: ${extractedAssetsDir.absolutePath}")
+            println("Stats files copied successfully to: ${extractedStatsDir.absolutePath}")
             
         } catch (e: Exception) {
             println("Error copying sprite files: ${e.message}")
@@ -74,7 +84,12 @@ class SpriteFileManager(private val context: Context) {
     }
     
     fun checkSpriteFilesExist(): Boolean {
-        val baseDir = File(context.filesDir, "Battle_Sprites_Reference/extracted_assets")
-        return baseDir.exists() && baseDir.listFiles()?.isNotEmpty() == true
+        val extractedAssetsDir = File(context.filesDir, "Battle_Sprites_Reference/extracted_assets")
+        val extractedStatsDir = File(context.filesDir, "Battle_Sprites_Reference/extracted_digimon_stats")
+        
+        val assetsExist = extractedAssetsDir.exists() && extractedAssetsDir.listFiles()?.isNotEmpty() == true
+        val statsExist = extractedStatsDir.exists() && extractedStatsDir.listFiles()?.isNotEmpty() == true
+        
+        return assetsExist && statsExist
     }
 } 
