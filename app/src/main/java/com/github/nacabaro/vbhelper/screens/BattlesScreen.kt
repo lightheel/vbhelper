@@ -10,14 +10,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.Image
+//import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+//import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.Button
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,6 +70,10 @@ class ArenaBattleSystem {
     private var _isAttackVisible by mutableStateOf(false)
     private var _critBarProgress by mutableStateOf(0)
     private var _isAttackButtonEnabled by mutableStateOf(true)
+    
+    // Attack animation state
+    private var _attackIsHit by mutableStateOf(false)
+    private var _isPlayerAttacking by mutableStateOf(false)
 
     // Exposed state for Compose
     val playerCurrentHP: Float get() = _playerCurrentHP
@@ -82,6 +86,10 @@ class ArenaBattleSystem {
     val isAttackVisible: Boolean get() = _isAttackVisible
     val critBarProgress: Int get() = _critBarProgress
     val isAttackButtonEnabled: Boolean get() = _isAttackButtonEnabled
+    
+    // Attack animation state
+    val attackIsHit: Boolean get() = _attackIsHit
+    val isPlayerAttacking: Boolean get() = _isPlayerAttacking
 
     //Initialize battle with character data
     fun initializeBattle(
@@ -110,6 +118,8 @@ class ArenaBattleSystem {
         _currentView = 0
         _isAttackVisible = true
         _isAttackButtonEnabled = false
+        _isPlayerAttacking = true
+        _attackProgress = 0f
         Log.d(TAG, "Player attack started")
     }
 
@@ -118,6 +128,8 @@ class ArenaBattleSystem {
         _isAttacking = true
         _currentView = 1
         _isAttackVisible = true
+        _isPlayerAttacking = false
+        _attackProgress = 0f
         Log.d(TAG, "Opponent attack started")
     }
 
@@ -127,12 +139,23 @@ class ArenaBattleSystem {
     }
 
     //Complete attack animation
-    fun completeAttackAnimation() {
+    fun completeAttackAnimation(playerDamage: Float = 0f, opponentDamage: Float = 0f) {
         _isAttacking = false
         _isAttackVisible = false
         _attackProgress = 0f
-        _currentView = if (_currentView == 0) 1 else 0
-        _isAttackButtonEnabled = true
+        _attackIsHit = false
+        
+        // Apply damage at end of animation
+        if (playerDamage > 0) {
+            applyDamage(true, playerDamage) // Player takes damage
+            println("Player took $playerDamage damage at end of animation")
+        }
+        if (opponentDamage > 0) {
+            applyDamage(false, opponentDamage) // Opponent takes damage
+            println("Opponent took $opponentDamage damage at end of animation")
+        }
+        
+        // Don't enable attack button here - it will be enabled when we switch back to player view
         Log.d(TAG, "Attack animation completed")
     }
 
@@ -206,6 +229,18 @@ class ArenaBattleSystem {
         _isAttackButtonEnabled = false
         Log.d(TAG, "Attack button disabled")
     }
+    
+    // Set attack hit/miss state
+    fun setAttackHitState(isHit: Boolean) {
+        _attackIsHit = isHit
+        Log.d(TAG, "Attack hit state set to: $isHit")
+    }
+    
+    // Switch to specific view
+    fun switchToView(view: Int) {
+        _currentView = view
+        Log.d(TAG, "Switched to view: $view")
+    }
 }
 
 @Composable
@@ -221,6 +256,9 @@ fun BattleScreen(
     context: android.content.Context? = null
 ) {
     var animationProgress by remember { mutableStateOf(0f) }
+    var pendingPlayerDamage by remember { mutableStateOf(0f) }
+    var pendingOpponentDamage by remember { mutableStateOf(0f) }
+    var currentAttackType by remember { mutableStateOf("") } // Track if this is player or enemy attack
 
     // Critical bar timer
     LaunchedEffect(Unit) {
@@ -232,10 +270,19 @@ fun BattleScreen(
         }
     }
 
-    // Attack animation
-    LaunchedEffect(battleSystem.isAttacking) {
-        if (battleSystem.isAttacking) {
+    // Player attack animation
+    LaunchedEffect(battleSystem.isAttacking, battleSystem.isPlayerAttacking) {
+        if (battleSystem.isAttacking && battleSystem.isPlayerAttacking) {
             animationProgress = 0f
+            println("=== Starting PLAYER attack animation ===")
+            println("Current view: ${battleSystem.currentView}")
+            println("Is player attacking: ${battleSystem.isPlayerAttacking}")
+            
+            // Store the current attack type
+            currentAttackType = "player"
+            println("Attack type: $currentAttackType")
+            
+            // Complete attack animation across the full screen
             animate(
                 initialValue = 0f,
                 targetValue = 1f,
@@ -243,26 +290,83 @@ fun BattleScreen(
             ) { value, _ ->
                 animationProgress = value
                 battleSystem.updateAttackAnimation(value)
+                println("Animation progress: $value")
             }
-            battleSystem.completeAttackAnimation()
-
+            
+            println("=== PLAYER Animation completed ===")
+            println("Final animation progress: $animationProgress")
+            
+            // Complete the attack animation
+            battleSystem.completeAttackAnimation(pendingPlayerDamage, pendingOpponentDamage)
+            
+            // Reset pending damage
+            pendingPlayerDamage = 0f
+            pendingOpponentDamage = 0f
+            
+            // Player attack just completed - switch to enemy view
+            println("Player attack completed, switching to enemy view")
+            battleSystem.switchToView(1)
+            
             // Check if battle is over
             if (battleSystem.isBattleOver()) {
                 onBattleComplete(battleSystem.getWinner())
             }
         }
     }
-
-    // Opponent AI - automatically attack back after player attack
-    LaunchedEffect(battleSystem.currentView) {
-        if (battleSystem.currentView == 1 && !battleSystem.isAttacking) {
-            // Wait a bit before opponent attacks
-            delay(1000)
-            if (battleSystem.currentView == 1 && !battleSystem.isBattleOver()) {
-                println("Opponent attacking back!")
-                battleSystem.startOpponentAttack()
-                // Apply damage to player
-                battleSystem.applyDamage(true, 15f) // Player takes damage
+    
+    // Enemy attack trigger (separate from animation)
+    LaunchedEffect(currentAttackType) {
+        if (currentAttackType == "player") {
+            // Player attack just completed - trigger enemy attack after delay
+            delay(500) // Wait before enemy attacks back
+            println("Starting enemy attack")
+            battleSystem.startOpponentAttack()
+            println("Enemy attack triggered - LaunchedEffect should re-trigger")
+        }
+    }
+    
+    // Enemy attack animation
+    LaunchedEffect(battleSystem.isAttacking, battleSystem.isPlayerAttacking) {
+        if (battleSystem.isAttacking && !battleSystem.isPlayerAttacking) {
+            animationProgress = 0f
+            println("=== Starting ENEMY attack animation ===")
+            println("Current view: ${battleSystem.currentView}")
+            println("Is player attacking: ${battleSystem.isPlayerAttacking}")
+            
+            // Store the current attack type
+            currentAttackType = "enemy"
+            println("Attack type: $currentAttackType")
+            
+            // Complete attack animation across the full screen
+            animate(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = tween(ArenaBattleSystem.ANIMATION_DURATION.toInt())
+            ) { value, _ ->
+                animationProgress = value
+                battleSystem.updateAttackAnimation(value)
+                println("Animation progress: $value")
+            }
+            
+            println("=== ENEMY Animation completed ===")
+            println("Final animation progress: $animationProgress")
+            
+            // Complete the attack animation
+            battleSystem.completeAttackAnimation(pendingPlayerDamage, pendingOpponentDamage)
+            
+            // Reset pending damage
+            pendingPlayerDamage = 0f
+            pendingOpponentDamage = 0f
+            
+            // Enemy attack just completed - switch back to player view
+            println("Enemy attack completed, switching back to player view")
+            battleSystem.switchToView(0)
+            // Enable attack button when we're back on player view
+            battleSystem.enableAttackButton()
+            
+            // Check if battle is over
+            if (battleSystem.isBattleOver()) {
+                onBattleComplete(battleSystem.getWinner())
             }
         }
     }
@@ -283,12 +387,15 @@ fun BattleScreen(
                     attackAnimationProgress = animationProgress,
                     onAttackClick = {
                         battleSystem.startPlayerAttack()
-                        // Apply damage after animation
-                        battleSystem.applyDamage(false, 20f) // Opponent takes damage
+                        // Damage will be applied at end of animation via pending damage system
                     },
                     activeCharacter = activeCharacter,
                     context = context,
-                    opponent = opponentCharacter
+                    opponent = opponentCharacter,
+                    onSetPendingDamage = { playerDamage, opponentDamage ->
+                        pendingPlayerDamage = playerDamage
+                        pendingOpponentDamage = opponentDamage
+                    }
                 )
             }
             1 -> {
@@ -325,7 +432,8 @@ fun PlayerBattleView(
     onAttackClick: () -> Unit,
     activeCharacter: APIBattleCharacter? = null,
     context: android.content.Context? = null,
-    opponent: APIBattleCharacter? = null
+    opponent: APIBattleCharacter? = null,
+    onSetPendingDamage: (Float, Float) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -390,51 +498,37 @@ fun PlayerBattleView(
                     .scale(-1f, 1f), // Flip horizontally
                 contentScale = ContentScale.Fit
             )
-            /*
-            Image(
-                painter = painterResource(
-                    when (stage) {
-                        "rookie" -> R.drawable.agumon
-                        "champion" -> R.drawable.greymon
-                        "ultimate" -> R.drawable.doruguremon
-                        "mega" -> R.drawable.machinedramon
-                        else -> R.drawable.agumon
-                    }
-                ),
-                contentDescription = "Player Character",
-                modifier = Modifier
-                    .size(120.dp)
-                    .scale(2f),
-                contentScale = ContentScale.Fit
-            )
-             */
 
             // Attack animation overlay
             if (attackAnimationProgress > 0) {
-                            AttackSpriteImage(
-                characterId = activeCharacter?.charaId ?: "dim011_mon01",
-                isLarge = true,
-                modifier = Modifier
-                    .size(60.dp)
-                    .offset(
-                        x = (attackAnimationProgress * 200 - 100).dp,
-                        y = 0.dp
-                    ),
-                contentScale = ContentScale.Fit
-            )
-                /*
-                Image(
-                    painter = painterResource(R.drawable.atk_l_00),
-                    contentDescription = "Attack Animation",
-                    modifier = Modifier
-                        .size(60.dp)
-                        .offset(
-                            x = (attackAnimationProgress * 200 - 100).dp,
-                            y = 0.dp
-                        ),
-                    contentScale = ContentScale.Fit
-                )
-                 */
+                // Show player attack on both player and enemy screens
+                // Show enemy attack on both enemy and player screens
+                val shouldShowAttack = true // Always show attack during animation
+                
+                if (shouldShowAttack) {
+                    val xOffset = if (battleSystem.isPlayerAttacking) {
+                        // Player attack: start from player position (left side) and fly to right edge
+                        (attackAnimationProgress * 400 - 200).dp
+                    } else {
+                        // Enemy attack: start from right edge and fly to left edge
+                        (-attackAnimationProgress * 400 + 200).dp
+                    }
+                    
+                    println("Attack sprite - Progress: $attackAnimationProgress, IsPlayerAttacking: ${battleSystem.isPlayerAttacking}, X Offset: $xOffset")
+                    
+                    AttackSpriteImage(
+                        characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                        isLarge = true,
+                        modifier = Modifier
+                            .size(60.dp)
+                            .offset(
+                                x = xOffset,
+                                y = 0.dp
+                            )
+                            .scale(if (battleSystem.isPlayerAttacking) -1f else 1f, 1f), // Flip player attacks
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
         }
 
@@ -494,40 +588,37 @@ fun PlayerBattleView(
                         
                         // Update HP based on API response
                         when (apiResult.state) {
-                            1 -> {
-                                // Match is still ongoing - update HP and continue
-                                println("Round ${apiResult.currentRound}: Player HP=${apiResult.playerHP}, Opponent HP=${apiResult.opponentHP}")
-                                
-                                // Apply the actual damage from API
-                                if (apiResult.playerAttackHit) {
-                                    val playerDamage = apiResult.playerAttackDamage.toFloat()
-                                    if (playerDamage > 0) {
-                                        battleSystem.applyDamage(false, playerDamage) // Opponent takes damage
-                                        println("Player attack hit! Damage: $playerDamage")
-                                    }
-                                } else {
-                                    println("Player attack missed!")
-                                }
-                                
-                                if (apiResult.opponentAttackDamage > 0) {
-                                    val opponentDamage = apiResult.opponentAttackDamage.toFloat()
-                                    battleSystem.applyDamage(true, opponentDamage) // Player takes damage
-                                    println("Opponent attack hit! Damage: $opponentDamage")
-                                }
-                                
-                                // Update HP to match API response
-                                battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
-                                
-                                // Keep attack button enabled for next round
-                                battleSystem.enableAttackButton()
-                            }
+                             1 -> {
+                                 // Match is still ongoing - update HP and continue
+                                 println("Round ${apiResult.currentRound}: Player HP=${apiResult.playerHP}, Opponent HP=${apiResult.opponentHP}")
+                                 
+                                 // Handle damage timing based on hit/miss
+                                 if (apiResult.playerAttackHit) {
+                                     // Player attack hit - enemy takes damage at end of player animation
+                                     // Player will dodge enemy attack
+                                     println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
+                                     onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
+                                     battleSystem.setAttackHitState(true)
+                                 } else {
+                                     // Player attack missed - player takes damage at end of enemy animation
+                                     println("Player attack missed! Player will take damage from enemy attack")
+                                     onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), 0f) // Player takes damage
+                                     battleSystem.setAttackHitState(false)
+                                 }
+                                 
+                                 // Don't update HP immediately - wait for animation to complete
+                                 // battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
+                                 
+                                 // Keep attack button enabled for next round
+                                 battleSystem.enableAttackButton()
+                             }
                             2 -> {
                                 // Match is over - report winner and complete battle
                                 println("Match over! Winner: ${apiResult.winner}")
                                 println("Final HP - Player: ${apiResult.playerHP}, Opponent: ${apiResult.opponentHP}")
                                 
-                                // Update final HP
-                                battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
+                                // Don't update HP immediately - let animation complete first
+                                // battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
                                 
                                 // Disable attack button since match is over
                                 battleSystem.disableAttackButton()
@@ -637,38 +728,37 @@ fun OpponentBattleView(
                     .size(80.dp),
                 contentScale = ContentScale.Fit
             )
-            /*
-            Image(
-                painter = painterResource(
-                    when (stage) {
-                        "rookie" -> R.drawable.agumon
-                        "champion" -> R.drawable.greymon
-                        "ultimate" -> R.drawable.doruguremon
-                        "mega" -> R.drawable.machinedramon
-                        else -> R.drawable.agumon
-                    }
-                ),
-                contentDescription = "Opponent Character",
-                modifier = Modifier
-                    .size(120.dp)
-                    .scale(-2f, 2f), // Flip horizontally
-                contentScale = ContentScale.Fit
-            )
-            */
 
             // Attack animation overlay
             if (attackAnimationProgress > 0) {
-                AttackSpriteImage(
-                    characterId = activeCharacter?.charaId ?: "dim011_mon01",
-                    isLarge = true,
-                    modifier = Modifier
-                        .size(60.dp)
-                        .offset(
-                            x = (-attackAnimationProgress * 200 + 100).dp,
-                            y = 0.dp
-                        ),
-                    contentScale = ContentScale.Fit
-                )
+                // Show player attack on both player and enemy screens
+                // Show enemy attack on both enemy and player screens
+                val shouldShowAttack = true // Always show attack during animation
+                
+                if (shouldShowAttack) {
+                    val xOffset = if (battleSystem.isPlayerAttacking) {
+                        // Player attack: start from left edge and fly to right edge
+                        (attackAnimationProgress * 400 - 200).dp
+                    } else {
+                        // Enemy attack: start from enemy position (right side) and fly to left edge
+                        (-attackAnimationProgress * 400 + 200).dp
+                    }
+                    
+                    println("OpponentBattleView - Attack sprite - Progress: $attackAnimationProgress, IsPlayerAttacking: ${battleSystem.isPlayerAttacking}, X Offset: $xOffset")
+                    
+                    AttackSpriteImage(
+                        characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                        isLarge = true,
+                        modifier = Modifier
+                            .size(60.dp)
+                            .offset(
+                                x = xOffset,
+                                y = 0.dp
+                            )
+                            .scale(if (battleSystem.isPlayerAttacking) -1f else 1f, 1f), // Flip player attacks
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
         }
 
