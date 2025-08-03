@@ -98,10 +98,24 @@ class BattleSpriteManager(private val context: Context) {
                 spriteData.texture_rect.height.toInt()
             )
             
-            // Cache the result
-            spriteCache[cacheKey] = spriteBitmap
+            // Ensure the bitmap is not scaled and has proper quality
+            val finalBitmap = if (spriteBitmap.width != spriteData.texture_rect.width.toInt() || 
+                                  spriteBitmap.height != spriteData.texture_rect.height.toInt()) {
+                // If the bitmap was scaled during creation, create a new one with exact dimensions
+                Bitmap.createScaledBitmap(spriteBitmap, 
+                    spriteData.texture_rect.width.toInt(), 
+                    spriteData.texture_rect.height.toInt(), 
+                    false) // false = no filtering/interpolation
+            } else {
+                spriteBitmap
+            }
             
-            return spriteBitmap
+            println("Extracted sprite dimensions: ${finalBitmap.width}x${finalBitmap.height}")
+            
+            // Cache the result
+            spriteCache[cacheKey] = finalBitmap
+            
+            return finalBitmap
             
         } catch (e: Exception) {
             e.printStackTrace()

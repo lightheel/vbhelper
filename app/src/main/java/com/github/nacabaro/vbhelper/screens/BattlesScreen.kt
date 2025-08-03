@@ -347,21 +347,20 @@ fun PlayerBattleView(
 
         // Player character with attack animation
         Box(
-            modifier = Modifier.size(120.dp),
+            modifier = Modifier.size(80.dp),
             contentAlignment = Alignment.Center
         ) {
             SpriteImage(
                 spriteName = "00", // The sprite number (00, 01, 02, etc.)
                 atlasName = activeCharacter?.charaId ?: when (stage) {
-                    "rookie" -> "dim275_mon01"
+                    "rookie" -> "dim000_mon03"
                     "champion" -> "dim012_mon04"
                     "ultimate" -> "dim137_mon09"
                     "mega" -> "dim012_mon14"
-                    else -> "dim275_mon01"
+                    else -> "dim011_mon01"
                 },
                 modifier = Modifier
-                    .size(120.dp)
-                    .scale(2f),
+                    .size(80.dp),
                 contentScale = ContentScale.Fit
             )
             /*
@@ -386,7 +385,7 @@ fun PlayerBattleView(
             // Attack animation overlay
             if (attackAnimationProgress > 0) {
                             AttackSpriteImage(
-                characterId = activeCharacter?.charaId ?: "dim275_mon01",
+                characterId = activeCharacter?.charaId ?: "dim011_mon01",
                 isLarge = true,
                 modifier = Modifier
                     .size(60.dp)
@@ -496,21 +495,20 @@ fun OpponentBattleView(
 
         // Opponent character with attack animation
         Box(
-            modifier = Modifier.size(120.dp),
+            modifier = Modifier.size(80.dp),
             contentAlignment = Alignment.Center
         ) {
             SpriteImage(
                 spriteName = "00", // The sprite number (00, 01, 02, etc.)
                 atlasName = activeCharacter?.charaId ?: when (stage) {
-                    "rookie" -> "dim275_mon01"
+                    "rookie" -> "dim000_mon03"
                     "champion" -> "dim012_mon04"
                     "ultimate" -> "dim137_mon09"
                     "mega" -> "dim012_mon14"
-                    else -> "dim275_mon01"
+                    else -> "dim011_mon01"
                 },
                 modifier = Modifier
-                    .size(120.dp)
-                    .scale(2f),
+                    .size(80.dp),
                 contentScale = ContentScale.Fit
             )
             /*
@@ -535,7 +533,7 @@ fun OpponentBattleView(
             // Attack animation overlay
             if (attackAnimationProgress > 0) {
                 AttackSpriteImage(
-                    characterId = activeCharacter?.charaId ?: "dim275_mon01",
+                    characterId = activeCharacter?.charaId ?: "dim011_mon01",
                     isLarge = true,
                     modifier = Modifier
                         .size(60.dp)
@@ -759,7 +757,7 @@ fun BattlesScreen() {
         // Create hardcoded character lists for each stage
         val rookieCharacters = listOf(
             APIBattleCharacter("AGUMON", "degimon_name_Dim012_003", "dim012_mon03", 0, 1, 1800, 1800, 2400.0f, 700.0f),
-            APIBattleCharacter("PULSEMON", "degimon_name_Dim275_001", "dim275_mon01", 0, 1, 1800, 1800, 2400.0f, 700.0f),
+            APIBattleCharacter("PULSEMON", "degimon_name_Dim000_003", "dim000_mon03", 0, 1, 1800, 1800, 2400.0f, 700.0f),
             APIBattleCharacter("DORUMON", "degimon_name_dim137_mon03", "dim137_mon03", 0, 1, 3000, 3000, 5100.0f, 1050.0f)
         )
 
