@@ -82,11 +82,18 @@ class BattleSpriteManager(private val context: Context) {
             val spriteDataJson = spriteDataFile.readText()
             val spriteData = gson.fromJson(spriteDataJson, SpriteData::class.java)
             
+            // Debug: Print sprite coordinates
+            println("Sprite coordinates: x=${spriteData.texture_rect.x}, y=${spriteData.texture_rect.y}, width=${spriteData.texture_rect.width}, height=${spriteData.texture_rect.height}")
+            println("Texture dimensions: width=${fullBitmap.width}, height=${fullBitmap.height}")
+            
+            // Calculate the correct Y coordinate (inverted coordinate system)
+            val correctedY = fullBitmap.height - spriteData.texture_rect.y.toInt() - spriteData.texture_rect.height.toInt()
+            
             // Extract the sprite from the atlas using texture_rect coordinates
             val spriteBitmap = Bitmap.createBitmap(
                 fullBitmap,
                 spriteData.texture_rect.x.toInt(),
-                spriteData.texture_rect.y.toInt(),
+                correctedY,
                 spriteData.texture_rect.width.toInt(),
                 spriteData.texture_rect.height.toInt()
             )

@@ -252,10 +252,10 @@ fun BattleScreen(
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        println("Current battle view: ${battleSystem.currentView}")
+        //println("Current battle view: ${battleSystem.currentView}")
         when (battleSystem.currentView) {
             0 -> {
-                println("Showing PlayerBattleView")
+                //println("Showing PlayerBattleView")
                 PlayerBattleView(
                     battleSystem = battleSystem,
                     stage = stage,
@@ -270,8 +270,8 @@ fun BattleScreen(
                 )
             }
             1 -> {
-                println("Showing OpponentBattleView")
-                                 OpponentBattleView(
+                //println("Showing OpponentBattleView")
+                 OpponentBattleView(
                      battleSystem = battleSystem,
                      stage = stage,
                      opponentName = opponentName,
@@ -353,11 +353,11 @@ fun PlayerBattleView(
             SpriteImage(
                 spriteName = "00", // The sprite number (00, 01, 02, etc.)
                 atlasName = activeCharacter?.charaId ?: when (stage) {
-                    "rookie" -> "dim000_mon01"
+                    "rookie" -> "dim275_mon01"
                     "champion" -> "dim012_mon04"
                     "ultimate" -> "dim137_mon09"
                     "mega" -> "dim012_mon14"
-                    else -> "dim000_mon01"
+                    else -> "dim275_mon01"
                 },
                 modifier = Modifier
                     .size(120.dp)
@@ -385,17 +385,17 @@ fun PlayerBattleView(
 
             // Attack animation overlay
             if (attackAnimationProgress > 0) {
-                AttackSpriteImage(
-                    characterId = activeCharacter?.charaId ?: "dim000_mon03",
-                    isLarge = true,
-                    modifier = Modifier
-                        .size(60.dp)
-                        .offset(
-                            x = (attackAnimationProgress * 200 - 100).dp,
-                            y = 0.dp
-                        ),
-                    contentScale = ContentScale.Fit
-                )
+                            AttackSpriteImage(
+                characterId = activeCharacter?.charaId ?: "dim275_mon01",
+                isLarge = true,
+                modifier = Modifier
+                    .size(60.dp)
+                    .offset(
+                        x = (attackAnimationProgress * 200 - 100).dp,
+                        y = 0.dp
+                    ),
+                contentScale = ContentScale.Fit
+            )
                 /*
                 Image(
                     painter = painterResource(R.drawable.atk_l_00),
@@ -423,7 +423,7 @@ fun PlayerBattleView(
         )
 
         // Attack button
-        println("PlayerBattleView: Attack button enabled = ${battleSystem.isAttackButtonEnabled}")
+        //println("PlayerBattleView: Attack button enabled = ${battleSystem.isAttackButtonEnabled}")
         Button(
             onClick = {
                 println("Attack button clicked!")
@@ -502,11 +502,11 @@ fun OpponentBattleView(
             SpriteImage(
                 spriteName = "00", // The sprite number (00, 01, 02, etc.)
                 atlasName = activeCharacter?.charaId ?: when (stage) {
-                    "rookie" -> "dim000_mon01"
+                    "rookie" -> "dim275_mon01"
                     "champion" -> "dim012_mon04"
                     "ultimate" -> "dim137_mon09"
                     "mega" -> "dim012_mon14"
-                    else -> "dim000_mon01"
+                    else -> "dim275_mon01"
                 },
                 modifier = Modifier
                     .size(120.dp)
@@ -535,7 +535,7 @@ fun OpponentBattleView(
             // Attack animation overlay
             if (attackAnimationProgress > 0) {
                 AttackSpriteImage(
-                    characterId = activeCharacter?.charaId ?: "dim000_mon03",
+                    characterId = activeCharacter?.charaId ?: "dim275_mon01",
                     isLarge = true,
                     modifier = Modifier
                         .size(60.dp)
@@ -759,7 +759,7 @@ fun BattlesScreen() {
         // Create hardcoded character lists for each stage
         val rookieCharacters = listOf(
             APIBattleCharacter("AGUMON", "degimon_name_Dim012_003", "dim012_mon03", 0, 1, 1800, 1800, 2400.0f, 700.0f),
-            APIBattleCharacter("PULSEMON", "degimon_name_Dim000_003", "dim000_mon03", 0, 1, 1800, 1800, 2400.0f, 700.0f),
+            APIBattleCharacter("PULSEMON", "degimon_name_Dim275_001", "dim275_mon01", 0, 1, 1800, 1800, 2400.0f, 700.0f),
             APIBattleCharacter("DORUMON", "degimon_name_dim137_mon03", "dim137_mon03", 0, 1, 3000, 3000, 5100.0f, 1050.0f)
         )
 
@@ -844,6 +844,15 @@ fun BattlesScreen() {
                         championButton()
                         ultimateButton()
                         megaButton()
+                        Button(
+                            onClick = {
+                                val spriteFileManager = SpriteFileManager(context)
+                                spriteFileManager.clearSpriteFiles()
+                                println("Sprite files cleared!")
+                            }
+                        ) {
+                            Text("Clear Sprite Files")
+                        }
                     }
                 }
 
