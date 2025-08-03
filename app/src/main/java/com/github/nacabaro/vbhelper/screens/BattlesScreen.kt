@@ -152,6 +152,13 @@ class ArenaBattleSystem {
         _critBarProgress = progress
     }
 
+    // Update HP from API response
+    fun updateHPFromAPI(playerHP: Float, opponentHP: Float) {
+        _playerCurrentHP = playerHP.coerceAtLeast(0f)
+        _opponentCurrentHP = opponentHP.coerceAtLeast(0f)
+        Log.d(TAG, "HP updated from API: Player HP $playerHP, Opponent HP $opponentHP")
+    }
+
 
     //Check if battle is over
     fun isBattleOver(): Boolean {
@@ -186,6 +193,18 @@ class ArenaBattleSystem {
         _isAttackVisible = false
         _attackProgress = 0f
         Log.d(TAG, "Battle system cleaned up")
+    }
+
+    // Enable attack button
+    fun enableAttackButton() {
+        _isAttackButtonEnabled = true
+        Log.d(TAG, "Attack button enabled")
+    }
+
+    // Disable attack button
+    fun disableAttackButton() {
+        _isAttackButtonEnabled = false
+        Log.d(TAG, "Attack button disabled")
     }
 }
 
@@ -288,7 +307,7 @@ fun BattleScreen(
         Button(
             onClick = onExitBattle,
             modifier = Modifier
-                .align(Alignment.TopEnd)
+                .align(Alignment.TopCenter)
                 .padding(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
         ) {
@@ -457,6 +476,9 @@ fun PlayerBattleView(
                 
                 // Send API call with all parameters
                 context?.let { ctx ->
+                    // Start player attack animation
+                    battleSystem.startPlayerAttack()
+                    
                     RetrofitHelper().getPVPWinner(
                         ctx, 
                         1, 
@@ -469,11 +491,66 @@ fun PlayerBattleView(
                     ) { apiResult ->
                         // Handle API response here
                         println("API Result: $apiResult")
-                        // TODO: Parse response and apply damage/hit/miss logic
+                        
+                        // Update HP based on API response
+                        when (apiResult.state) {
+                            1 -> {
+                                // Match is still ongoing - update HP and continue
+                                println("Round ${apiResult.currentRound}: Player HP=${apiResult.playerHP}, Opponent HP=${apiResult.opponentHP}")
+                                
+                                // Apply the actual damage from API
+                                if (apiResult.playerAttackHit) {
+                                    val playerDamage = apiResult.playerAttackDamage.toFloat()
+                                    if (playerDamage > 0) {
+                                        battleSystem.applyDamage(false, playerDamage) // Opponent takes damage
+                                        println("Player attack hit! Damage: $playerDamage")
+                                    }
+                                } else {
+                                    println("Player attack missed!")
+                                }
+                                
+                                if (apiResult.opponentAttackDamage > 0) {
+                                    val opponentDamage = apiResult.opponentAttackDamage.toFloat()
+                                    battleSystem.applyDamage(true, opponentDamage) // Player takes damage
+                                    println("Opponent attack hit! Damage: $opponentDamage")
+                                }
+                                
+                                // Update HP to match API response
+                                battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
+                                
+                                // Keep attack button enabled for next round
+                                battleSystem.enableAttackButton()
+                            }
+                            2 -> {
+                                // Match is over - report winner and complete battle
+                                println("Match over! Winner: ${apiResult.winner}")
+                                println("Final HP - Player: ${apiResult.playerHP}, Opponent: ${apiResult.opponentHP}")
+                                
+                                // Update final HP
+                                battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
+                                
+                                // Disable attack button since match is over
+                                battleSystem.disableAttackButton()
+                                
+                                // Complete the battle
+                                onAttackClick()
+                            }
+                            -1 -> {
+                                // Error state
+                                println("API Error: ${apiResult.status}")
+                                // Re-enable attack button on error
+                                battleSystem.enableAttackButton()
+                            }
+                            else -> {
+                                println("Unknown state: ${apiResult.state}")
+                                // Re-enable attack button on unknown state
+                                battleSystem.enableAttackButton()
+                            }
+                        }
                     }
                 }
                 
-                onAttackClick()
+                // Don't call onAttackClick() here - only call it when match is over (state = 2)
             },
             enabled = battleSystem.isAttackButtonEnabled,
             modifier = Modifier
@@ -1102,6 +1179,59 @@ fun BattlesScreen() {
                 }
 
                 "battle-results" -> {
+                    var winnerName by remember { mutableStateOf("") }
+                    var isWinnerLoaded by remember { mutableStateOf(false) }
+                    
+                    // Send one more stage 1 call to get winner info, then cleanup
+                    LaunchedEffect(Unit) {
+                        // Determine player and opponent stages
+                        val playerStage = when (activeCharacter?.stage) {
+                            0 -> 0 // rookie
+                            1 -> 1 // champion
+                            2 -> 2 // ultimate
+                            3 -> 3 // mega
+                            else -> 0
+                        }
+                        
+                        val opponentStage = when (selectedOpponent?.stage) {
+                            0 -> 0 // rookie
+                            1 -> 1 // champion
+                            2 -> 2 // ultimate
+                            3 -> 3 // mega
+                            else -> 0
+                        }
+                        
+                        // First, send one more stage 1 call to get winner info
+                        RetrofitHelper().getPVPWinner(
+                            context, 
+                            1, 
+                            2, 
+                            activeCharacter?.name ?: "Player", 
+                            playerStage, 
+                            opponentStage, 
+                            selectedOpponent?.name ?: "Opponent", 
+                            opponentStage
+                        ) { winnerResult ->
+                            println("Winner API Result: $winnerResult")
+                            winnerName = winnerResult.winner
+                            isWinnerLoaded = true
+                            
+                            // Now send cleanup call
+                            RetrofitHelper().getPVPWinner(
+                                context, 
+                                2, 
+                                2, 
+                                activeCharacter?.name ?: "Player", 
+                                playerStage, 
+                                opponentStage, 
+                                selectedOpponent?.name ?: "Opponent", 
+                                opponentStage
+                            ) { cleanupResult ->
+                                println("Cleanup API Result: $cleanupResult")
+                            }
+                        }
+                    }
+                    
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
@@ -1110,16 +1240,25 @@ fun BattlesScreen() {
                             text = "Battle Complete!",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = Color.Gray
                         )
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        Text(
-                            text = "Results will be displayed here",
-                            fontSize = 16.sp,
-                            color = Color.White
-                        )
+                        if (isWinnerLoaded) {
+                            Text(
+                                text = "Winner: $winnerName",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray
+                            )
+                        } else {
+                            Text(
+                                text = "Loading results...",
+                                fontSize = 16.sp,
+                                color = Color.Gray
+                            )
+                        }
                         
                         Spacer(modifier = Modifier.height(32.dp))
                         
