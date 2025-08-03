@@ -10,22 +10,22 @@ class SpriteFileManager(private val context: Context) {
     fun copySpriteFilesToInternalStorage() {
         try {
             // Create the base directory for extracted_assets
-            val extractedAssetsDir = File(context.filesDir, "Battle_Sprites_Reference/extracted_assets")
+            val extractedAssetsDir = File(context.filesDir, "battle_sprites/extracted_assets")
             if (!extractedAssetsDir.exists()) {
                 extractedAssetsDir.mkdirs()
             }
             
             // Create the base directory for extracted_digimon_stats
-            val extractedStatsDir = File(context.filesDir, "Battle_Sprites_Reference/extracted_digimon_stats")
+            val extractedStatsDir = File(context.filesDir, "battle_sprites/extracted_digimon_stats")
             if (!extractedStatsDir.exists()) {
                 extractedStatsDir.mkdirs()
             }
             
             // Copy extracted_assets files from assets to internal storage
-            copyAssetDirectory("Battle_Sprites_Reference/extracted_assets", extractedAssetsDir)
+            copyAssetDirectory("battle_sprites/extracted_assets", extractedAssetsDir)
             
             // Copy extracted_digimon_stats files from assets to internal storage
-            copyAssetDirectory("Battle_Sprites_Reference/extracted_digimon_stats", extractedStatsDir)
+            copyAssetDirectory("battle_sprites/extracted_digimon_stats", extractedStatsDir)
             
             println("Sprite files copied successfully to: ${extractedAssetsDir.absolutePath}")
             println("Stats files copied successfully to: ${extractedStatsDir.absolutePath}")
@@ -84,12 +84,56 @@ class SpriteFileManager(private val context: Context) {
     }
     
     fun checkSpriteFilesExist(): Boolean {
-        val extractedAssetsDir = File(context.filesDir, "Battle_Sprites_Reference/extracted_assets")
-        val extractedStatsDir = File(context.filesDir, "Battle_Sprites_Reference/extracted_digimon_stats")
+        val extractedAssetsDir = File(context.filesDir, "battle_sprites/extracted_assets")
+        val extractedStatsDir = File(context.filesDir, "battle_sprites/extracted_digimon_stats")
         
         val assetsExist = extractedAssetsDir.exists() && extractedAssetsDir.listFiles()?.isNotEmpty() == true
         val statsExist = extractedStatsDir.exists() && extractedStatsDir.listFiles()?.isNotEmpty() == true
         
         return assetsExist && statsExist
+    }
+    
+    fun clearSpriteFiles() {
+        try {
+            val extractedAssetsDir = File(context.filesDir, "battle_sprites/extracted_assets")
+            val extractedStatsDir = File(context.filesDir, "battle_sprites/extracted_digimon_stats")
+            
+            if (extractedAssetsDir.exists()) {
+                deleteDirectory(extractedAssetsDir)
+                println("Cleared extracted_assets directory")
+            }
+            
+            if (extractedStatsDir.exists()) {
+                deleteDirectory(extractedStatsDir)
+                println("Cleared extracted_digimon_stats directory")
+            }
+            
+            // Also clear the battle_sprites directory if it's empty
+            val battleSpritesDir = File(context.filesDir, "battle_sprites")
+            if (battleSpritesDir.exists() && battleSpritesDir.listFiles()?.isEmpty() == true) {
+                battleSpritesDir.delete()
+                println("Cleared battle_sprites directory")
+            }
+            
+        } catch (e: Exception) {
+            println("Error clearing sprite files: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+    
+    private fun deleteDirectory(directory: File) {
+        if (directory.exists()) {
+            val files = directory.listFiles()
+            if (files != null) {
+                for (file in files) {
+                    if (file.isDirectory) {
+                        deleteDirectory(file)
+                    } else {
+                        file.delete()
+                    }
+                }
+            }
+            directory.delete()
+        }
     }
 } 

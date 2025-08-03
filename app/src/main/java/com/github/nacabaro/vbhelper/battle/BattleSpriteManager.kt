@@ -38,7 +38,7 @@ class BattleSpriteManager(private val context: Context) {
     private val spriteCache = mutableMapOf<String, Bitmap>()
     
     // Base directory where your sprites are stored
-    private val spriteBaseDir = File(context.filesDir, "Battle_Sprites_Reference/extracted_assets")
+    private val spriteBaseDir = File(context.filesDir, "battle_sprites/extracted_assets")
     
     fun loadSprite(spriteName: String, atlasName: String): Bitmap? {
         val cacheKey = "${spriteName}_${atlasName}"
@@ -58,18 +58,9 @@ class BattleSpriteManager(private val context: Context) {
         println("Available directories: ${spriteBaseDir.listFiles()?.map { it.name }}")
         
         try {
-            // Load the mapping file
-            val mappingFile = File(spriteBaseDir, "mappings/${atlasName}_mapping.json")
-            if (!mappingFile.exists()) {
-                println("Mapping file not found: ${mappingFile.absolutePath}")
-                return null
-            }
+            // Load the PNG texture file directly using the atlas name
+            val textureFile = File(spriteBaseDir, "extracted_textures/${atlasName}.png")
             
-            val mappingJson = mappingFile.readText()
-            val mapping = gson.fromJson(mappingJson, SpriteMapping::class.java)
-            
-            // Load the PNG texture file
-            val textureFile = File(spriteBaseDir, "textures/${mapping.texture.file}")
             if (!textureFile.exists()) {
                 println("Texture file not found: ${textureFile.absolutePath}")
                 return null
@@ -142,18 +133,18 @@ class BattleSpriteManager(private val context: Context) {
     // Helper method to get available atlases
     fun getAvailableAtlases(): List<String> {
         try {
-            val mappingsDir = File(spriteBaseDir, "mappings")
-            if (!mappingsDir.exists()) {
+            val texturesDir = File(spriteBaseDir, "extracted_textures")
+            if (!texturesDir.exists()) {
                 return emptyList()
             }
             
-            val mappingFiles = mappingsDir.listFiles { file ->
-                file.name.endsWith("_mapping.json")
+            val textureFiles = texturesDir.listFiles { file ->
+                file.name.endsWith(".png")
             } ?: emptyArray()
             
-            return mappingFiles.map { file ->
-                // Extract atlas name from filename (e.g., "dim000_mon01_mapping.json" -> "dim000_mon01")
-                file.name.substringBefore("_mapping.json")
+            return textureFiles.map { file ->
+                // Extract atlas name from filename (e.g., "dim000_mon01.png" -> "dim000_mon01")
+                file.name.substringBefore(".png")
             }.sorted()
             
         } catch (e: Exception) {

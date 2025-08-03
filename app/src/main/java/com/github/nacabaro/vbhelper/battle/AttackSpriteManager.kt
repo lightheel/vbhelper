@@ -32,7 +32,7 @@ class AttackSpriteManager(private val context: Context) {
     private val characterDataCache = mutableMapOf<String, CharacterData>()
     
     // Base path for attack textures
-    private val attackTexturesPath = "Battle_Sprites_Reference/extracted_assets/atk_textures"
+    private val attackTexturesPath = "battle_sprites/extracted_assets/extracted_atksprites"
     
     fun getAttackSprite(characterId: String, isLarge: Boolean = false): Bitmap? {
         println("AttackSpriteManager: Getting attack sprite for characterId=$characterId, isLarge=$isLarge")
@@ -86,7 +86,7 @@ class AttackSpriteManager(private val context: Context) {
         
         try {
             // Load character data from JSON file
-            val characterDataFile = File(context.filesDir, "Battle_Sprites_Reference/extracted_digimon_stats/character_data/CharacterData.json")
+            val characterDataFile = File(context.filesDir, "battle_sprites/extracted_digimon_stats/character_data/CharacterData.json")
             println("AttackSpriteManager: Character data file path = ${characterDataFile.absolutePath}")
             println("AttackSpriteManager: Character data file exists = ${characterDataFile.exists()}")
             
