@@ -212,7 +212,7 @@ fun PlayerBattleView(
         ) {
             SpriteImage(
                 spriteName = activeCharacter?.charaId ?: "dim011_mon01",
-                atlasName = "dim011_mon01",
+                atlasName = activeCharacter?.charaId ?: "dim011_mon01",
                 modifier = Modifier
                     .size(80.dp)
                     .scale(-1f, 1f), // Flip player Digimon horizontally
@@ -382,7 +382,7 @@ fun OpponentBattleView(
         ) {
             SpriteImage(
                 spriteName = activeCharacter?.charaId ?: "dim011_mon01",
-                atlasName = "dim011_mon01",
+                atlasName = activeCharacter?.charaId ?: "dim011_mon01",
                 modifier = Modifier.size(80.dp),
                 contentScale = ContentScale.Fit
             )
@@ -440,6 +440,40 @@ fun BattlesScreen() {
     var expanded by remember { mutableStateOf(false) }
     var selectedStage by remember { mutableStateOf("") }
     var currentStage by remember { mutableStateOf("rookie") }
+
+    // Create hardcoded character lists for each stage
+    val rookieCharacters = listOf(
+        APIBattleCharacter("AGUMON", "degimon_name_Dim012_003", "dim012_mon03", 0, 1, 1800, 1800, 2400.0f, 700.0f),
+        APIBattleCharacter("PULSEMON", "degimon_name_Dim000_003", "dim000_mon03", 0, 1, 1800, 1800, 2400.0f, 700.0f),
+        APIBattleCharacter("DORUMON", "degimon_name_dim137_mon03", "dim137_mon03", 0, 1, 3000, 3000, 5100.0f, 1050.0f)
+    )
+
+    val championCharacters = listOf(
+        APIBattleCharacter("GREYMON","degimon_name_Dim012_004","dim012_mon04",1,1,2000, 2000, 3000.0f,900.0f),
+        APIBattleCharacter("TYRANNOMON","degimon_name_Dim008_006","dim008_mon06",1,3,2000, 2000, 2400.0f,600.0f),
+        APIBattleCharacter("DORUGAMON","degimon_name_dim137_mon05","dim137_mon05",1,3,3500, 3500, 5200.0f,1200.0f)
+    )
+
+    val ultimateCharacters = listOf(
+        APIBattleCharacter("METALGREYMON (VIRUS)","degimon_name_Dim014_005","dim014_mon05",2,2,2640, 2640, 2450.0f,800.0f),
+        APIBattleCharacter("MAMEMON", "degimon_name_Dim000_005", "dim000_mon05", 2, 1, 3000, 3000, 4000.0f, 1000.0f),
+        APIBattleCharacter("DORUGREYMON","degimon_name_dim137_mon09","dim137_mon09",2,3,5000, 5000, 6400.0f,1400.0f)
+    )
+
+    val megaCharacters = listOf(
+        APIBattleCharacter("WARGREYMON","degimon_name_Dim012_014","dim012_mon14",3,1,3080, 3080, 3825.0f,800.0f),
+        APIBattleCharacter("SLAYERDRAMON","degimon_name_dim129_mon15","dim129_mon15",3,1,4800, 4800, 6300.0f,1950.0f),
+        APIBattleCharacter("BREAKDRAMON","degimon_name_dim129_mon17","dim129_mon17",3,2,6000, 6000, 4000.0f,1980.0f)
+    )
+
+    // Get the appropriate character list based on current stage
+    val characterList = when (currentStage.lowercase()) {
+        "rookie" -> rookieCharacters
+        "champion" -> championCharacters
+        "ultimate" -> ultimateCharacters
+        "mega" -> megaCharacters
+        else -> rookieCharacters
+    }
 
     val context = LocalContext.current
     
@@ -889,13 +923,4 @@ fun BattlesScreen() {
             }
         }
     }
-}
-
-// Character list for dropdown
-val characterList = listOf(
-    APIBattleCharacter("Agumon", "agumon", "dim011_mon01", 0, 0, 100, 100, 50f, 50f),
-    APIBattleCharacter("Gabumon", "gabumon", "dim012_mon02", 0, 0, 90, 90, 45f, 55f),
-    APIBattleCharacter("Biyomon", "biyomon", "dim013_mon03", 0, 0, 85, 85, 40f, 60f),
-    APIBattleCharacter("Tentomon", "tentomon", "dim014_mon04", 0, 0, 95, 95, 55f, 45f),
-    APIBattleCharacter("Palmon", "palmon", "dim015_mon05", 0, 0, 88, 88, 42f, 58f)
-) 
+} 
