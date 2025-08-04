@@ -73,7 +73,7 @@ class BattleSpriteManager(private val context: Context) {
             }
             
             // Load the specific sprite data file
-            val spriteDataFile = File(spriteBaseDir, "sprites/${spriteName}_sprite_00.json")
+            val spriteDataFile = File(spriteBaseDir, "sprites/${spriteName}.json")
             if (!spriteDataFile.exists()) {
                 println("Sprite data file not found: ${spriteDataFile.absolutePath}")
                 return null

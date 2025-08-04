@@ -49,6 +49,8 @@ import com.github.nacabaro.vbhelper.battle.SpriteImage
 import com.github.nacabaro.vbhelper.battle.AttackSpriteImage
 import com.github.nacabaro.vbhelper.battle.SpriteFileManager
 import com.github.nacabaro.vbhelper.battle.ArenaBattleSystem
+import com.github.nacabaro.vbhelper.battle.DigimonAnimationType
+import com.github.nacabaro.vbhelper.battle.AnimatedSpriteImage
 
 @Composable
 fun BattleScreen(
@@ -266,9 +268,18 @@ fun PlayerBattleView(
                     .size(80.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
-                SpriteImage(
-                    spriteName = activeCharacter?.charaId ?: "dim011_mon01",
-                    atlasName = activeCharacter?.charaId ?: "dim011_mon01",
+                // Determine animation type based on battle state
+                val animationType = when (battleSystem.attackPhase) {
+                    1 -> DigimonAnimationType.ATTACK  // Player attack on player screen
+                    2 -> DigimonAnimationType.ATTACK  // Player attack on opponent screen
+                    3 -> DigimonAnimationType.IDLE    // Opponent attack on opponent screen
+                    4 -> DigimonAnimationType.IDLE    // Opponent attack on player screen
+                    else -> DigimonAnimationType.IDLE
+                }
+                
+                AnimatedSpriteImage(
+                    characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                    animationType = animationType,
                     modifier = Modifier
                         .size(80.dp)
                         .scale(-1f, 1f), // Flip player Digimon horizontally
@@ -473,9 +484,18 @@ fun OpponentBattleView(
                 .size(80.dp),
             contentAlignment = Alignment.CenterEnd
         ) {
-            SpriteImage(
-                spriteName = activeCharacter?.charaId ?: "dim011_mon01",
-                atlasName = activeCharacter?.charaId ?: "dim011_mon01",
+            // Determine animation type based on battle state
+            val animationType = when (battleSystem.attackPhase) {
+                1 -> DigimonAnimationType.IDLE    // Player attack on player screen
+                2 -> DigimonAnimationType.IDLE    // Player attack on opponent screen
+                3 -> DigimonAnimationType.ATTACK  // Opponent attack on opponent screen
+                4 -> DigimonAnimationType.ATTACK  // Opponent attack on player screen
+                else -> DigimonAnimationType.IDLE
+            }
+            
+            AnimatedSpriteImage(
+                characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                animationType = animationType,
                 modifier = Modifier.size(80.dp),
                 contentScale = ContentScale.Fit
             )
