@@ -283,7 +283,7 @@ fun PlayerBattleView(
                     val xOffset = when (battleSystem.attackPhase) {
                         1 -> (attackAnimationProgress * 400 + 50).dp  // Player attack on player screen - start and end more to the right
                         2 -> (attackAnimationProgress * 400 - 200).dp  // Player attack on opponent screen
-                        4 -> (-attackAnimationProgress * 400 + 200).dp  // Opponent attack on player screen
+                        4 -> (-attackAnimationProgress * 400 + 350).dp  // Opponent attack on player screen - start more to the right
                         else -> 0.dp
                     }
                     
@@ -467,7 +467,7 @@ fun OpponentBattleView(
             if (shouldShowAttack) {
                 val xOffset = when (battleSystem.attackPhase) {
                     2 -> (attackAnimationProgress * 400 - 350).dp  // Player attack on opponent screen - start more to the left
-                    3 -> (-attackAnimationProgress * 400 + 200).dp  // Opponent attack on opponent screen
+                    3 -> (-attackAnimationProgress * 400 + -50).dp  // Opponent attack on opponent screen - start more to the left
                     else -> 0.dp
                 }
                 
