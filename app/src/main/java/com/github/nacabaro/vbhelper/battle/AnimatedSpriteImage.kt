@@ -25,14 +25,18 @@ fun AnimatedSpriteImage(
     // Start the animation when the component is first created
     LaunchedEffect(characterId) {
         coroutineScope.launch {
-            animationStateMachine.playAnimation(DigimonAnimationType.IDLE)
+            animationStateMachine.playIdleAnimation()
         }
     }
     
     // Change animation when animationType changes
     LaunchedEffect(animationType) {
         coroutineScope.launch {
-            animationStateMachine.playAnimation(animationType)
+            if (animationType == DigimonAnimationType.IDLE) {
+                animationStateMachine.playIdleAnimation()
+            } else {
+                animationStateMachine.playAnimation(animationType)
+            }
         }
     }
     

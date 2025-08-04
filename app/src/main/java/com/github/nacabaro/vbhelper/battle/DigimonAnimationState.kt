@@ -168,6 +168,40 @@ class DigimonAnimationStateMachine(
         }
     }
     
+    // Special method for idle animation that cycles between IDLE and IDLE2
+    suspend fun playIdleAnimation() {
+        if (currentAnimation == DigimonAnimationType.IDLE && isPlaying) {
+            return // Already playing idle animation
+        }
+        
+        currentAnimation = DigimonAnimationType.IDLE
+        isPlaying = true
+        
+        // Get both IDLE and IDLE2 frames
+        val idleFrames = spriteFileMappings[DigimonAnimationType.IDLE] ?: listOf("00")
+        val idle2Frames = spriteFileMappings[DigimonAnimationType.IDLE2] ?: listOf("01")
+        
+        // Combine frames for cycling idle animation
+        val combinedFrames = (idleFrames + idle2Frames).distinct()
+        
+        if (combinedFrames.isEmpty()) {
+            println("Warning: No idle sprite files found")
+            currentSpriteIndex = 0
+            return
+        }
+        
+        val duration = animationDurations[DigimonAnimationType.IDLE] ?: 500L
+        
+        // Cycle through idle frames
+        var frameIndex = 0
+        while (isPlaying && currentAnimation == DigimonAnimationType.IDLE) {
+            val spriteIndex = combinedFrames[frameIndex % combinedFrames.size]
+            currentSpriteIndex = spriteIndex.toIntOrNull() ?: 0
+            delay(duration)
+            frameIndex++
+        }
+    }
+    
     fun stopAnimation() {
         isPlaying = false
     }
