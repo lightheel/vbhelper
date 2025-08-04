@@ -51,6 +51,8 @@ import com.github.nacabaro.vbhelper.battle.SpriteFileManager
 import com.github.nacabaro.vbhelper.battle.ArenaBattleSystem
 import com.github.nacabaro.vbhelper.battle.DigimonAnimationType
 import com.github.nacabaro.vbhelper.battle.AnimatedSpriteImage
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 
 
 @Composable
@@ -596,6 +598,7 @@ fun BattlesScreen() {
     
     // Sprite animation tester state
     var showSpriteTester by remember { mutableStateOf(false) }
+    var spriteTesterView by remember { mutableStateOf("entry") } // "entry" or "testing"
     var dimId by remember { mutableStateOf("") }
     var monId by remember { mutableStateOf("") }
     var currentTestAnimation by remember { mutableStateOf(DigimonAnimationType.IDLE) }
@@ -784,7 +787,7 @@ fun BattlesScreen() {
         }
     }
     
-    val spriteTester = @Composable {
+    val spriteTesterEntry = @Composable {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(16.dp)
@@ -819,6 +822,7 @@ fun BattlesScreen() {
                     if (dimId.isNotEmpty() && monId.isNotEmpty()) {
                         testCharacterId = "dim${dimId}_mon${monId}"
                         println("Testing sprite for: $testCharacterId")
+                        spriteTesterView = "testing"
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -828,57 +832,76 @@ fun BattlesScreen() {
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Animation test buttons
-            if (testCharacterId.isNotEmpty()) {
-                Text("Animation States:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Create a grid of animation buttons
-                val animationTypes = listOf(
-                    DigimonAnimationType.IDLE to "IDLE",
-                    DigimonAnimationType.IDLE2 to "IDLE2",
-                    DigimonAnimationType.WALK to "WALK",
-                    DigimonAnimationType.WALK2 to "WALK2",
-                    DigimonAnimationType.RUN to "RUN",
-                    DigimonAnimationType.RUN2 to "RUN2",
-                    DigimonAnimationType.WORKOUT to "WORKOUT",
-                    DigimonAnimationType.WORKOUT2 to "WORKOUT2",
-                    DigimonAnimationType.HAPPY to "HAPPY",
-                    DigimonAnimationType.SLEEP to "SLEEP",
-                    DigimonAnimationType.ATTACK to "ATTACK",
-                    DigimonAnimationType.FLEE to "FLEE"
-                )
-                
-                // Display sprite
-                AnimatedSpriteImage(
-                    characterId = testCharacterId,
-                    animationType = currentTestAnimation,
-                    modifier = Modifier.size(120.dp),
-                    contentScale = ContentScale.Fit
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Animation buttons in a grid
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // Create rows of 3 buttons each
-                    animationTypes.chunked(3).forEach { row ->
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            row.forEach { (animationType, label) ->
-                                Button(
-                                    onClick = { currentTestAnimation = animationType },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (currentTestAnimation == animationType) Color.Blue else Color.Gray
-                                    ),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(label, fontSize = 12.sp)
-                                }
+            Button(
+                onClick = { showSpriteTester = false },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Back to Main")
+            }
+        }
+    }
+    
+    val spriteTesterTesting = @Composable {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text("Sprite Animation Testing", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Character: $testCharacterId", fontSize = 14.sp, color = Color.Gray)
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Display sprite
+            AnimatedSpriteImage(
+                characterId = testCharacterId,
+                animationType = currentTestAnimation,
+                modifier = Modifier.size(120.dp),
+                contentScale = ContentScale.Fit
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Animation buttons in a grid
+            Text("Animation Buttons:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            val animationTypes = listOf(
+                DigimonAnimationType.IDLE to "IDLE",
+                DigimonAnimationType.IDLE2 to "IDLE2",
+                DigimonAnimationType.WALK to "WALK",
+                DigimonAnimationType.WALK2 to "WALK2",
+                DigimonAnimationType.RUN to "RUN",
+                DigimonAnimationType.RUN2 to "RUN2",
+                DigimonAnimationType.WORKOUT to "WORKOUT",
+                DigimonAnimationType.WORKOUT2 to "WORKOUT2",
+                DigimonAnimationType.HAPPY to "HAPPY",
+                DigimonAnimationType.SLEEP to "SLEEP",
+                DigimonAnimationType.ATTACK to "ATTACK",
+                DigimonAnimationType.FLEE to "FLEE"
+            )
+            
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Create rows of 3 buttons each
+                animationTypes.chunked(3).forEach { row ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        row.forEach { (animationType, label) ->
+                            Button(
+                                onClick = { 
+                                    currentTestAnimation = animationType
+                                    println("Switched to animation: $label")
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (currentTestAnimation == animationType) Color.Blue else Color.Gray
+                                ),
+                                modifier = Modifier.weight(1f),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 4.dp, horizontal = 2.dp)
+                            ) {
+                                Text(label, fontSize = 10.sp)
                             }
                         }
                     }
@@ -887,11 +910,30 @@ fun BattlesScreen() {
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            Button(
-                onClick = { showSpriteTester = false },
+            // Navigation buttons
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Back to Main")
+                Button(
+                    onClick = { spriteTesterView = "entry" },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Back to Entry")
+                }
+                
+                Button(
+                    onClick = { 
+                        showSpriteTester = false
+                        spriteTesterView = "entry"
+                        testCharacterId = ""
+                        dimId = ""
+                        monId = ""
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Back to Main")
+                }
             }
         }
     }
@@ -913,7 +955,11 @@ fun BattlesScreen() {
             when (currentView) {
                 "main" -> {
                     if (showSpriteTester) {
-                        spriteTester()
+                        when (spriteTesterView) {
+                            "entry" -> spriteTesterEntry()
+                            "testing" -> spriteTesterTesting()
+                            else -> spriteTesterEntry()
+                        }
                     } else {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -923,7 +969,14 @@ fun BattlesScreen() {
                             ultimateButton()
                             megaButton()
                             Button(
-                                onClick = { showSpriteTester = true }
+                                onClick = { 
+                                    showSpriteTester = true
+                                    spriteTesterView = "entry"
+                                    testCharacterId = ""
+                                    dimId = ""
+                                    monId = ""
+                                    currentTestAnimation = DigimonAnimationType.IDLE
+                                }
                             ) {
                                 Text("Sprite Animation Tester")
                             }
