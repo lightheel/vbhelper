@@ -52,6 +52,7 @@ import com.github.nacabaro.vbhelper.battle.ArenaBattleSystem
 import com.github.nacabaro.vbhelper.battle.DigimonAnimationType
 import com.github.nacabaro.vbhelper.battle.AnimatedSpriteImage
 
+
 @Composable
 fun BattleScreen(
     stage: String,
@@ -592,6 +593,13 @@ fun BattlesScreen() {
     var expanded by remember { mutableStateOf(false) }
     var selectedStage by remember { mutableStateOf("") }
     var currentStage by remember { mutableStateOf("rookie") }
+    
+    // Sprite animation tester state
+    var showSpriteTester by remember { mutableStateOf(false) }
+    var dimId by remember { mutableStateOf("") }
+    var monId by remember { mutableStateOf("") }
+    var currentTestAnimation by remember { mutableStateOf(DigimonAnimationType.IDLE) }
+    var testCharacterId by remember { mutableStateOf("") }
 
     // Create hardcoded character lists for each stage
     val rookieCharacters = listOf(
@@ -775,6 +783,118 @@ fun BattlesScreen() {
             }
         }
     }
+    
+    val spriteTester = @Composable {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text("Sprite Animation Tester", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // DIM ID input
+            OutlinedTextField(
+                value = dimId,
+                onValueChange = { dimId = it },
+                label = { Text("DIM ID (e.g., 012)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Mon ID input
+            OutlinedTextField(
+                value = monId,
+                onValueChange = { monId = it },
+                label = { Text("Mon ID (e.g., 03)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Load sprite button
+            Button(
+                onClick = {
+                    if (dimId.isNotEmpty() && monId.isNotEmpty()) {
+                        testCharacterId = "dim${dimId}_mon${monId}"
+                        println("Testing sprite for: $testCharacterId")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Load Sprite")
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Animation test buttons
+            if (testCharacterId.isNotEmpty()) {
+                Text("Animation States:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Create a grid of animation buttons
+                val animationTypes = listOf(
+                    DigimonAnimationType.IDLE to "IDLE",
+                    DigimonAnimationType.IDLE2 to "IDLE2",
+                    DigimonAnimationType.WALK to "WALK",
+                    DigimonAnimationType.WALK2 to "WALK2",
+                    DigimonAnimationType.RUN to "RUN",
+                    DigimonAnimationType.RUN2 to "RUN2",
+                    DigimonAnimationType.WORKOUT to "WORKOUT",
+                    DigimonAnimationType.WORKOUT2 to "WORKOUT2",
+                    DigimonAnimationType.HAPPY to "HAPPY",
+                    DigimonAnimationType.SLEEP to "SLEEP",
+                    DigimonAnimationType.ATTACK to "ATTACK",
+                    DigimonAnimationType.FLEE to "FLEE"
+                )
+                
+                // Display sprite
+                AnimatedSpriteImage(
+                    characterId = testCharacterId,
+                    animationType = currentTestAnimation,
+                    modifier = Modifier.size(120.dp),
+                    contentScale = ContentScale.Fit
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Animation buttons in a grid
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Create rows of 3 buttons each
+                    animationTypes.chunked(3).forEach { row ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            row.forEach { (animationType, label) ->
+                                Button(
+                                    onClick = { currentTestAnimation = animationType },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (currentTestAnimation == animationType) Color.Blue else Color.Gray
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(label, fontSize = 12.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Button(
+                onClick = { showSpriteTester = false },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Back to Main")
+            }
+        }
+    }
 
     Scaffold (
         topBar = {
@@ -792,21 +912,30 @@ fun BattlesScreen() {
         ) {
             when (currentView) {
                 "main" -> {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        rookieButton()
-                        championButton()
-                        ultimateButton()
-                        megaButton()
-                        Button(
-                            onClick = {
-                                val spriteFileManager = SpriteFileManager(context)
-                                spriteFileManager.clearSpriteFiles()
-                                println("Sprite files cleared!")
-                            }
+                    if (showSpriteTester) {
+                        spriteTester()
+                    } else {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("Clear Sprite Files")
+                            rookieButton()
+                            championButton()
+                            ultimateButton()
+                            megaButton()
+                            Button(
+                                onClick = { showSpriteTester = true }
+                            ) {
+                                Text("Sprite Animation Tester")
+                            }
+                            Button(
+                                onClick = {
+                                    val spriteFileManager = SpriteFileManager(context)
+                                    spriteFileManager.clearSpriteFiles()
+                                    println("Sprite files cleared!")
+                                }
+                            ) {
+                                Text("Clear Sprite Files")
+                            }
                         }
                     }
                 }

@@ -176,10 +176,10 @@ class DigimonAnimationStateMachine(
         
         currentAnimation = DigimonAnimationType.IDLE
         isPlaying = true
-        
-        // Get both IDLE and IDLE2 frames
+
         val idleFrames = spriteFileMappings[DigimonAnimationType.IDLE] ?: listOf("00")
-        val idle2Frames = spriteFileMappings[DigimonAnimationType.IDLE2] ?: listOf("01")
+
+        val idle2Frames = spriteFileMappings[DigimonAnimationType.HAPPY] ?: listOf("08")
         
         // Combine frames for cycling idle animation
         val combinedFrames = (idleFrames + idle2Frames).distinct()
