@@ -207,197 +207,212 @@ fun PlayerBattleView(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Exit button at the top-right
-        Button(
-            onClick = { /* TODO: Add exit functionality */ },
+        // Top section: Exit button, HP bar, and HP numbers
+        Column(
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Text("Exit", color = Color.White, fontSize = 14.sp)
+            // Exit button at the top-right
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = { /* TODO: Add exit functionality */ },
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Exit", color = Color.White, fontSize = 14.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Health bar
+            LinearProgressIndicator(
+                progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp),
+                color = Color.Green,
+                trackColor = Color.Gray
+            )
+
+            // Health display numbers
+            Text(
+                text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
+                fontSize = 14.sp,
+                color = Color.Black
+            )
         }
 
-        // Main content
-        Column(
+        // Middle section: Player Digimon only
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            contentAlignment = Alignment.Center
         ) {
-            // Player Digimon
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .size(80.dp),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            SpriteImage(
-                spriteName = activeCharacter?.charaId ?: "dim011_mon01",
-                atlasName = activeCharacter?.charaId ?: "dim011_mon01",
+            // Player Digimon (center)
+            Box(
                 modifier = Modifier
-                    .size(80.dp)
-                    .scale(-1f, 1f), // Flip player Digimon horizontally
-                contentScale = ContentScale.Fit
-            )
-            
-            // Attack sprite visibility and positioning based on attack phase
-            val shouldShowAttack = when (battleSystem.attackPhase) {
-                1 -> true  // Player attack on player screen
-                2 -> true  // Player attack on opponent screen  
-                3 -> false // Opponent attack on opponent screen
-                4 -> false // Opponent attack on player screen
-                else -> false
-            }
-            
-            if (shouldShowAttack) {
-                val xOffset = when (battleSystem.attackPhase) {
-                    1 -> (attackAnimationProgress * 400 - 200).dp  // Player attack on player screen
-                    2 -> (attackAnimationProgress * 400 - 200).dp  // Player attack on opponent screen
-                    else -> 0.dp
-                }
-                
-                println("PlayerBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
-                
-                AttackSpriteImage(
-                    characterId = activeCharacter?.charaId ?: "dim011_mon01",
-                    isLarge = true,
+                    .fillMaxWidth()
+                    .size(80.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                SpriteImage(
+                    spriteName = activeCharacter?.charaId ?: "dim011_mon01",
+                    atlasName = activeCharacter?.charaId ?: "dim011_mon01",
                     modifier = Modifier
-                        .size(60.dp)
-                        .offset(
-                            x = xOffset,
-                            y = 0.dp
-                        )
-                        .scale(-1f, 1f), // Flip player attacks
+                        .size(80.dp)
+                        .scale(-1f, 1f), // Flip player Digimon horizontally
                     contentScale = ContentScale.Fit
                 )
+                
+                // Attack sprite visibility and positioning based on attack phase
+                val shouldShowAttack = when (battleSystem.attackPhase) {
+                    1 -> true  // Player attack on player screen
+                    2 -> true  // Player attack on opponent screen  
+                    3 -> false // Opponent attack on opponent screen
+                    4 -> false // Opponent attack on player screen
+                    else -> false
+                }
+                
+                if (shouldShowAttack) {
+                    val xOffset = when (battleSystem.attackPhase) {
+                        1 -> (attackAnimationProgress * 400 - 200).dp  // Player attack on player screen
+                        2 -> (attackAnimationProgress * 400 - 200).dp  // Player attack on opponent screen
+                        else -> 0.dp
+                    }
+                    
+                    println("PlayerBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
+                    
+                    AttackSpriteImage(
+                        characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                        isLarge = true,
+                        modifier = Modifier
+                            .size(60.dp)
+                            .offset(
+                                x = xOffset,
+                                y = 0.dp
+                            )
+                            .scale(-1f, 1f), // Flip player attacks
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
         }
 
-        // Critical bar
-        LinearProgressIndicator(
-            progress = battleSystem.critBarProgress / 100f,
+        // Bottom section: Critical bar and Attack button
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(10.dp),
-            color = Color.Yellow,
-            trackColor = Color.Gray
-        )
+                .padding(16.dp)
+                .align(Alignment.BottomCenter),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Critical bar
+            LinearProgressIndicator(
+                progress = battleSystem.critBarProgress / 100f,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp),
+                color = Color.Yellow,
+                trackColor = Color.Gray
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Health bar
-        LinearProgressIndicator(
-            progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(10.dp),
-            color = Color.Green,
-            trackColor = Color.Gray
-        )
-
-        // Health display numbers
-        Text(
-            text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
-            fontSize = 14.sp,
-            color = Color.Black
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Attack button
-        Button(
-            onClick = {
-                println("Attack button clicked!")
-                
-                // Get crit bar progress as float (0.0f to 100.0f)
-                val critBarProgressFloat = battleSystem.critBarProgress.toFloat()
-                
-                // Determine player and opponent stages
-                val playerStage = when (activeCharacter?.stage) {
-                    0 -> 0 // rookie
-                    1 -> 1 // champion
-                    2 -> 2 // ultimate
-                    3 -> 3 // mega
-                    else -> 0
-                }
-                
-                val opponentStage = when (opponent?.stage) {
-                    0 -> 0 // rookie
-                    1 -> 1 // champion
-                    2 -> 2 // ultimate
-                    3 -> 3 // mega
-                    else -> 0
-                }
-                
-                // Send API call with all parameters
-                context?.let { ctx ->
-                    // Start player attack animation
-                    battleSystem.startPlayerAttack()
+            // Attack button
+            Button(
+                onClick = {
+                    println("Attack button clicked!")
                     
-                    RetrofitHelper().getPVPWinner(
-                        ctx, 
-                        1, 
-                        2, 
-                        activeCharacter?.name ?: "Player", 
-                        playerStage, 
-                        opponentStage, 
-                        opponent?.name ?: "Opponent", 
-                        opponentStage
-                    ) { apiResult ->
-                        // Handle API response here
-                        println("API Result: $apiResult")
+                    // Get crit bar progress as float (0.0f to 100.0f)
+                    val critBarProgressFloat = battleSystem.critBarProgress.toFloat()
+                    
+                    // Determine player and opponent stages
+                    val playerStage = when (activeCharacter?.stage) {
+                        0 -> 0 // rookie
+                        1 -> 1 // champion
+                        2 -> 2 // ultimate
+                        3 -> 3 // mega
+                        else -> 0
+                    }
+                    
+                    val opponentStage = when (opponent?.stage) {
+                        0 -> 0 // rookie
+                        1 -> 1 // champion
+                        2 -> 2 // ultimate
+                        3 -> 3 // mega
+                        else -> 0
+                    }
+                    
+                    // Send API call with all parameters
+                    context?.let { ctx ->
+                        // Start player attack animation
+                        battleSystem.startPlayerAttack()
                         
-                        // Update HP based on API response
-                        when (apiResult.state) {
-                             1 -> {
-                                 // Match is still ongoing - update HP and continue
-                                 println("Round ${apiResult.currentRound}: Player HP=${apiResult.playerHP}, Opponent HP=${apiResult.opponentHP}")
-                                 
-                                                                                                     // Set pending damage based on API result
-                                  if (apiResult.playerAttackHit) {
-                                      // Player attack hit - enemy takes damage at end of player animation
-                                      println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
-                                      onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
-                                      battleSystem.setAttackHitState(true)
-                                  } else {
-                                      // Player attack missed - enemy counter-attacks and player takes damage
-                                      println("Player attack missed! Enemy counter-attacks and player takes ${apiResult.opponentAttackDamage} damage")
-                                      onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), 0f) // Player takes damage
-                                      battleSystem.setAttackHitState(false)
-                                  }
-                             }
-                             2 -> {
-                                 // Match is over - transition to results screen
-                                 println("Match is over! Winner: ${apiResult.winner}")
-                                 battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
-                                 onAttackClick() // This will transition to battle-results screen
-                             }
-                             -1 -> {
-                                 // Error occurred
-                                 println("API Error: ${apiResult.status}")
-                                 battleSystem.resetAttackState()
-                                 battleSystem.enableAttackButton()
+                        RetrofitHelper().getPVPWinner(
+                            ctx, 
+                            1, 
+                            2, 
+                            activeCharacter?.name ?: "Player", 
+                            playerStage, 
+                            opponentStage, 
+                            opponent?.name ?: "Opponent", 
+                            opponentStage
+                        ) { apiResult ->
+                            // Handle API response here
+                            println("API Result: $apiResult")
+                            
+                            // Update HP based on API response
+                            when (apiResult.state) {
+                                 1 -> {
+                                     // Match is still ongoing - update HP and continue
+                                     println("Round ${apiResult.currentRound}: Player HP=${apiResult.playerHP}, Opponent HP=${apiResult.opponentHP}")
+                                     
+                                                                                                         // Set pending damage based on API result
+                                      if (apiResult.playerAttackHit) {
+                                          // Player attack hit - enemy takes damage at end of player animation
+                                          println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
+                                          onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
+                                          battleSystem.setAttackHitState(true)
+                                      } else {
+                                          // Player attack missed - enemy counter-attacks and player takes damage
+                                          println("Player attack missed! Enemy counter-attacks and player takes ${apiResult.opponentAttackDamage} damage")
+                                          onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), 0f) // Player takes damage
+                                          battleSystem.setAttackHitState(false)
+                                      }
+                                 }
+                                 2 -> {
+                                     // Match is over - transition to results screen
+                                     println("Match is over! Winner: ${apiResult.winner}")
+                                     battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
+                                     onAttackClick() // This will transition to battle-results screen
+                                 }
+                                 -1 -> {
+                                     // Error occurred
+                                     println("API Error: ${apiResult.status}")
+                                     battleSystem.resetAttackState()
+                                     battleSystem.enableAttackButton()
+                                 }
                              }
                          }
                      }
-                }
-            },
-            enabled = battleSystem.isAttackButtonEnabled,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Red,
-                disabledContainerColor = Color.Gray
-            ),
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Text("Attack", color = Color.White, fontSize = 18.sp)
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
+                 },
+                 enabled = battleSystem.isAttackButtonEnabled,
+                 modifier = Modifier
+                     .fillMaxWidth()
+                     .height(50.dp),
+                 colors = ButtonDefaults.buttonColors(
+                     containerColor = Color.Red,
+                     disabledContainerColor = Color.Gray
+                 ),
+                 shape = RoundedCornerShape(8.dp)
+             ) {
+                 Text("Attack", color = Color.White, fontSize = 18.sp)
+             }
         }
     }
 }
