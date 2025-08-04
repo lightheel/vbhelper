@@ -108,12 +108,12 @@ fun BattleScreen(
                     battleSystem.setAttackProgress(progress)
                     delay(16) // 60 FPS
                 }
-                println("Phase 2 completed, applying damage and starting opponent attack")
-                // Apply player's damage and start opponent attack
-                battleSystem.completeAttackAnimation(opponentDamage = pendingOpponentDamage)
-                pendingOpponentDamage = 0f
-                delay(500)
-                battleSystem.startOpponentAttack()
+                                 println("Phase 2 completed, applying damage and starting opponent attack")
+                 // Apply player's damage and start opponent attack
+                 battleSystem.completeAttackAnimation(opponentDamage = pendingOpponentDamage)
+                 pendingOpponentDamage = 0f
+                 delay(500)
+                 battleSystem.startOpponentAttack()
             }
             3 -> {
                 // Phase 3: Opponent attack on opponent screen
@@ -138,12 +138,12 @@ fun BattleScreen(
                     battleSystem.setAttackProgress(progress)
                     delay(16) // 60 FPS
                 }
-                println("Phase 4 completed, applying damage and resetting")
-                // Apply opponent's damage and reset
-                battleSystem.completeAttackAnimation(playerDamage = pendingPlayerDamage)
-                pendingPlayerDamage = 0f
-                battleSystem.resetAttackState()
-                battleSystem.enableAttackButton()
+                                 println("Phase 4 completed, applying damage and resetting")
+                 // Apply opponent's damage and reset
+                 battleSystem.completeAttackAnimation(playerDamage = pendingPlayerDamage)
+                 pendingPlayerDamage = 0f
+                 battleSystem.resetAttackState()
+                 battleSystem.enableAttackButton()
                 
                 // Check if battle is over
                 if (battleSystem.checkBattleOver()) {
@@ -306,25 +306,6 @@ fun PlayerBattleView(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Enemy HP bar
-        LinearProgressIndicator(
-            progress = battleSystem.opponentHP / (opponent?.baseHp?.toFloat() ?: 100f),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(10.dp),
-            color = Color.Red,
-            trackColor = Color.Gray
-        )
-
-        // Enemy HP display numbers
-        Text(
-            text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${opponent?.baseHp ?: 100}",
-            fontSize = 14.sp,
-            color = Color.Black
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Attack button
         Button(
             onClick = {
@@ -374,21 +355,18 @@ fun PlayerBattleView(
                                  // Match is still ongoing - update HP and continue
                                  println("Round ${apiResult.currentRound}: Player HP=${apiResult.playerHP}, Opponent HP=${apiResult.opponentHP}")
                                  
-                                 // Handle damage timing based on hit/miss
-                                 if (apiResult.playerAttackHit) {
-                                     // Player attack hit - enemy takes damage at end of player animation
-                                     println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
-                                     onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
-                                     battleSystem.setAttackHitState(true)
-                                 } else {
-                                     // Player attack missed - player takes damage at end of enemy animation
-                                     println("Player attack missed! Player will take damage from enemy attack")
-                                     onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), 0f) // Player takes damage
-                                     battleSystem.setAttackHitState(false)
-                                 }
-                                 
-                                 // Update HP from API
-                                 battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
+                                                                                                     // Set pending damage based on API result
+                                  if (apiResult.playerAttackHit) {
+                                      // Player attack hit - enemy takes damage at end of player animation
+                                      println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
+                                      onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
+                                      battleSystem.setAttackHitState(true)
+                                  } else {
+                                      // Player attack missed - enemy counter-attacks and player takes damage
+                                      println("Player attack missed! Enemy counter-attacks and player takes ${apiResult.opponentAttackDamage} damage")
+                                      onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), 0f) // Player takes damage
+                                      battleSystem.setAttackHitState(false)
+                                  }
                              }
                              2 -> {
                                  // Match is over - transition to results screen
