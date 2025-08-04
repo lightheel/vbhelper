@@ -253,12 +253,12 @@ fun PlayerBattleView(
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Player Digimon (center)
+            // Player Digimon (left side)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .size(80.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.CenterStart
             ) {
                 SpriteImage(
                     spriteName = activeCharacter?.charaId ?: "dim011_mon01",
