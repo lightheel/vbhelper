@@ -17,7 +17,7 @@ fun AnimatedSpriteImage(
 ) {
     val context = LocalContext.current
     val spriteManager = remember { BattleSpriteManager(context) }
-    val animationStateMachine = remember { DigimonAnimationStateMachine(characterId) }
+    val animationStateMachine = remember { DigimonAnimationStateMachine(characterId, context) }
     val coroutineScope = rememberCoroutineScope()
     
     var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }

@@ -4,6 +4,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
+import android.content.Context
+import java.io.File
+import com.google.gson.Gson
 
 enum class DigimonAnimationType {
     IDLE,
@@ -28,7 +31,8 @@ data class AnimationState(
 )
 
 class DigimonAnimationStateMachine(
-    private val characterId: String
+    private val characterId: String,
+    private val context: Context
 ) {
     var currentAnimation by mutableStateOf<DigimonAnimationType>(DigimonAnimationType.IDLE)
         private set
@@ -39,38 +43,24 @@ class DigimonAnimationStateMachine(
     var isPlaying by mutableStateOf(false)
         private set
     
-    // Animation mapping - maps animation types to sprite indices
-    // For now, we'll assume the sprite indices 0-11 correspond to the 12 animation types
-    private val animationMapping = mapOf(
-        DigimonAnimationType.IDLE to 0,
-        DigimonAnimationType.IDLE2 to 1,
-        DigimonAnimationType.WALK to 2,
-        DigimonAnimationType.WALK2 to 3,
-        DigimonAnimationType.RUN to 4,
-        DigimonAnimationType.RUN2 to 5,
-        DigimonAnimationType.WORKOUT to 6,
-        DigimonAnimationType.WORKOUT2 to 7,
-        DigimonAnimationType.HAPPY to 8,
-        DigimonAnimationType.SLEEP to 9,
-        DigimonAnimationType.ATTACK to 10,
-        DigimonAnimationType.FLEE to 11
+    // Animation mapping based on m_Name values
+    private val mNameToAnimationType = mapOf(
+        "01" to DigimonAnimationType.IDLE,
+        "02" to DigimonAnimationType.IDLE2,
+        "03" to DigimonAnimationType.WALK,
+        "04" to DigimonAnimationType.WALK2,
+        "05" to DigimonAnimationType.RUN,
+        "06" to DigimonAnimationType.RUN2,
+        "07" to DigimonAnimationType.WORKOUT,
+        "08" to DigimonAnimationType.WORKOUT2,
+        "09" to DigimonAnimationType.HAPPY,
+        "10" to DigimonAnimationType.SLEEP,
+        "11" to DigimonAnimationType.ATTACK,
+        "12" to DigimonAnimationType.FLEE
     )
     
-    // Animation frame sequences - defines which frames to cycle through for each animation
-    private val animationFrameSequences = mapOf(
-        DigimonAnimationType.IDLE to listOf(0, 1), // Cycle between idle frames
-        DigimonAnimationType.IDLE2 to listOf(1, 0), // Alternative idle cycle
-        DigimonAnimationType.WALK to listOf(2, 3), // Walk animation frames
-        DigimonAnimationType.WALK2 to listOf(3, 2), // Alternative walk cycle
-        DigimonAnimationType.RUN to listOf(4, 5), // Run animation frames
-        DigimonAnimationType.RUN2 to listOf(5, 4), // Alternative run cycle
-        DigimonAnimationType.WORKOUT to listOf(6, 7), // Workout animation frames
-        DigimonAnimationType.WORKOUT2 to listOf(7, 6), // Alternative workout cycle
-        DigimonAnimationType.HAPPY to listOf(8), // Single happy frame
-        DigimonAnimationType.SLEEP to listOf(9), // Single sleep frame
-        DigimonAnimationType.ATTACK to listOf(10), // Single attack frame
-        DigimonAnimationType.FLEE to listOf(11) // Single flee frame
-    )
+    // Cache for sprite file mappings
+    private var spriteFileMappings: Map<DigimonAnimationType, List<String>> = emptyMap()
     
     // Animation durations for each type
     private val animationDurations = mapOf(
@@ -84,9 +74,64 @@ class DigimonAnimationStateMachine(
         DigimonAnimationType.WORKOUT2 to 300L,
         DigimonAnimationType.HAPPY to 400L,
         DigimonAnimationType.SLEEP to 1000L,
-        DigimonAnimationType.ATTACK to 300L, // Longer for attack animation
+        DigimonAnimationType.ATTACK to 300L,
         DigimonAnimationType.FLEE to 150L
     )
+    
+    init {
+        loadSpriteFileMappings()
+    }
+    
+    private fun loadSpriteFileMappings() {
+        try {
+            val spriteBaseDir = File(context.filesDir, "battle_sprites/extracted_assets/sprites")
+            val gson = Gson()
+            
+            val mappings = mutableMapOf<DigimonAnimationType, MutableList<String>>()
+            
+            // Initialize all animation types
+            DigimonAnimationType.values().forEach { animationType ->
+                mappings[animationType] = mutableListOf()
+            }
+            
+            println("Loading sprite mappings for character: $characterId")
+            
+            // Scan all sprite files for this character
+            val spriteFiles = spriteBaseDir.listFiles { file ->
+                file.name.startsWith("${characterId}_sprite_") && file.name.endsWith(".json")
+            }
+            
+            println("Found ${spriteFiles?.size ?: 0} sprite files for $characterId")
+            
+            spriteFiles?.forEach { spriteFile ->
+                println("Processing sprite file: ${spriteFile.name}")
+                val spriteDataJson = spriteFile.readText()
+                val spriteData = gson.fromJson(spriteDataJson, SpriteData::class.java)
+                
+                println("  m_Name: ${spriteData.m_Name}")
+                
+                // Get the animation type from m_Name
+                val animationType = mNameToAnimationType[spriteData.m_Name]
+                if (animationType != null) {
+                    // Extract the sprite index from filename (e.g., "dim000_mon01_sprite_00.json" -> "00")
+                    val spriteIndex = spriteFile.name.substringAfter("_sprite_").substringBefore(".json")
+                    mappings[animationType]?.add(spriteIndex)
+                    println("  Mapped to animation type: $animationType with sprite index: $spriteIndex")
+                } else {
+                    println("  Unknown m_Name: ${spriteData.m_Name}")
+                }
+            }
+            
+            // Convert to immutable map
+            spriteFileMappings = mappings.mapValues { it.value.sorted() }
+            
+            println("Final sprite mappings for $characterId: $spriteFileMappings")
+            
+        } catch (e: Exception) {
+            println("Error loading sprite file mappings: ${e.message}")
+            e.printStackTrace()
+        }
+    }
     
     suspend fun playAnimation(animationType: DigimonAnimationType) {
         if (currentAnimation == animationType && isPlaying) {
@@ -96,19 +141,27 @@ class DigimonAnimationStateMachine(
         currentAnimation = animationType
         isPlaying = true
         
-        val frameSequence = animationFrameSequences[animationType] ?: listOf(0)
+        val frameSequence = spriteFileMappings[animationType] ?: listOf("00")
         val duration = animationDurations[animationType] ?: 100L
+        
+        // Ensure we have at least one frame
+        if (frameSequence.isEmpty()) {
+            println("Warning: No sprite files found for animation type $animationType")
+            currentSpriteIndex = 0
+            return
+        }
         
         // For non-looping animations like ATTACK, play once and return to IDLE
         if (animationType == DigimonAnimationType.ATTACK) {
-            currentSpriteIndex = frameSequence[0]
+            currentSpriteIndex = frameSequence.firstOrNull()?.toIntOrNull() ?: 0
             delay(duration)
             playAnimation(DigimonAnimationType.IDLE)
         } else {
             // For looping animations, cycle through frames
             var frameIndex = 0
             while (isPlaying && currentAnimation == animationType) {
-                currentSpriteIndex = frameSequence[frameIndex % frameSequence.size]
+                val spriteIndex = frameSequence[frameIndex % frameSequence.size]
+                currentSpriteIndex = spriteIndex.toIntOrNull() ?: 0
                 delay(duration)
                 frameIndex++
             }
