@@ -56,6 +56,22 @@ class DigimonAnimationStateMachine(
         DigimonAnimationType.FLEE to 11
     )
     
+    // Animation frame sequences - defines which frames to cycle through for each animation
+    private val animationFrameSequences = mapOf(
+        DigimonAnimationType.IDLE to listOf(0, 1), // Cycle between idle frames
+        DigimonAnimationType.IDLE2 to listOf(1, 0), // Alternative idle cycle
+        DigimonAnimationType.WALK to listOf(2, 3), // Walk animation frames
+        DigimonAnimationType.WALK2 to listOf(3, 2), // Alternative walk cycle
+        DigimonAnimationType.RUN to listOf(4, 5), // Run animation frames
+        DigimonAnimationType.RUN2 to listOf(5, 4), // Alternative run cycle
+        DigimonAnimationType.WORKOUT to listOf(6, 7), // Workout animation frames
+        DigimonAnimationType.WORKOUT2 to listOf(7, 6), // Alternative workout cycle
+        DigimonAnimationType.HAPPY to listOf(8), // Single happy frame
+        DigimonAnimationType.SLEEP to listOf(9), // Single sleep frame
+        DigimonAnimationType.ATTACK to listOf(10), // Single attack frame
+        DigimonAnimationType.FLEE to listOf(11) // Single flee frame
+    )
+    
     // Animation durations for each type
     private val animationDurations = mapOf(
         DigimonAnimationType.IDLE to 500L,
@@ -80,21 +96,21 @@ class DigimonAnimationStateMachine(
         currentAnimation = animationType
         isPlaying = true
         
-        val spriteIndex = animationMapping[animationType] ?: 0
-        currentSpriteIndex = spriteIndex
-        
+        val frameSequence = animationFrameSequences[animationType] ?: listOf(0)
         val duration = animationDurations[animationType] ?: 100L
         
         // For non-looping animations like ATTACK, play once and return to IDLE
         if (animationType == DigimonAnimationType.ATTACK) {
+            currentSpriteIndex = frameSequence[0]
             delay(duration)
             playAnimation(DigimonAnimationType.IDLE)
         } else {
-            // For looping animations, keep playing
+            // For looping animations, cycle through frames
+            var frameIndex = 0
             while (isPlaying && currentAnimation == animationType) {
+                currentSpriteIndex = frameSequence[frameIndex % frameSequence.size]
                 delay(duration)
-                // For now, we'll just keep the same sprite
-                // In the future, we could cycle through multiple sprites for each animation
+                frameIndex++
             }
         }
     }
