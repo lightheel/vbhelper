@@ -205,6 +205,11 @@ fun PlayerBattleView(
     opponent: APIBattleCharacter?,
     onSetPendingDamage: (Float, Float) -> Unit
 ) {
+    // Track previous character ID to detect transitions
+    var previousCharacterId by remember { mutableStateOf<String?>(null) }
+    var previousAttackPhase by remember { mutableStateOf<Int?>(null) }
+    var isTransitioning by remember { mutableStateOf(false) }
+    
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -293,20 +298,35 @@ fun PlayerBattleView(
                         else -> activeCharacter?.charaId ?: "dim011_mon01"  // Use player's character ID
                     }
                     
+                    // Handle sprite transition
+                    LaunchedEffect(characterId, battleSystem.attackPhase) {
+                        if ((previousCharacterId != null && previousCharacterId != characterId) ||
+                            (previousAttackPhase != null && previousAttackPhase != battleSystem.attackPhase)) {
+                            // Character ID or attack phase changed, start transition
+                            isTransitioning = true
+                            delay(100) // Brief invisibility period
+                            isTransitioning = false
+                        }
+                        previousCharacterId = characterId
+                        previousAttackPhase = battleSystem.attackPhase
+                    }
+                    
                     println("PlayerBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
                     
-                    AttackSpriteImage(
-                        characterId = characterId,
-                        isLarge = true,
-                        modifier = Modifier
-                            .size(60.dp)
-                            .offset(
-                                x = xOffset,
-                                y = 0.dp
-                            )
-                            .scale(if (battleSystem.attackPhase == 4) 1f else -1f, 1f), // Don't flip opponent attacks
-                        contentScale = ContentScale.Fit
-                    )
+                    if (!isTransitioning) {
+                        AttackSpriteImage(
+                            characterId = characterId,
+                            isLarge = true,
+                            modifier = Modifier
+                                .size(60.dp)
+                                .offset(
+                                    x = xOffset,
+                                    y = 0.dp
+                                )
+                                .scale(if (battleSystem.attackPhase == 4) 1f else -1f, 1f), // Don't flip opponent attacks
+                            contentScale = ContentScale.Fit
+                        )
+                    }
                 }
             }
         }
@@ -434,6 +454,11 @@ fun OpponentBattleView(
     activeCharacter: APIBattleCharacter? = null,
     playerCharacter: APIBattleCharacter? = null
 ) {
+    // Track previous character ID to detect transitions
+    var previousCharacterId by remember { mutableStateOf<String?>(null) }
+    var previousAttackPhase by remember { mutableStateOf<Int?>(null) }
+    var isTransitioning by remember { mutableStateOf(false) }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -478,20 +503,35 @@ fun OpponentBattleView(
                     else -> "dim011_mon01"
                 }
                 
+                // Handle sprite transition
+                LaunchedEffect(characterId, battleSystem.attackPhase) {
+                    if ((previousCharacterId != null && previousCharacterId != characterId) ||
+                        (previousAttackPhase != null && previousAttackPhase != battleSystem.attackPhase)) {
+                        // Character ID or attack phase changed, start transition
+                        isTransitioning = true
+                        delay(100) // Brief invisibility period
+                        isTransitioning = false
+                    }
+                    previousCharacterId = characterId
+                    previousAttackPhase = battleSystem.attackPhase
+                }
+                
                 println("OpponentBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
                 
-                AttackSpriteImage(
-                    characterId = characterId,
-                    isLarge = true,
-                    modifier = Modifier
-                        .size(60.dp)
-                        .offset(
-                            x = xOffset,
-                            y = 0.dp
-                        )
-                        .scale(if (battleSystem.attackPhase == 2) -1f else 1f, 1f), // Flip player attacks only
-                    contentScale = ContentScale.Fit
-                )
+                if (!isTransitioning) {
+                    AttackSpriteImage(
+                        characterId = characterId,
+                        isLarge = true,
+                        modifier = Modifier
+                            .size(60.dp)
+                            .offset(
+                                x = xOffset,
+                                y = 0.dp
+                            )
+                            .scale(if (battleSystem.attackPhase == 2) -1f else 1f, 1f), // Flip player attacks only
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
         }
 
