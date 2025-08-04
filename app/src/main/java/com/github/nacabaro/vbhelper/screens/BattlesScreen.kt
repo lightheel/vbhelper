@@ -185,7 +185,8 @@ fun BattleScreen(
                     stage = stage,
                     opponentName = opponentName,
                     attackAnimationProgress = battleSystem.attackProgress,
-                    activeCharacter = opponentCharacter
+                    activeCharacter = opponentCharacter,
+                    playerCharacter = activeCharacter
                 )
             }
         }
@@ -430,7 +431,8 @@ fun OpponentBattleView(
     stage: String,
     opponentName: String,
     attackAnimationProgress: Float,
-    activeCharacter: APIBattleCharacter? = null
+    activeCharacter: APIBattleCharacter? = null,
+    playerCharacter: APIBattleCharacter? = null
 ) {
     Column(
         modifier = Modifier
@@ -469,10 +471,17 @@ fun OpponentBattleView(
                     else -> 0.dp
                 }
                 
+                // Use correct character ID based on attack phase
+                val characterId = when (battleSystem.attackPhase) {
+                    2 -> playerCharacter?.charaId ?: "dim011_mon01"  // Use player's character ID for player attack
+                    3 -> activeCharacter?.charaId ?: "dim011_mon01"  // Use opponent's character ID for opponent attack
+                    else -> "dim011_mon01"
+                }
+                
                 println("OpponentBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
                 
                 AttackSpriteImage(
-                    characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                    characterId = characterId,
                     isLarge = true,
                     modifier = Modifier
                         .size(60.dp)
@@ -480,7 +489,7 @@ fun OpponentBattleView(
                             x = xOffset,
                             y = 0.dp
                         )
-                        .scale(if (battleSystem.isPlayerAttacking) -1f else 1f, 1f), // Flip player attacks
+                        .scale(if (battleSystem.attackPhase == 2) -1f else 1f, 1f), // Flip player attacks only
                     contentScale = ContentScale.Fit
                 )
             }
