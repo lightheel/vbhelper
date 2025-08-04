@@ -10,14 +10,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Spacer
-//import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-//import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.Button
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,358 +34,133 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-//import androidx.compose.animation.core.animateFloatAsState
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.github.nacabaro.vbhelper.battle.APIBattleCharacter
-//import com.github.nacabaro.vbhelper.battle.BattleSpriteManager
 import android.util.Log
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.battle.RetrofitHelper
 import com.github.nacabaro.vbhelper.battle.SpriteImage
 import com.github.nacabaro.vbhelper.battle.AttackSpriteImage
 import com.github.nacabaro.vbhelper.battle.SpriteFileManager
-
-class ArenaBattleSystem {
-    companion object {
-        private const val TAG = "VBArenaBattleSystem"
-        const val ANIMATION_DURATION = 1500L
-    }
-
-    // Battle state
-    private var _playerCurrentHP by mutableStateOf(100f)
-    private var _playerMaxHP by mutableStateOf(100f)
-    private var _opponentCurrentHP by mutableStateOf(100f)
-    private var _opponentMaxHP by mutableStateOf(100f)
-    private var _isAttacking by mutableStateOf(false)
-    private var _attackProgress by mutableStateOf(0f)
-    private var _currentView by mutableStateOf(0) // 0 = player, 1 = opponent
-    private var _isAttackVisible by mutableStateOf(false)
-    private var _critBarProgress by mutableStateOf(0)
-    private var _isAttackButtonEnabled by mutableStateOf(true)
-    
-    // Attack animation state
-    private var _attackIsHit by mutableStateOf(false)
-    private var _isPlayerAttacking by mutableStateOf(false)
-
-    // Exposed state for Compose
-    val playerCurrentHP: Float get() = _playerCurrentHP
-    val playerMaxHP: Float get() = _playerMaxHP
-    val opponentCurrentHP: Float get() = _opponentCurrentHP
-    val opponentMaxHP: Float get() = _opponentMaxHP
-    val isAttacking: Boolean get() = _isAttacking
-    val attackProgress: Float get() = _attackProgress
-    val currentView: Int get() = _currentView
-    val isAttackVisible: Boolean get() = _isAttackVisible
-    val critBarProgress: Int get() = _critBarProgress
-    val isAttackButtonEnabled: Boolean get() = _isAttackButtonEnabled
-    
-    // Attack animation state
-    val attackIsHit: Boolean get() = _attackIsHit
-    val isPlayerAttacking: Boolean get() = _isPlayerAttacking
-
-    //Initialize battle with character data
-    fun initializeBattle(
-        playerHP: Float = 100f,
-        opponentHP: Float = 100f,
-        playerMaxHP: Float = 100f,
-        opponentMaxHP: Float = 100f
-    ) {
-        _playerCurrentHP = playerHP
-        _playerMaxHP = playerMaxHP
-        _opponentCurrentHP = opponentHP
-        _opponentMaxHP = opponentMaxHP
-        _currentView = 0
-        _isAttacking = false
-        _attackProgress = 0f
-        _isAttackVisible = false
-        _critBarProgress = 0
-        _isAttackButtonEnabled = true
-
-        Log.d(TAG, "Battle initialized: Player HP $playerHP/$playerMaxHP, Opponent HP $opponentHP/$opponentMaxHP")
-    }
-
-    //Start player attack
-    fun startPlayerAttack() {
-        _isAttacking = true
-        _currentView = 0
-        _isAttackVisible = true
-        _isAttackButtonEnabled = false
-        _isPlayerAttacking = true
-        _attackProgress = 0f
-        Log.d(TAG, "Player attack started")
-    }
-
-    //Start opponent attack
-    fun startOpponentAttack() {
-        _isAttacking = true
-        _currentView = 1
-        _isAttackVisible = true
-        _isPlayerAttacking = false
-        _attackProgress = 0f
-        Log.d(TAG, "Opponent attack started")
-    }
-
-    //Update attack animation progress
-    fun updateAttackAnimation(progress: Float) {
-        _attackProgress = progress
-    }
-
-    //Complete attack animation
-    fun completeAttackAnimation(playerDamage: Float = 0f, opponentDamage: Float = 0f) {
-        _isAttacking = false
-        _isAttackVisible = false
-        _attackProgress = 0f
-        _attackIsHit = false
-        
-        // Apply damage at end of animation
-        if (playerDamage > 0) {
-            applyDamage(true, playerDamage) // Player takes damage
-            println("Player took $playerDamage damage at end of animation")
-        }
-        if (opponentDamage > 0) {
-            applyDamage(false, opponentDamage) // Opponent takes damage
-            println("Opponent took $opponentDamage damage at end of animation")
-        }
-        
-        // Don't enable attack button here - it will be enabled when we switch back to player view
-        Log.d(TAG, "Attack animation completed")
-    }
-
-    //Apply damage to player or opponent
-    fun applyDamage(isPlayer: Boolean, damage: Float) {
-        if (isPlayer) {
-            _playerCurrentHP = (_playerCurrentHP - damage).coerceAtLeast(0f)
-            Log.d(TAG, "Player took $damage damage. HP: ${_playerCurrentHP}/${_playerMaxHP}")
-        } else {
-            _opponentCurrentHP = (_opponentCurrentHP - damage).coerceAtLeast(0f)
-            Log.d(TAG, "Opponent took $damage damage. HP: ${_opponentCurrentHP}/${_opponentMaxHP}")
-        }
-    }
-
-    //Update critical bar progress
-    fun updateCritBarProgress(progress: Int) {
-        _critBarProgress = progress
-    }
-
-    // Update HP from API response
-    fun updateHPFromAPI(playerHP: Float, opponentHP: Float) {
-        _playerCurrentHP = playerHP.coerceAtLeast(0f)
-        _opponentCurrentHP = opponentHP.coerceAtLeast(0f)
-        Log.d(TAG, "HP updated from API: Player HP $playerHP, Opponent HP $opponentHP")
-    }
-
-
-    //Check if battle is over
-    fun isBattleOver(): Boolean {
-        return _playerCurrentHP <= 0f || _opponentCurrentHP <= 0f
-    }
-
-    //Get battle winner
-    fun getWinner(): String? {
-        return when {
-            _playerCurrentHP <= 0f -> "opponent"
-            _opponentCurrentHP <= 0f -> "player"
-            else -> null
-        }
-    }
-
-    //Reset battle state
-    fun resetBattle() {
-        _playerCurrentHP = _playerMaxHP
-        _opponentCurrentHP = _opponentMaxHP
-        _isAttacking = false
-        _attackProgress = 0f
-        _currentView = 0
-        _isAttackVisible = false
-        _critBarProgress = 0
-        _isAttackButtonEnabled = true
-        Log.d(TAG, "Battle reset")
-    }
-
-    //Clean up resources
-    fun cleanup() {
-        _isAttacking = false
-        _isAttackVisible = false
-        _attackProgress = 0f
-        Log.d(TAG, "Battle system cleaned up")
-    }
-
-    // Enable attack button
-    fun enableAttackButton() {
-        _isAttackButtonEnabled = true
-        Log.d(TAG, "Attack button enabled")
-    }
-
-    // Disable attack button
-    fun disableAttackButton() {
-        _isAttackButtonEnabled = false
-        Log.d(TAG, "Attack button disabled")
-    }
-    
-    // Set attack hit/miss state
-    fun setAttackHitState(isHit: Boolean) {
-        _attackIsHit = isHit
-        Log.d(TAG, "Attack hit state set to: $isHit")
-    }
-    
-    // Switch to specific view
-    fun switchToView(view: Int) {
-        _currentView = view
-        Log.d(TAG, "Switched to view: $view")
-    }
-}
+import com.github.nacabaro.vbhelper.battle.ArenaBattleSystem
 
 @Composable
 fun BattleScreen(
-    battleSystem: ArenaBattleSystem,
-    stage: String = "rookie",
-    playerName: String = "Player",
-    opponentName: String = "Opponent",
-    activeCharacter: APIBattleCharacter? = null,
-    opponentCharacter: APIBattleCharacter? = null,
-    onBattleComplete: (String?) -> Unit = {},
-    onExitBattle: () -> Unit = {},
+    stage: String,
+    playerName: String,
+    opponentName: String,
+    activeCharacter: APIBattleCharacter?,
+    opponentCharacter: APIBattleCharacter?,
+    onAttackClick: () -> Unit,
     context: android.content.Context? = null
 ) {
-    var animationProgress by remember { mutableStateOf(0f) }
+    val battleSystem = remember { ArenaBattleSystem() }
+    
+    // Pending damage state for API integration
     var pendingPlayerDamage by remember { mutableStateOf(0f) }
     var pendingOpponentDamage by remember { mutableStateOf(0f) }
-    var currentAttackType by remember { mutableStateOf("") } // Track if this is player or enemy attack
-
+    
     // Critical bar timer
     LaunchedEffect(Unit) {
         while (true) {
             delay(30)
-            if (!battleSystem.isAttacking) {
+            if (battleSystem.attackPhase == 0) { // Only update when not attacking
                 battleSystem.updateCritBarProgress((battleSystem.critBarProgress + 5) % 101)
             }
         }
     }
-
-    // Player attack animation
-    LaunchedEffect(battleSystem.isAttacking, battleSystem.isPlayerAttacking) {
-        if (battleSystem.isAttacking && battleSystem.isPlayerAttacking) {
-            animationProgress = 0f
-            println("=== Starting PLAYER attack animation ===")
-            println("Current view: ${battleSystem.currentView}")
-            println("Is player attacking: ${battleSystem.isPlayerAttacking}")
-            
-            // Store the current attack type
-            currentAttackType = "player"
-            println("Attack type: $currentAttackType")
-            
-            // Complete attack animation across the full screen
-            animate(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = tween(ArenaBattleSystem.ANIMATION_DURATION.toInt())
-            ) { value, _ ->
-                animationProgress = value
-                battleSystem.updateAttackAnimation(value)
-                println("Animation progress: $value")
-            }
-            
-            println("=== PLAYER Animation completed ===")
-            println("Final animation progress: $animationProgress")
-            
-            // Complete the attack animation
-            battleSystem.completeAttackAnimation(pendingPlayerDamage, pendingOpponentDamage)
-            
-            // Reset pending damage
-            pendingPlayerDamage = 0f
-            pendingOpponentDamage = 0f
-            
-            // Player attack just completed - switch to enemy view
-            println("Player attack completed, switching to enemy view")
-            battleSystem.switchToView(1)
-            
-            // Check if battle is over
-            if (battleSystem.isBattleOver()) {
-                onBattleComplete(battleSystem.getWinner())
-            }
-        }
-    }
     
-    // Enemy attack trigger (separate from animation)
-    LaunchedEffect(currentAttackType) {
-        if (currentAttackType == "player") {
-            // Player attack just completed - trigger enemy attack after delay
-            delay(500) // Wait before enemy attacks back
-            println("Starting enemy attack")
-            battleSystem.startOpponentAttack()
-            println("Enemy attack triggered - LaunchedEffect should re-trigger")
-        }
-    }
-    
-    // Enemy attack animation
-    LaunchedEffect(battleSystem.isAttacking, battleSystem.isPlayerAttacking) {
-        if (battleSystem.isAttacking && !battleSystem.isPlayerAttacking) {
-            animationProgress = 0f
-            println("=== Starting ENEMY attack animation ===")
-            println("Current view: ${battleSystem.currentView}")
-            println("Is player attacking: ${battleSystem.isPlayerAttacking}")
-            
-            // Store the current attack type
-            currentAttackType = "enemy"
-            println("Attack type: $currentAttackType")
-            
-            // Complete attack animation across the full screen
-            animate(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = tween(ArenaBattleSystem.ANIMATION_DURATION.toInt())
-            ) { value, _ ->
-                animationProgress = value
-                battleSystem.updateAttackAnimation(value)
-                println("Animation progress: $value")
+    // Animation for attack phases
+    LaunchedEffect(battleSystem.attackPhase) {
+        when (battleSystem.attackPhase) {
+            1 -> {
+                // Phase 1: Player attack on player screen
+                println("Starting Phase 1: Player attack on player screen")
+                var progress = 0f
+                while (progress < 1f) {
+                    progress += 0.016f // 60 FPS
+                    battleSystem.setAttackProgress(progress)
+                    delay(16) // 60 FPS
+                }
+                println("Phase 1 completed, advancing to Phase 2")
+                battleSystem.advanceAttackPhase()
             }
-            
-            println("=== ENEMY Animation completed ===")
-            println("Final animation progress: $animationProgress")
-            
-            // Complete the attack animation
-            battleSystem.completeAttackAnimation(pendingPlayerDamage, pendingOpponentDamage)
-            
-            // Reset pending damage
-            pendingPlayerDamage = 0f
-            pendingOpponentDamage = 0f
-            
-            // Enemy attack just completed - switch back to player view
-            println("Enemy attack completed, switching back to player view")
-            battleSystem.switchToView(0)
-            // Enable attack button when we're back on player view
-            battleSystem.enableAttackButton()
-            
-            // Check if battle is over
-            if (battleSystem.isBattleOver()) {
-                onBattleComplete(battleSystem.getWinner())
+            2 -> {
+                // Phase 2: Player attack on opponent screen
+                println("Starting Phase 2: Player attack on opponent screen")
+                battleSystem.switchToView(1)
+                var progress = 0f
+                while (progress < 1f) {
+                    progress += 0.016f // 60 FPS
+                    battleSystem.setAttackProgress(progress)
+                    delay(16) // 60 FPS
+                }
+                println("Phase 2 completed, applying damage and starting opponent attack")
+                // Apply player's damage and start opponent attack
+                battleSystem.completeAttackAnimation(opponentDamage = pendingOpponentDamage)
+                pendingOpponentDamage = 0f
+                delay(500)
+                battleSystem.startOpponentAttack()
+            }
+            3 -> {
+                // Phase 3: Opponent attack on opponent screen
+                println("Starting Phase 3: Opponent attack on opponent screen")
+                battleSystem.switchToView(1)
+                var progress = 0f
+                while (progress < 1f) {
+                    progress += 0.016f // 60 FPS
+                    battleSystem.setAttackProgress(progress)
+                    delay(16) // 60 FPS
+                }
+                println("Phase 3 completed, advancing to Phase 4")
+                battleSystem.advanceAttackPhase()
+            }
+            4 -> {
+                // Phase 4: Opponent attack on player screen
+                println("Starting Phase 4: Opponent attack on player screen")
+                battleSystem.switchToView(0)
+                var progress = 0f
+                while (progress < 1f) {
+                    progress += 0.016f // 60 FPS
+                    battleSystem.setAttackProgress(progress)
+                    delay(16) // 60 FPS
+                }
+                println("Phase 4 completed, applying damage and resetting")
+                // Apply opponent's damage and reset
+                battleSystem.completeAttackAnimation(playerDamage = pendingPlayerDamage)
+                pendingPlayerDamage = 0f
+                battleSystem.resetAttackState()
+                battleSystem.enableAttackButton()
+                
+                // Check if battle is over
+                if (battleSystem.checkBattleOver()) {
+                    battleSystem.endBattle()
+                    onAttackClick()
+                }
             }
         }
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        //println("Current battle view: ${battleSystem.currentView}")
         when (battleSystem.currentView) {
             0 -> {
-                //println("Showing PlayerBattleView")
+                // Player view
                 PlayerBattleView(
                     battleSystem = battleSystem,
                     stage = stage,
                     playerName = playerName,
-                    attackAnimationProgress = animationProgress,
+                    attackAnimationProgress = battleSystem.attackProgress,
                     onAttackClick = {
                         battleSystem.startPlayerAttack()
-                        // Damage will be applied at end of animation via pending damage system
                     },
                     activeCharacter = activeCharacter,
                     context = context,
@@ -399,26 +172,15 @@ fun BattleScreen(
                 )
             }
             1 -> {
-                //println("Showing OpponentBattleView")
-                 OpponentBattleView(
-                     battleSystem = battleSystem,
-                     stage = stage,
-                     opponentName = opponentName,
-                     attackAnimationProgress = animationProgress,
-                     activeCharacter = opponentCharacter
-                 )
+                // Opponent view
+                OpponentBattleView(
+                    battleSystem = battleSystem,
+                    stage = stage,
+                    opponentName = opponentName,
+                    attackAnimationProgress = battleSystem.attackProgress,
+                    activeCharacter = opponentCharacter
+                )
             }
-        }
-
-        // Exit button
-        Button(
-            onClick = onExitBattle,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-        ) {
-            Text("Exit", color = Color.White)
         }
     }
 }
@@ -430,54 +192,18 @@ fun PlayerBattleView(
     playerName: String,
     attackAnimationProgress: Float,
     onAttackClick: () -> Unit,
-    activeCharacter: APIBattleCharacter? = null,
-    context: android.content.Context? = null,
-    opponent: APIBattleCharacter? = null,
+    activeCharacter: APIBattleCharacter?,
+    context: android.content.Context?,
+    opponent: APIBattleCharacter?,
     onSetPendingDamage: (Float, Float) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Health display
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text("Current HP", color = Color.White, fontSize = 12.sp)
-                Text(
-                    text = battleSystem.playerCurrentHP.toInt().toString(),
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Column {
-                Text("Max HP", color = Color.White, fontSize = 12.sp)
-                Text(
-                    text = battleSystem.playerMaxHP.toInt().toString(),
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        // Health bar
-        LinearProgressIndicator(
-            progress = (battleSystem.playerCurrentHP / battleSystem.playerMaxHP).coerceIn(0f, 1f),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(20.dp),
-            color = Color.Green,
-            trackColor = Color.Gray
-        )
-
-        // Player character with attack animation
+        // Player Digimon
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -485,50 +211,44 @@ fun PlayerBattleView(
             contentAlignment = Alignment.CenterStart
         ) {
             SpriteImage(
-                spriteName = "00", // The sprite number (00, 01, 02, etc.)
-                atlasName = activeCharacter?.charaId ?: when (stage) {
-                    "rookie" -> "dim000_mon03"
-                    "champion" -> "dim012_mon04"
-                    "ultimate" -> "dim137_mon09"
-                    "mega" -> "dim012_mon14"
-                    else -> "dim011_mon01"
-                },
+                spriteName = activeCharacter?.charaId ?: "dim011_mon01",
+                atlasName = "dim011_mon01",
                 modifier = Modifier
                     .size(80.dp)
-                    .scale(-1f, 1f), // Flip horizontally
+                    .scale(-1f, 1f), // Flip player Digimon horizontally
                 contentScale = ContentScale.Fit
             )
-
-            // Attack animation overlay
-            if (attackAnimationProgress > 0) {
-                // Show player attack on both player and enemy screens
-                // Show enemy attack on both enemy and player screens
-                val shouldShowAttack = true // Always show attack during animation
-                
-                if (shouldShowAttack) {
-                    val xOffset = if (battleSystem.isPlayerAttacking) {
-                        // Player attack: start from player position (left side) and fly to right edge
-                        (attackAnimationProgress * 400 - 200).dp
-                    } else {
-                        // Enemy attack: start from right edge and fly to left edge
-                        (-attackAnimationProgress * 400 + 200).dp
-                    }
-                    
-                    println("Attack sprite - Progress: $attackAnimationProgress, IsPlayerAttacking: ${battleSystem.isPlayerAttacking}, X Offset: $xOffset")
-                    
-                    AttackSpriteImage(
-                        characterId = activeCharacter?.charaId ?: "dim011_mon01",
-                        isLarge = true,
-                        modifier = Modifier
-                            .size(60.dp)
-                            .offset(
-                                x = xOffset,
-                                y = 0.dp
-                            )
-                            .scale(if (battleSystem.isPlayerAttacking) -1f else 1f, 1f), // Flip player attacks
-                        contentScale = ContentScale.Fit
-                    )
+            
+            // Attack sprite visibility and positioning based on attack phase
+            val shouldShowAttack = when (battleSystem.attackPhase) {
+                1 -> true  // Player attack on player screen
+                2 -> true  // Player attack on opponent screen  
+                3 -> false // Opponent attack on opponent screen
+                4 -> false // Opponent attack on player screen
+                else -> false
+            }
+            
+            if (shouldShowAttack) {
+                val xOffset = when (battleSystem.attackPhase) {
+                    1 -> (attackAnimationProgress * 400 - 200).dp  // Player attack on player screen
+                    2 -> (attackAnimationProgress * 400 - 200).dp  // Player attack on opponent screen
+                    else -> 0.dp
                 }
+                
+                println("PlayerBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
+                
+                AttackSpriteImage(
+                    characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                    isLarge = true,
+                    modifier = Modifier
+                        .size(60.dp)
+                        .offset(
+                            x = xOffset,
+                            y = 0.dp
+                        )
+                        .scale(-1f, 1f), // Flip player attacks
+                    contentScale = ContentScale.Fit
+                )
             }
         }
 
@@ -543,7 +263,6 @@ fun PlayerBattleView(
         )
 
         // Attack button
-        //println("PlayerBattleView: Attack button enabled = ${battleSystem.isAttackButtonEnabled}")
         Button(
             onClick = {
                 println("Attack button clicked!")
@@ -595,7 +314,6 @@ fun PlayerBattleView(
                                  // Handle damage timing based on hit/miss
                                  if (apiResult.playerAttackHit) {
                                      // Player attack hit - enemy takes damage at end of player animation
-                                     // Player will dodge enemy attack
                                      println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
                                      onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
                                      battleSystem.setAttackHitState(true)
@@ -606,42 +324,24 @@ fun PlayerBattleView(
                                      battleSystem.setAttackHitState(false)
                                  }
                                  
-                                 // Don't update HP immediately - wait for animation to complete
-                                 // battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
-                                 
-                                 // Keep attack button enabled for next round
+                                 // Update HP from API
+                                 battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
+                             }
+                             2 -> {
+                                 // Match is over - transition to results screen
+                                 println("Match is over! Winner: ${apiResult.winner}")
+                                 battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
+                                 onAttackClick() // This will transition to battle-results screen
+                             }
+                             -1 -> {
+                                 // Error occurred
+                                 println("API Error: ${apiResult.status}")
+                                 battleSystem.resetAttackState()
                                  battleSystem.enableAttackButton()
                              }
-                            2 -> {
-                                // Match is over - report winner and complete battle
-                                println("Match over! Winner: ${apiResult.winner}")
-                                println("Final HP - Player: ${apiResult.playerHP}, Opponent: ${apiResult.opponentHP}")
-                                
-                                // Don't update HP immediately - let animation complete first
-                                // battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
-                                
-                                // Disable attack button since match is over
-                                battleSystem.disableAttackButton()
-                                
-                                // Complete the battle
-                                onAttackClick()
-                            }
-                            -1 -> {
-                                // Error state
-                                println("API Error: ${apiResult.status}")
-                                // Re-enable attack button on error
-                                battleSystem.enableAttackButton()
-                            }
-                            else -> {
-                                println("Unknown state: ${apiResult.state}")
-                                // Re-enable attack button on unknown state
-                                battleSystem.enableAttackButton()
-                            }
-                        }
-                    }
+                         }
+                     }
                 }
-                
-                // Don't call onAttackClick() here - only call it when match is over (state = 2)
             },
             enabled = battleSystem.isAttackButtonEnabled,
             modifier = Modifier
@@ -671,44 +371,9 @@ fun OpponentBattleView(
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+        verticalArrangement = Arrangement.Center
     ) {
-        // Health display
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text("Current HP", color = Color.White, fontSize = 12.sp)
-                Text(
-                    text = battleSystem.opponentCurrentHP.toInt().toString(),
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Column {
-                Text("Max HP", color = Color.White, fontSize = 12.sp)
-                Text(
-                    text = battleSystem.opponentMaxHP.toInt().toString(),
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        // Health bar
-        LinearProgressIndicator(
-            progress = (battleSystem.opponentCurrentHP / battleSystem.opponentMaxHP).coerceIn(0f, 1f),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(20.dp),
-            color = Color.Green,
-            trackColor = Color.Gray
-        )
-
-        // Opponent character with attack animation
+        // Opponent Digimon
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -716,49 +381,42 @@ fun OpponentBattleView(
             contentAlignment = Alignment.CenterEnd
         ) {
             SpriteImage(
-                spriteName = "00", // The sprite number (00, 01, 02, etc.)
-                atlasName = activeCharacter?.charaId ?: when (stage) {
-                    "rookie" -> "dim000_mon03"
-                    "champion" -> "dim012_mon04"
-                    "ultimate" -> "dim137_mon09"
-                    "mega" -> "dim012_mon14"
-                    else -> "dim011_mon01"
-                },
-                modifier = Modifier
-                    .size(80.dp),
+                spriteName = activeCharacter?.charaId ?: "dim011_mon01",
+                atlasName = "dim011_mon01",
+                modifier = Modifier.size(80.dp),
                 contentScale = ContentScale.Fit
             )
-
-            // Attack animation overlay
-            if (attackAnimationProgress > 0) {
-                // Show player attack on both player and enemy screens
-                // Show enemy attack on both enemy and player screens
-                val shouldShowAttack = true // Always show attack during animation
-                
-                if (shouldShowAttack) {
-                    val xOffset = if (battleSystem.isPlayerAttacking) {
-                        // Player attack: start from left edge and fly to right edge
-                        (attackAnimationProgress * 400 - 200).dp
-                    } else {
-                        // Enemy attack: start from enemy position (right side) and fly to left edge
-                        (-attackAnimationProgress * 400 + 200).dp
-                    }
-                    
-                    println("OpponentBattleView - Attack sprite - Progress: $attackAnimationProgress, IsPlayerAttacking: ${battleSystem.isPlayerAttacking}, X Offset: $xOffset")
-                    
-                    AttackSpriteImage(
-                        characterId = activeCharacter?.charaId ?: "dim011_mon01",
-                        isLarge = true,
-                        modifier = Modifier
-                            .size(60.dp)
-                            .offset(
-                                x = xOffset,
-                                y = 0.dp
-                            )
-                            .scale(if (battleSystem.isPlayerAttacking) -1f else 1f, 1f), // Flip player attacks
-                        contentScale = ContentScale.Fit
-                    )
+            
+            // Attack sprite visibility and positioning based on attack phase
+            val shouldShowAttack = when (battleSystem.attackPhase) {
+                1 -> false // Player attack on player screen
+                2 -> true  // Player attack on opponent screen  
+                3 -> true  // Opponent attack on opponent screen
+                4 -> false // Opponent attack on player screen
+                else -> false
+            }
+            
+            if (shouldShowAttack) {
+                val xOffset = when (battleSystem.attackPhase) {
+                    2 -> (attackAnimationProgress * 400 - 200).dp  // Player attack on opponent screen
+                    3 -> (-attackAnimationProgress * 400 + 200).dp  // Opponent attack on opponent screen
+                    else -> 0.dp
                 }
+                
+                println("OpponentBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
+                
+                AttackSpriteImage(
+                    characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                    isLarge = true,
+                    modifier = Modifier
+                        .size(60.dp)
+                        .offset(
+                            x = xOffset,
+                            y = 0.dp
+                        )
+                        .scale(if (battleSystem.isPlayerAttacking) -1f else 1f, 1f), // Flip player attacks
+                    contentScale = ContentScale.Fit
+                )
             }
         }
 
@@ -781,6 +439,7 @@ fun BattlesScreen() {
 
     var expanded by remember { mutableStateOf(false) }
     var selectedStage by remember { mutableStateOf("") }
+    var currentStage by remember { mutableStateOf("rookie") }
 
     val context = LocalContext.current
     
@@ -798,35 +457,18 @@ fun BattlesScreen() {
     val rookieButton = @Composable {
         Button(
             onClick = {
-                //println("Rookie button clicked - starting API call")
                 try {
                     RetrofitHelper().getOpponents(context, "rookie") { opponents ->
-                        //println("API call completed successfully")
                         try {
-                            //println("Received opponents data: $opponents")
-                            //println("Opponents list size: ${opponents.opponentsList.size}")
-
-                            // For loop to check opponents and print their names
-                            //for (opponent in opponents.opponentsList) {
-                            //    println("Opponent: ${opponent.name}")
-                            //}
-
-                            // Store the opponents in your ArrayList
                             opponentsList.clear()
                             opponentsList.addAll(opponents.opponentsList)
-
-                            //println("Updated opponentsList size: ${opponentsList.size}")
-                            //println("About to change view to rookie")
                             currentView = "rookie"
-                            //println("View changed to rookie")
                         } catch (e: Exception) {
-                            //println("Error processing opponents data: ${e.message}")
                             Log.d(TAG, "Error processing opponents data: ${e.message}")
                             e.printStackTrace()
                         }
                     }
                 } catch (e: Exception) {
-                    //println("Error calling getOpponents: ${e.message}")
                     Log.d(TAG,"Error calling getOpponents: ${e.message}")
                     e.printStackTrace()
                 }
@@ -839,35 +481,18 @@ fun BattlesScreen() {
     val championButton = @Composable {
         Button(
             onClick = {
-                //println("Champion button clicked - starting API call")
                 try {
                     RetrofitHelper().getOpponents(context, "champion") { opponents ->
-                        //println("API call completed successfully")
                         try {
-                            //println("Received opponents data: $opponents")
-                            //println("Opponents list size: ${opponents.opponentsList.size}")
-
-                            // For loop to check opponents and print their names
-                            //for (opponent in opponents.opponentsList) {
-                            //    println("Opponent: ${opponent.name}")
-                            //}
-
-                            // Store the opponents in your ArrayList
                             opponentsList.clear()
                             opponentsList.addAll(opponents.opponentsList)
-
-                            //println("Updated opponentsList size: ${opponentsList.size}")
-                            //println("About to change view to champion")
                             currentView = "champion"
-                            //println("View changed to champion")
                         } catch (e: Exception) {
-                            //println("Error processing opponents data: ${e.message}")
                             Log.d(TAG, "Error processing opponents data: ${e.message}")
                             e.printStackTrace()
                         }
                     }
                 } catch (e: Exception) {
-                    //println("Error calling getOpponents: ${e.message}")
                     Log.d(TAG,"Error calling getOpponents: ${e.message}")
                     e.printStackTrace()
                 }
@@ -880,35 +505,18 @@ fun BattlesScreen() {
     val ultimateButton = @Composable {
         Button(
             onClick = {
-                //println("Ultimate button clicked - starting API call")
                 try {
                     RetrofitHelper().getOpponents(context, "ultimate") { opponents ->
-                        //println("API call completed successfully")
                         try {
-                            //println("Received opponents data: $opponents")
-                            //println("Opponents list size: ${opponents.opponentsList.size}")
-
-                            // For loop to check opponents and print their names
-                            //for (opponent in opponents.opponentsList) {
-                            //    println("Opponent: ${opponent.name}")
-                            //}
-
-                            // Store the opponents in your ArrayList
                             opponentsList.clear()
                             opponentsList.addAll(opponents.opponentsList)
-
-                            //println("Updated opponentsList size: ${opponentsList.size}")
-                            //println("About to change view to ultimate")
                             currentView = "ultimate"
-                            //println("View changed to ultimate")
                         } catch (e: Exception) {
-                            //println("Error processing opponents data: ${e.message}")
                             Log.d(TAG, "Error processing opponents data: ${e.message}")
                             e.printStackTrace()
                         }
                     }
                 } catch (e: Exception) {
-                    //println("Error calling getOpponents: ${e.message}")
                     Log.d(TAG,"Error calling getOpponents: ${e.message}")
                     e.printStackTrace()
                 }
@@ -921,35 +529,18 @@ fun BattlesScreen() {
     val megaButton = @Composable {
         Button(
             onClick = {
-                //println("Mega button clicked - starting API call")
                 try {
                     RetrofitHelper().getOpponents(context, "mega") { opponents ->
-                        //println("API call completed successfully")
                         try {
-                            //println("Received opponents data: $opponents")
-                            //println("Opponents list size: ${opponents.opponentsList.size}")
-
-                            // For loop to check opponents and print their names
-                            //for (opponent in opponents.opponentsList) {
-                            //    println("Opponent: ${opponent.name}")
-                            //}
-
-                            // Store the opponents in your ArrayList
                             opponentsList.clear()
                             opponentsList.addAll(opponents.opponentsList)
-
-                            //println("Updated opponentsList size: ${opponentsList.size}")
-                            //println("About to change view to mega")
                             currentView = "mega"
-                            //println("View changed to mega")
                         } catch (e: Exception) {
-                            //println("Error processing opponents data: ${e.message}")
                             Log.d(TAG, "Error processing opponents data: ${e.message}")
                             e.printStackTrace()
                         }
                     }
                 } catch (e: Exception) {
-                    //println("Error calling getOpponents: ${e.message}")
                     Log.d(TAG,"Error calling getOpponents: ${e.message}")
                     e.printStackTrace()
                 }
@@ -961,49 +552,13 @@ fun BattlesScreen() {
 
     val backButton = @Composable {
         Button(
-            onClick = {
-                currentView = "main"
-            }
+            onClick = { currentView = "main" }
         ) {
             Text("Back")
         }
     }
 
     val characterDropdown = @Composable { currentStage: String ->
-        // Create hardcoded character lists for each stage
-        val rookieCharacters = listOf(
-            APIBattleCharacter("AGUMON", "degimon_name_Dim012_003", "dim012_mon03", 0, 1, 1800, 1800, 2400.0f, 700.0f),
-            APIBattleCharacter("PULSEMON", "degimon_name_Dim000_003", "dim000_mon03", 0, 1, 1800, 1800, 2400.0f, 700.0f),
-            APIBattleCharacter("DORUMON", "degimon_name_dim137_mon03", "dim137_mon03", 0, 1, 3000, 3000, 5100.0f, 1050.0f)
-        )
-
-        val championCharacters = listOf(
-            APIBattleCharacter("GREYMON","degimon_name_Dim012_004","dim012_mon04",1,1,2000, 2000, 3000.0f,900.0f),
-            APIBattleCharacter("TYRANNOMON","degimon_name_Dim008_006","dim008_mon06",1,3,2000, 2000, 2400.0f,600.0f),
-            APIBattleCharacter("DORUGAMON","degimon_name_dim137_mon05","dim137_mon05",1,3,3500, 3500, 5200.0f,1200.0f)
-        )
-
-        val ultimateCharacters = listOf(
-            APIBattleCharacter("METALGREYMON (VIRUS)","degimon_name_Dim014_005","dim014_mon05",2,2,2640, 2640, 2450.0f,800.0f),
-            APIBattleCharacter("MAMEMON", "degimon_name_Dim000_005", "dim000_mon05", 2, 1, 3000, 3000, 4000.0f, 1000.0f),
-            APIBattleCharacter("DORUGREYMON","degimon_name_dim137_mon09","dim137_mon09",2,3,5000, 5000, 6400.0f,1400.0f)
-        )
-
-        val megaCharacters = listOf(
-            APIBattleCharacter("WARGREYMON","degimon_name_Dim012_014","dim012_mon14",3,1,3080, 3080, 3825.0f,800.0f),
-            APIBattleCharacter("SLAYERDRAMON","degimon_name_dim129_mon15","dim129_mon15",3,1,4800, 4800, 6300.0f,1950.0f),
-            APIBattleCharacter("BREAKDRAMON","degimon_name_dim129_mon17","dim129_mon17",3,2,6000, 6000, 4000.0f,1980.0f)
-        )
-
-        // Get the appropriate character list based on current stage
-        val characterList = when (currentStage.lowercase()) {
-            "rookie" -> rookieCharacters
-            "champion" -> championCharacters
-            "ultimate" -> ultimateCharacters
-            "mega" -> megaCharacters
-            else -> rookieCharacters
-        }
-
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
@@ -1070,7 +625,6 @@ fun BattlesScreen() {
                     }
                 }
 
-
                 "rookie" -> {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -1110,159 +664,129 @@ fun BattlesScreen() {
                 }
 
                 "champion" -> {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Champion Battle View")
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Champion Battle View")
 
-                        // Add character selection dropdown
-                        characterDropdown("champion")
+                            // Add character selection dropdown
+                            characterDropdown("champion")
 
-                        // Display buttons for each opponent
-                        opponentsList.forEach { opponent ->
-                            Button(
-                                onClick = {
-                                    activeCharacter?.let {
-                                        selectedOpponent = opponent
-                                        RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 1, 0, opponent.name, 1) { apiResult ->
-                                            currentView = "battle-main"
+                            // Display buttons for each opponent
+                            opponentsList.forEach { opponent ->
+                                Button(
+                                    onClick = {
+                                        activeCharacter?.let {
+                                            selectedOpponent = opponent
+                                            RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 1, 0, opponent.name, 1) { apiResult ->
+                                                currentView = "battle-main"
+                                            }
                                         }
-                                    }
-                                },
-                                modifier = Modifier.padding(vertical = 4.dp)
-                            ) {
-                                Text("Battle ${opponent.name}")
+                                    },
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                ) {
+                                    Text("Battle ${opponent.name}")
+                                }
                             }
-                        }
 
-                        // Show selected character info
-                        activeCharacter?.let { character ->
-                            Text("Active Character: ${character.name}")
-                            Text("HP: ${character.currentHp}/${character.baseHp}")
-                            Text("BP: ${character.baseBp}")
-                            Text("AP: ${character.baseAp}")
-                        }
+                            // Show selected character info
+                            activeCharacter?.let { character ->
+                                Text("Active Character: ${character.name}")
+                                Text("HP: ${character.currentHp}/${character.baseHp}")
+                                Text("BP: ${character.baseBp}")
+                                Text("AP: ${character.baseAp}")
+                            }
 
-                        backButton()
-                    }
+                            backButton()
+                        }
                 }
 
                 "ultimate" -> {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Ultimate Battle View")
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Ultimate Battle View")
 
-                        // Add character selection dropdown
-                        characterDropdown("ultimate")
+                            // Add character selection dropdown
+                            characterDropdown("ultimate")
 
-                        // Display buttons for each opponent
-                        opponentsList.forEach { opponent ->
-                            Button(
-                                onClick = {
-                                    activeCharacter?.let {
-                                        selectedOpponent = opponent
-                                        RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 2, 0, opponent.name, 2) { apiResult ->
-                                            currentView = "battle-main"
+                            // Display buttons for each opponent
+                            opponentsList.forEach { opponent ->
+                                Button(
+                                    onClick = {
+                                        activeCharacter?.let {
+                                            selectedOpponent = opponent
+                                            RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 2, 0, opponent.name, 2) { apiResult ->
+                                                currentView = "battle-main"
+                                            }
                                         }
-                                    }
-                                },
-                                modifier = Modifier.padding(vertical = 4.dp)
-                            ) {
-                                Text("Battle ${opponent.name}")
+                                    },
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                ) {
+                                    Text("Battle ${opponent.name}")
+                                }
                             }
-                        }
 
-                        // Show selected character info
-                        activeCharacter?.let { character ->
-                            Text("Active Character: ${character.name}")
-                            Text("HP: ${character.currentHp}/${character.baseHp}")
-                            Text("BP: ${character.baseBp}")
-                            Text("AP: ${character.baseAp}")
-                        }
+                            // Show selected character info
+                            activeCharacter?.let { character ->
+                                Text("Active Character: ${character.name}")
+                                Text("HP: ${character.currentHp}/${character.baseHp}")
+                                Text("BP: ${character.baseBp}")
+                                Text("AP: ${character.baseAp}")
+                            }
 
-                        backButton()
-                    }
+                            backButton()
+                        }
                 }
 
                 "mega" -> {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Mega Battle View")
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Mega Battle View")
 
-                        // Add character selection dropdown
-                        characterDropdown("mega")
+                            // Add character selection dropdown
+                            characterDropdown("mega")
 
-                        // Display buttons for each opponent
-                        opponentsList.forEach { opponent ->
-                            Button(
-                                onClick = {
-                                    activeCharacter?.let {
-                                        selectedOpponent = opponent
-                                        RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 3, 0, opponent.name, 3) { apiResult ->
-                                            currentView = "battle-main"
+                            // Display buttons for each opponent
+                            opponentsList.forEach { opponent ->
+                                Button(
+                                    onClick = {
+                                        activeCharacter?.let {
+                                            selectedOpponent = opponent
+                                            RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 3, 0, opponent.name, 3) { apiResult ->
+                                                currentView = "battle-main"
+                                            }
                                         }
-                                    }
-                                },
-                                modifier = Modifier.padding(vertical = 4.dp)
-                            ) {
-                                Text("Battle ${opponent.name}")
+                                    },
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                ) {
+                                    Text("Battle ${opponent.name}")
+                                }
                             }
-                        }
 
-                        // Show selected character info
-                        activeCharacter?.let { character ->
-                            Text("Active Character: ${character.name}")
-                            Text("HP: ${character.currentHp}/${character.baseHp}")
-                            Text("BP: ${character.baseBp}")
-                            Text("AP: ${character.baseAp}")
-                        }
+                            // Show selected character info
+                            activeCharacter?.let { character ->
+                                Text("Active Character: ${character.name}")
+                                Text("HP: ${character.currentHp}/${character.baseHp}")
+                                Text("BP: ${character.baseBp}")
+                                Text("AP: ${character.baseAp}")
+                            }
 
-                        backButton()
-                    }
+                            backButton()
+                        }
                 }
 
                 "battle-main" -> {
-                    val battleSystem = remember { ArenaBattleSystem() }
-
-                    // Determine the current stage based on the character's stage
-                    val currentStage = when (activeCharacter?.stage) {
-                        0 -> "rookie"
-                        1 -> "champion"
-                        2 -> "ultimate"
-                        3 -> "mega"
-                        else -> "rookie"
-                    }
-
-                    // Initialize battle with character stats
-                    LaunchedEffect(activeCharacter, selectedOpponent) {
-                        activeCharacter?.let { playerCharacter ->
-                            selectedOpponent?.let { opponentCharacter ->
-                                println("Initializing battle with player: ${playerCharacter.name}, opponent: ${opponentCharacter.name}")
-                                battleSystem.initializeBattle(
-                                playerHP = playerCharacter.currentHp.toFloat(),
-                                opponentHP = opponentCharacter.currentHp.toFloat(),
-                                playerMaxHP = playerCharacter.baseHp.toFloat(),
-                                opponentMaxHP = opponentCharacter.baseHp.toFloat()
-                                )
-                            }
-                        }
-                    }
-
                     BattleScreen(
-                        battleSystem = battleSystem,
                         stage = currentStage,
                         playerName = activeCharacter?.name ?: "Player",
                         opponentName = selectedOpponent?.name ?: "Opponent",
                         activeCharacter = activeCharacter,
                         opponentCharacter = selectedOpponent,
-                        onBattleComplete = { winner ->
-                        println("Battle complete! Winner: $winner")
-                        currentView = "battle-results"
-                        },
-                        onExitBattle = {
-                        currentView = "main"
+                        onAttackClick = {
+                            // This will be called when the battle is over
+                            currentView = "battle-results"
                         },
                         context = context
                     )
@@ -1272,7 +796,6 @@ fun BattlesScreen() {
                     var winnerName by remember { mutableStateOf("") }
                     var isWinnerLoaded by remember { mutableStateOf(false) }
                     
-                    // Send one more stage 1 call to get winner info, then cleanup
                     LaunchedEffect(Unit) {
                         // Determine player and opponent stages
                         val playerStage = when (activeCharacter?.stage) {
@@ -1291,7 +814,7 @@ fun BattlesScreen() {
                             else -> 0
                         }
                         
-                        // First, send one more stage 1 call to get winner info
+                        // First get the winner info
                         RetrofitHelper().getPVPWinner(
                             context, 
                             1, 
@@ -1301,12 +824,11 @@ fun BattlesScreen() {
                             opponentStage, 
                             selectedOpponent?.name ?: "Opponent", 
                             opponentStage
-                        ) { winnerResult ->
-                            println("Winner API Result: $winnerResult")
-                            winnerName = winnerResult.winner
+                        ) { apiResult ->
+                            winnerName = apiResult.winner ?: "Unknown"
                             isWinnerLoaded = true
                             
-                            // Now send cleanup call
+                            // Then send the cleanup call
                             RetrofitHelper().getPVPWinner(
                                 context, 
                                 2, 
@@ -1317,54 +839,50 @@ fun BattlesScreen() {
                                 selectedOpponent?.name ?: "Opponent", 
                                 opponentStage
                             ) { cleanupResult ->
-                                println("Cleanup API Result: $cleanupResult")
+                                println("Cleanup call completed")
                             }
                         }
                     }
                     
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "Battle Complete!",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Gray
-                        )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        if (isWinnerLoaded) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
                             Text(
-                                text = "Winner: $winnerName",
-                                fontSize = 18.sp,
+                                text = "Battle Complete!",
+                                fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.Gray
                             )
-                        } else {
-                            Text(
-                                text = "Loading results...",
-                                fontSize = 16.sp,
-                                color = Color.Gray
-                            )
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            if (isWinnerLoaded) {
+                                Text(
+                                    text = "Winner: $winnerName",
+                                    fontSize = 20.sp,
+                                    color = Color.Gray
+                                )
+                            } else {
+                                Text(
+                                    text = "Loading results...",
+                                    fontSize = 20.sp,
+                                    color = Color.Gray
+                                )
+                            }
                         }
                         
-                        Spacer(modifier = Modifier.height(32.dp))
-                        
+                        // Exit button
                         Button(
-                            onClick = {
-                                currentView = "main"
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Blue
-                            ),
-                            shape = RoundedCornerShape(8.dp)
+                            onClick = { currentView = "main" },
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                         ) {
-                            Text("Back to Main Menu", color = Color.White, fontSize = 16.sp)
+                            Text("Exit", color = Color.White)
                         }
                     }
                 }
@@ -1372,3 +890,12 @@ fun BattlesScreen() {
         }
     }
 }
+
+// Character list for dropdown
+val characterList = listOf(
+    APIBattleCharacter("Agumon", "agumon", "dim011_mon01", 0, 0, 100, 100, 50f, 50f),
+    APIBattleCharacter("Gabumon", "gabumon", "dim012_mon02", 0, 0, 90, 90, 45f, 55f),
+    APIBattleCharacter("Biyomon", "biyomon", "dim013_mon03", 0, 0, 85, 85, 40f, 60f),
+    APIBattleCharacter("Tentomon", "tentomon", "dim014_mon04", 0, 0, 95, 95, 55f, 45f),
+    APIBattleCharacter("Palmon", "palmon", "dim015_mon05", 0, 0, 88, 88, 42f, 58f)
+) 
