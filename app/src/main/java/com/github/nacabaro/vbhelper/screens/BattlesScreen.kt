@@ -62,6 +62,13 @@ fun BattleScreen(
 ) {
     val battleSystem = remember { ArenaBattleSystem() }
     
+    // Initialize HP when battle starts
+    LaunchedEffect(activeCharacter, opponentCharacter) {
+        val playerMaxHP = activeCharacter?.baseHp?.toFloat() ?: 100f
+        val opponentMaxHP = opponentCharacter?.baseHp?.toFloat() ?: 100f
+        battleSystem.initializeHP(playerMaxHP, opponentMaxHP)
+    }
+    
     // Pending damage state for API integration
     var pendingPlayerDamage by remember { mutableStateOf(0f) }
     var pendingOpponentDamage by remember { mutableStateOf(0f) }
@@ -197,13 +204,29 @@ fun PlayerBattleView(
     opponent: APIBattleCharacter?,
     onSetPendingDamage: (Float, Float) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        // Player Digimon
+        // Exit button at the top-right
+        Button(
+            onClick = { /* TODO: Add exit functionality */ },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+        ) {
+            Text("Exit", color = Color.White, fontSize = 14.sp)
+        }
+
+        // Main content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Player Digimon
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -261,6 +284,46 @@ fun PlayerBattleView(
             color = Color.Yellow,
             trackColor = Color.Gray
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Health bar
+        LinearProgressIndicator(
+            progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp),
+            color = Color.Green,
+            trackColor = Color.Gray
+        )
+
+        // Health display numbers
+        Text(
+            text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
+            fontSize = 14.sp,
+            color = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Enemy HP bar
+        LinearProgressIndicator(
+            progress = battleSystem.opponentHP / (opponent?.baseHp?.toFloat() ?: 100f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp),
+            color = Color.Red,
+            trackColor = Color.Gray
+        )
+
+        // Enemy HP display numbers
+        Text(
+            text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${opponent?.baseHp ?: 100}",
+            fontSize = 14.sp,
+            color = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Attack button
         Button(
@@ -355,6 +418,9 @@ fun PlayerBattleView(
         ) {
             Text("Attack", color = Color.White, fontSize = 18.sp)
         }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        }
     }
 }
 
@@ -419,6 +485,23 @@ fun OpponentBattleView(
                 )
             }
         }
+
+        // Enemy HP bar
+        LinearProgressIndicator(
+            progress = battleSystem.opponentHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp),
+            color = Color.Red,
+            trackColor = Color.Gray
+        )
+
+        // Enemy HP display numbers
+        Text(
+            text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
+            fontSize = 14.sp,
+            color = Color.Black
+        )
 
         // Spacer for layout balance
         Spacer(modifier = Modifier.height(120.dp))

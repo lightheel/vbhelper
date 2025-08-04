@@ -99,6 +99,12 @@ class ArenaBattleSystem {
         Log.d(TAG, "Updated HP from API: Player=$playerHP, Opponent=$opponentHP")
     }
 
+    fun initializeHP(playerMaxHP: Float, opponentMaxHP: Float) {
+        _playerHP = playerMaxHP
+        _opponentHP = opponentMaxHP
+        Log.d(TAG, "Initialized HP: Player=$playerMaxHP, Opponent=$opponentMaxHP")
+    }
+
     fun completeAttackAnimation(playerDamage: Float = 0f, opponentDamage: Float = 0f) {
         if (playerDamage > 0f) {
             applyDamage(true, playerDamage)
