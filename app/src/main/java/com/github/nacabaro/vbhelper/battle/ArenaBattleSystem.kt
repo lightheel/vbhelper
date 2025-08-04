@@ -129,6 +129,6 @@ class ArenaBattleSystem {
 
     fun updateCritBarProgress(progress: Int) {
         _critBarProgress = progress
-        Log.d(TAG, "Updated crit bar progress: $progress")
+        //Log.d(TAG, "Updated crit bar progress: $progress")
     }
 } 
