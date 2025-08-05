@@ -13,14 +13,22 @@ fun AnimatedSpriteImage(
     characterId: String,
     animationType: DigimonAnimationType = DigimonAnimationType.IDLE,
     modifier: Modifier = Modifier,
-    contentScale: ContentScale = ContentScale.Fit
+    contentScale: ContentScale = ContentScale.Fit,
+    reloadMappings: Boolean = false
 ) {
     val context = LocalContext.current
-    val spriteManager = remember { BattleSpriteManager(context) }
+    val spriteManager = remember { IndividualSpriteManager(context) }
     val animationStateMachine = remember { DigimonAnimationStateMachine(characterId, context) }
     val coroutineScope = rememberCoroutineScope()
     
     var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    
+    // Reload mappings when reloadMappings parameter changes
+    LaunchedEffect(reloadMappings) {
+        if (reloadMappings) {
+            animationStateMachine.reloadMappings()
+        }
+    }
     
     // Start the animation when the component is first created
     LaunchedEffect(characterId) {
@@ -41,17 +49,16 @@ fun AnimatedSpriteImage(
     }
     
     // Update sprite when animation state changes
-    LaunchedEffect(animationStateMachine.currentSpriteIndex) {
-        val spriteName = animationStateMachine.getCurrentSpriteName()
-        val atlasName = animationStateMachine.getCurrentAtlasName()
+    LaunchedEffect(animationStateMachine.currentFrameNumber) {
+        val frameNumber = animationStateMachine.getCurrentFrame()
         
-        println("Loading animated sprite: $spriteName from atlas: $atlasName")
-        bitmap = spriteManager.loadSprite(spriteName, atlasName)
+        println("Loading animated sprite frame: $frameNumber for character: $characterId")
+        bitmap = spriteManager.loadSpriteFrame(characterId, frameNumber)
         
         if (bitmap == null) {
-            println("Failed to load animated sprite: $spriteName from atlas: $atlasName")
+            println("Failed to load animated sprite frame: $frameNumber for character: $characterId")
         } else {
-            println("Successfully loaded animated sprite: $spriteName from atlas: $atlasName")
+            println("Successfully loaded animated sprite frame: $frameNumber for character: $characterId")
         }
     }
     

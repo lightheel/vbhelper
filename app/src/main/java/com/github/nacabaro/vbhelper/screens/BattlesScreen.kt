@@ -45,7 +45,6 @@ import com.github.nacabaro.vbhelper.battle.APIBattleCharacter
 import android.util.Log
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.battle.RetrofitHelper
-import com.github.nacabaro.vbhelper.battle.SpriteImage
 import com.github.nacabaro.vbhelper.battle.AttackSpriteImage
 import com.github.nacabaro.vbhelper.battle.SpriteFileManager
 import com.github.nacabaro.vbhelper.battle.ArenaBattleSystem
@@ -286,7 +285,8 @@ fun PlayerBattleView(
                     modifier = Modifier
                         .size(80.dp)
                         .scale(-1f, 1f), // Flip player Digimon horizontally
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Fit,
+                    reloadMappings = false
                 )
                 
                 // Attack sprite visibility and positioning based on attack phase
@@ -500,7 +500,8 @@ fun OpponentBattleView(
                 characterId = activeCharacter?.charaId ?: "dim011_mon01",
                 animationType = animationType,
                 modifier = Modifier.size(80.dp),
-                contentScale = ContentScale.Fit
+                contentScale = ContentScale.Fit,
+                reloadMappings = false
             )
             
             // Attack sprite visibility and positioning based on attack phase
@@ -642,12 +643,13 @@ fun BattlesScreen() {
     
     // Initialize sprite files on first load
     LaunchedEffect(Unit) {
+        println("BATTLESCREEN: LaunchedEffect triggered - checking sprite files...")
         val spriteFileManager = SpriteFileManager(context)
         if (!spriteFileManager.checkSpriteFilesExist()) {
-            println("Copying sprite files to internal storage...")
+            println("BATTLESCREEN: Copying sprite files to internal storage...")
             spriteFileManager.copySpriteFilesToInternalStorage()
         } else {
-            println("Sprite files already exist in internal storage")
+            println("BATTLESCREEN: Sprite files already exist in internal storage")
         }
     }
 
@@ -856,7 +858,8 @@ fun BattlesScreen() {
                 characterId = testCharacterId,
                 animationType = currentTestAnimation,
                 modifier = Modifier.size(120.dp),
-                contentScale = ContentScale.Fit
+                contentScale = ContentScale.Fit,
+                reloadMappings = false
             )
             
             Spacer(modifier = Modifier.height(16.dp))

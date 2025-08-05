@@ -6,34 +6,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import com.github.nacabaro.vbhelper.battle.BattleSpriteManager
 
 @Composable
 fun SpriteImage(
-    spriteName: String,
-    atlasName: String,
+    characterId: String,
+    frameNumber: Int,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit
 ) {
     val context = LocalContext.current
-    val spriteManager = remember { BattleSpriteManager(context) }
+    val spriteManager = remember { IndividualSpriteManager(context) }
     
     var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
     
-    LaunchedEffect(spriteName, atlasName) {
-        println("Loading sprite: $spriteName from atlas: $atlasName")
-        bitmap = spriteManager.loadSprite(spriteName, atlasName)
+    LaunchedEffect(characterId, frameNumber) {
+        println("Loading sprite frame: $frameNumber for character: $characterId")
+        bitmap = spriteManager.loadSpriteFrame(characterId, frameNumber)
         if (bitmap == null) {
-            println("Failed to load sprite: $spriteName from atlas: $atlasName")
+            println("Failed to load sprite frame: $frameNumber for character: $characterId")
         } else {
-            println("Successfully loaded sprite: $spriteName from atlas: $atlasName")
+            println("Successfully loaded sprite frame: $frameNumber for character: $characterId")
         }
     }
     
     bitmap?.let { bmp ->
         Image(
             bitmap = bmp.asImageBitmap(),
-            contentDescription = "Sprite: $spriteName",
+            contentDescription = "Sprite: $characterId frame $frameNumber",
             modifier = modifier,
             contentScale = contentScale
         )

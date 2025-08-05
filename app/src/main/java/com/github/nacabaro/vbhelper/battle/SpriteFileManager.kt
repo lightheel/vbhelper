@@ -9,26 +9,90 @@ class SpriteFileManager(private val context: Context) {
     
     fun copySpriteFilesToInternalStorage() {
         try {
-            // Create the base directory for extracted_assets
-            val extractedAssetsDir = File(context.filesDir, "battle_sprites/extracted_assets")
-            if (!extractedAssetsDir.exists()) {
-                extractedAssetsDir.mkdirs()
+            println("Starting sprite file copy process...")
+            
+            // Debug: List what's in the assets directory
+            val assetManager = context.assets
+            val battleSpritesFiles = assetManager.list("battle_sprites")
+            println("battle_sprites directory in assets contains: ${battleSpritesFiles?.joinToString(", ")}")
+            
+            val extractedAssetsFiles = assetManager.list("battle_sprites/extracted_assets")
+            println("battle_sprites/extracted_assets directory in assets contains: ${extractedAssetsFiles?.joinToString(", ")}")
+            
+            // Check specifically for extracted_atksprites in assets (now directly under battle_sprites)
+            val atkspritesInAssets = assetManager.list("battle_sprites/extracted_atksprites")
+            println("extracted_atksprites in assets contains: ${atkspritesInAssets?.size ?: 0} files")
+            if (atkspritesInAssets != null && atkspritesInAssets.isNotEmpty()) {
+                println("First few attack files in assets: ${atkspritesInAssets.take(5).joinToString(", ")}")
             }
             
-            // Create the base directory for extracted_digimon_stats
-            val extractedStatsDir = File(context.filesDir, "battle_sprites/extracted_digimon_stats")
-            if (!extractedStatsDir.exists()) {
-                extractedStatsDir.mkdirs()
+            // Check for extracted_battlebgs in assets (now directly under battle_sprites)
+            val battlebgsInAssets = assetManager.list("battle_sprites/extracted_battlebgs")
+            println("extracted_battlebgs in assets contains: ${battlebgsInAssets?.size ?: 0} files")
+            if (battlebgsInAssets != null && battlebgsInAssets.isNotEmpty()) {
+                println("First few battle background files in assets: ${battlebgsInAssets.take(5).joinToString(", ")}")
             }
             
-            // Copy extracted_assets files from assets to internal storage
-            copyAssetDirectory("battle_sprites/extracted_assets", extractedAssetsDir)
+            // Try to list all possible subdirectories in battle_sprites
+            println("Checking all possible subdirectories in battle_sprites...")
+            battleSpritesFiles?.forEach { subdir ->
+                try {
+                    val subdirFiles = assetManager.list("battle_sprites/$subdir")
+                    println("  $subdir contains: ${subdirFiles?.size ?: 0} files")
+                    if (subdirFiles != null && subdirFiles.isNotEmpty()) {
+                        println("    First few files: ${subdirFiles.take(3).joinToString(", ")}")
+                    }
+                } catch (e: Exception) {
+                    println("  Error listing $subdir: ${e.message}")
+                }
+            }
             
-            // Copy extracted_digimon_stats files from assets to internal storage
-            copyAssetDirectory("battle_sprites/extracted_digimon_stats", extractedStatsDir)
+            // Create the base directory for battle_sprites
+            val battleSpritesDir = File(context.filesDir, "battle_sprites")
+            if (!battleSpritesDir.exists()) {
+                battleSpritesDir.mkdirs()
+                println("Created battle_sprites directory: ${battleSpritesDir.absolutePath}")
+            } else {
+                println("battle_sprites directory already exists: ${battleSpritesDir.absolutePath}")
+            }
             
-            println("Sprite files copied successfully to: ${extractedAssetsDir.absolutePath}")
-            println("Stats files copied successfully to: ${extractedStatsDir.absolutePath}")
+            // Copy all subdirectories from battle_sprites assets to internal storage
+            println("Copying all battle_sprites subdirectories...")
+            battleSpritesFiles?.forEach { subdir ->
+                val sourcePath = "battle_sprites/$subdir"
+                val targetDir = File(battleSpritesDir, subdir)
+                println("Copying $sourcePath to ${targetDir.absolutePath}")
+                copyAssetDirectory(sourcePath, targetDir)
+            }
+            
+            println("Sprite files copied successfully to: ${battleSpritesDir.absolutePath}")
+            
+            // Verify that attack sprites were copied
+            val atkspritesDir = File(battleSpritesDir, "extracted_atksprites")
+            if (atkspritesDir.exists()) {
+                val attackFiles = atkspritesDir.listFiles()
+                println("Attack sprites directory exists with ${attackFiles?.size ?: 0} files")
+                if (attackFiles != null && attackFiles.isNotEmpty()) {
+                    println("First few attack files: ${attackFiles.take(5).map { it.name }}")
+                }
+            } else {
+                println("WARNING: extracted_atksprites directory does not exist!")
+                // List what's actually in the battle_sprites directory
+                val battleSpritesContents = battleSpritesDir.listFiles()
+                println("battle_sprites directory contains: ${battleSpritesContents?.map { it.name }?.joinToString(", ")}")
+            }
+            
+            // Verify that battle backgrounds were copied
+            val battlebgsDir = File(battleSpritesDir, "extracted_battlebgs")
+            if (battlebgsDir.exists()) {
+                val bgFiles = battlebgsDir.listFiles()
+                println("Battle backgrounds directory exists with ${bgFiles?.size ?: 0} files")
+                if (bgFiles != null && bgFiles.isNotEmpty()) {
+                    println("First few battle background files: ${bgFiles.take(5).map { it.name }}")
+                }
+            } else {
+                println("WARNING: extracted_battlebgs directory does not exist!")
+            }
             
         } catch (e: Exception) {
             println("Error copying sprite files: ${e.message}")
@@ -41,6 +105,9 @@ class SpriteFileManager(private val context: Context) {
             val assetManager = context.assets
             val files = assetManager.list(assetPath) ?: return
             
+            println("Copying asset directory: $assetPath (${files.size} items)")
+            println("Files found: ${files.joinToString(", ")}")
+            
             for (file in files) {
                 val assetFilePath = if (assetPath.isEmpty()) file else "$assetPath/$file"
                 val targetFile = File(targetDir, file)
@@ -50,21 +117,50 @@ class SpriteFileManager(private val context: Context) {
                     targetFile.parentFile!!.mkdirs()
                 }
                 
-                // Check if it's a directory
-                val subFiles = assetManager.list(assetFilePath)
-                if (subFiles != null && subFiles.isNotEmpty()) {
-                    // It's a directory, create it and copy contents
-                    if (!targetFile.exists()) {
-                        targetFile.mkdirs()
+                // Check if it's a directory by trying to list its contents
+                try {
+                    val subFiles = assetManager.list(assetFilePath)
+                    if (subFiles != null && subFiles.isNotEmpty()) {
+                        // It's a directory, create it and copy contents
+                        println("Copying subdirectory: $assetFilePath (${subFiles.size} files)")
+                        if (!targetFile.exists()) {
+                            targetFile.mkdirs()
+                        }
+                        copyAssetDirectory(assetFilePath, targetFile)
+                    } else {
+                        // It's a file, copy it
+                        copyAssetFile(assetFilePath, targetFile)
                     }
-                    copyAssetDirectory(assetFilePath, targetFile)
-                } else {
-                    // It's a file, copy it
+                } catch (e: Exception) {
+                    // If we can't list contents, it's probably a file
+                    println("Treating $assetFilePath as file (could not list contents)")
                     copyAssetFile(assetFilePath, targetFile)
                 }
             }
+            
+            // Special handling for extracted_atksprites - try to copy it directly if it wasn't found
+            if (assetPath == "battle_sprites/extracted_assets") {
+                println("Special handling: Checking for extracted_atksprites directory...")
+                try {
+                    val atkspritesFiles = assetManager.list("battle_sprites/extracted_assets/extracted_atksprites")
+                    if (atkspritesFiles != null && atkspritesFiles.isNotEmpty()) {
+                        println("Found extracted_atksprites with ${atkspritesFiles.size} files")
+                        val atkspritesDir = File(targetDir, "extracted_atksprites")
+                        if (!atkspritesDir.exists()) {
+                            atkspritesDir.mkdirs()
+                        }
+                        copyAssetDirectory("battle_sprites/extracted_assets/extracted_atksprites", atkspritesDir)
+                    } else {
+                        println("extracted_atksprites directory not found in assets")
+                    }
+                } catch (e: Exception) {
+                    println("Error checking extracted_atksprites: ${e.message}")
+                }
+            }
+            
         } catch (e: Exception) {
             println("Error copying asset directory $assetPath: ${e.message}")
+            e.printStackTrace()
         }
     }
     
@@ -84,34 +180,34 @@ class SpriteFileManager(private val context: Context) {
     }
     
     fun checkSpriteFilesExist(): Boolean {
-        val extractedAssetsDir = File(context.filesDir, "battle_sprites/extracted_assets")
-        val extractedStatsDir = File(context.filesDir, "battle_sprites/extracted_digimon_stats")
+        val battleSpritesDir = File(context.filesDir, "battle_sprites")
+        val extractedAssetsDir = File(battleSpritesDir, "extracted_assets")
+        val extractedStatsDir = File(battleSpritesDir, "extracted_digimon_stats")
+        val atkspritesDir = File(battleSpritesDir, "extracted_atksprites")
+        val battlebgsDir = File(battleSpritesDir, "extracted_battlebgs")
         
+        val battleSpritesExist = battleSpritesDir.exists() && battleSpritesDir.listFiles()?.isNotEmpty() == true
         val assetsExist = extractedAssetsDir.exists() && extractedAssetsDir.listFiles()?.isNotEmpty() == true
         val statsExist = extractedStatsDir.exists() && extractedStatsDir.listFiles()?.isNotEmpty() == true
+        val atkspritesExist = atkspritesDir.exists() && atkspritesDir.listFiles()?.isNotEmpty() == true
+        val battlebgsExist = battlebgsDir.exists() && battlebgsDir.listFiles()?.isNotEmpty() == true
         
-        return assetsExist && statsExist
+        println("Checking sprite files exist:")
+        println("  battle_sprites exists: $battleSpritesExist")
+        println("  extracted_assets exists: $assetsExist")
+        println("  extracted_digimon_stats exists: $statsExist")
+        println("  extracted_atksprites exists: $atkspritesExist")
+        println("  extracted_battlebgs exists: $battlebgsExist")
+        
+        return battleSpritesExist && assetsExist && statsExist && atkspritesExist && battlebgsExist
     }
     
     fun clearSpriteFiles() {
         try {
-            val extractedAssetsDir = File(context.filesDir, "battle_sprites/extracted_assets")
-            val extractedStatsDir = File(context.filesDir, "battle_sprites/extracted_digimon_stats")
-            
-            if (extractedAssetsDir.exists()) {
-                deleteDirectory(extractedAssetsDir)
-                println("Cleared extracted_assets directory")
-            }
-            
-            if (extractedStatsDir.exists()) {
-                deleteDirectory(extractedStatsDir)
-                println("Cleared extracted_digimon_stats directory")
-            }
-            
-            // Also clear the battle_sprites directory if it's empty
             val battleSpritesDir = File(context.filesDir, "battle_sprites")
-            if (battleSpritesDir.exists() && battleSpritesDir.listFiles()?.isEmpty() == true) {
-                battleSpritesDir.delete()
+            
+            if (battleSpritesDir.exists()) {
+                deleteDirectory(battleSpritesDir)
                 println("Cleared battle_sprites directory")
             }
             

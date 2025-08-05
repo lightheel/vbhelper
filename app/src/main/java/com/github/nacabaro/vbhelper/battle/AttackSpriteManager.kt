@@ -31,8 +31,8 @@ class AttackSpriteManager(private val context: Context) {
     private val gson = Gson()
     private val characterDataCache = mutableMapOf<String, CharacterData>()
     
-    // Base path for attack textures
-    private val attackTexturesPath = "battle_sprites/extracted_assets/extracted_atksprites"
+    // Base path for attack textures (updated for new folder structure)
+    private val attackTexturesPath = "battle_sprites/extracted_atksprites"
     
     fun getAttackSprite(characterId: String, isLarge: Boolean = false): Bitmap? {
         println("AttackSpriteManager: Getting attack sprite for characterId=$characterId, isLarge=$isLarge")
