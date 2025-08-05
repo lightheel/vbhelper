@@ -96,8 +96,8 @@ fun BattleScreen(
     LaunchedEffect(battleSystem.attackPhase) {
         when (battleSystem.attackPhase) {
             1 -> {
-                // Phase 1: Player attack on player screen
-                println("Starting Phase 1: Player attack on player screen")
+                // Phase 1: Both attacks from middle screen
+                println("Starting Phase 1: Both attacks from middle screen")
                 var progress = 0f
                 while (progress < 1f) {
                     progress += 0.016f // 60 FPS
@@ -108,86 +108,72 @@ fun BattleScreen(
                 battleSystem.advanceAttackPhase()
             }
             2 -> {
-                // Phase 2: Player attack on opponent screen
-                println("Starting Phase 2: Player attack on opponent screen")
-                battleSystem.switchToView(1)
+                // Phase 2: Player attack on enemy screen
+                println("Starting Phase 2: Player attack on enemy screen")
+                battleSystem.switchToView(2) // Enemy screen
                 var progress = 0f
                 while (progress < 1f) {
                     progress += 0.016f // 60 FPS
                     battleSystem.setAttackProgress(progress)
                     
-                    // Trigger animation when attack reaches the opponent (around 55% progress for opponent dodge)
+                    // Trigger animation when attack reaches the enemy (around 55% progress for enemy dodge)
                     if (progress >= 0.55f && !battleSystem.isOpponentHit && !battleSystem.isOpponentDodging) {
                         if (battleSystem.attackIsHit) {
-                            // Player attack hits opponent
-                            println("Player attack hits opponent at progress $progress")
+                            // Player attack hits enemy
+                            println("Player attack hits enemy at progress $progress")
                             battleSystem.startOpponentHit()
                         } else {
-                            // Player attack misses, opponent dodges
-                            println("Player attack misses, opponent dodges at progress $progress")
+                            // Player attack misses, enemy dodges
+                            println("Player attack misses, enemy dodges at progress $progress")
                             battleSystem.startOpponentDodge()
                         }
                     }
                     
                     delay(16) // 60 FPS
                 }
-                println("Phase 2 completed, applying damage and starting opponent attack")
+                println("Phase 2 completed, applying damage and starting Phase 3")
                 // Apply player's damage
                 battleSystem.completeAttackAnimation(opponentDamage = pendingOpponentDamage)
                 pendingOpponentDamage = 0f
                 delay(500)
                 
-                // Check if there's a counter-attack set up
+                // Check if there should be a counter-attack
                 if (battleSystem.shouldCounterAttack) {
-                    println("Starting counter-attack")
+                    println("Starting counter-attack from Phase 2")
                     battleSystem.startCounterAttack()
                 } else {
-                    // Normal opponent attack
-                    battleSystem.startOpponentAttack()
+                    println("No counter-attack, advancing to Phase 3")
+                    battleSystem.advanceAttackPhase()
                 }
             }
             3 -> {
-                // Phase 3: Opponent attack on opponent screen
-                println("Starting Phase 3: Opponent attack on opponent screen")
-                battleSystem.switchToView(1)
-                var progress = 0f
-                while (progress < 1f) {
-                    progress += 0.016f // 60 FPS
-                    battleSystem.setAttackProgress(progress)
-                    delay(16) // 60 FPS
-                }
-                println("Phase 3 completed, advancing to Phase 4")
-                battleSystem.advanceAttackPhase()
-            }
-            4 -> {
-                // Phase 4: Opponent attack on player screen
-                println("Starting Phase 4: Opponent attack on player screen")
-                battleSystem.switchToView(0)
+                // Phase 3: Enemy attack on player screen
+                println("Starting Phase 3: Enemy attack on player screen")
+                battleSystem.switchToView(1) // Player screen
                 var progress = 0f
                 while (progress < 1f) {
                     progress += 0.016f // 60 FPS
                     battleSystem.setAttackProgress(progress)
                     
-                    // Trigger animation when attack reaches the player (around 75% progress - earlier for better timing)
+                    // Trigger animation when attack reaches the player (around 75% progress for player dodge)
                     if (progress >= 0.75f && !battleSystem.isPlayerHit && !battleSystem.isPlayerDodging) {
-                        println("Phase 4: Checking player animation at progress $progress, opponentAttackIsHit=${battleSystem.opponentAttackIsHit}, shouldCounterAttack=${battleSystem.shouldCounterAttack}, counterAttackIsHit=${battleSystem.counterAttackIsHit}")
-                        println("Phase 4: Player animation decision - opponentAttackIsHit=${battleSystem.opponentAttackIsHit}, will ${if (battleSystem.opponentAttackIsHit) "HIT" else "DODGE"}")
-                        println("Phase 4: Full debug - attackPhase=${battleSystem.attackPhase}, isPlayerAttacking=${battleSystem.isPlayerAttacking}")
+                        println("Phase 3: Checking player animation at progress $progress, opponentAttackIsHit=${battleSystem.opponentAttackIsHit}")
+                        println("Phase 3: Player animation decision - opponentAttackIsHit=${battleSystem.opponentAttackIsHit}, will ${if (battleSystem.opponentAttackIsHit) "HIT" else "DODGE"}")
                         if (battleSystem.opponentAttackIsHit) {
-                            // Opponent attack hits player
-                            println("Opponent attack hits player at progress $progress")
+                            // Enemy attack hits player
+                            println("Enemy attack hits player at progress $progress")
                             battleSystem.startPlayerHit()
                         } else {
-                            // Opponent attack misses, player dodges
-                            println("Opponent attack misses, player dodges at progress $progress")
+                            // Enemy attack misses, player dodges
+                            println("Enemy attack misses, player dodges at progress $progress")
                             battleSystem.startPlayerDodge()
                         }
                     }
                     
                     delay(16) // 60 FPS
                 }
-                println("Phase 4 completed, applying damage and resetting")
-                // Apply opponent's damage and reset
+                println("Phase 3 completed, applying damage and resetting")
+                // Apply enemy's damage and reset
                 battleSystem.completeAttackAnimation(playerDamage = pendingPlayerDamage)
                 pendingPlayerDamage = 0f
                 battleSystem.resetAttackState()
@@ -314,7 +300,28 @@ fun BattleScreen(
     ) {
         when (battleSystem.currentView) {
             0 -> {
-                // Player view
+                // Middle screen - both Digimon
+                MiddleBattleView(
+                    battleSystem = battleSystem,
+                    stage = stage,
+                    playerName = playerName,
+                    opponentName = opponentName,
+                    attackAnimationProgress = battleSystem.attackProgress,
+                    onAttackClick = {
+                        battleSystem.startPlayerAttack()
+                    },
+                    activeCharacter = activeCharacter,
+                    opponentCharacter = opponentCharacter,
+                    context = context,
+                    onSetPendingDamage = { playerDamage, opponentDamage ->
+                        pendingPlayerDamage = playerDamage
+                        pendingOpponentDamage = opponentDamage
+                    },
+                    coroutineScope = coroutineScope
+                )
+            }
+            1 -> {
+                // Player screen - enemy attack
                 PlayerBattleView(
                     battleSystem = battleSystem,
                     stage = stage,
@@ -333,9 +340,9 @@ fun BattleScreen(
                     coroutineScope = coroutineScope
                 )
             }
-            1 -> {
-                // Opponent view
-                OpponentBattleView(
+            2 -> {
+                // Enemy screen - player attack
+                EnemyBattleView(
                     battleSystem = battleSystem,
                     stage = stage,
                     opponentName = opponentName,
@@ -344,6 +351,394 @@ fun BattleScreen(
                     playerCharacter = activeCharacter
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun MiddleBattleView(
+    battleSystem: ArenaBattleSystem,
+    stage: String,
+    playerName: String,
+    opponentName: String,
+    attackAnimationProgress: Float,
+    onAttackClick: () -> Unit,
+    activeCharacter: APIBattleCharacter?,
+    opponentCharacter: APIBattleCharacter?,
+    context: android.content.Context?,
+    onSetPendingDamage: (Float, Float) -> Unit,
+    coroutineScope: kotlinx.coroutines.CoroutineScope
+) {
+    // Track previous character ID to detect transitions
+    var previousCharacterId by remember { mutableStateOf<String?>(null) }
+    var previousAttackPhase by remember { mutableStateOf<Int?>(null) }
+    var isTransitioning by remember { mutableStateOf(false) }
+    var lastApiResult by remember { mutableStateOf<com.github.nacabaro.vbhelper.battle.PVPDataModel?>(null) }
+    
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Top section: Exit button, HP bars, and HP numbers
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Exit button at the top-right
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = { /* TODO: Add exit functionality */ },
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Exit", color = Color.White, fontSize = 14.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Debug display
+            if (lastApiResult != null) {
+                Text(
+                    text = "Debug: state=${lastApiResult!!.state}, playerAttackHit=${lastApiResult!!.playerAttackHit}, opponentDamage=${lastApiResult!!.opponentAttackDamage}",
+                    color = Color.Red,
+                    fontSize = 10.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Enemy HP bar (top)
+            LinearProgressIndicator(
+                progress = battleSystem.opponentHP / (opponentCharacter?.baseHp?.toFloat() ?: 100f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp),
+                color = Color.Red,
+                trackColor = Color.Gray
+            )
+
+            // Enemy HP display numbers
+            Text(
+                text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${opponentCharacter?.baseHp ?: 100}",
+                fontSize = 14.sp,
+                color = Color.Black
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Player HP bar (bottom)
+            LinearProgressIndicator(
+                progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp),
+                color = Color.Green,
+                trackColor = Color.Gray
+            )
+
+            // Player HP display numbers
+            Text(
+                text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
+                fontSize = 14.sp,
+                color = Color.Black
+            )
+        }
+
+        // Middle section: Both Digimon with horizontal line separator
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceEvenly
+            ) {
+                // Enemy Digimon (top half)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    // Determine animation type for enemy
+                    val enemyAnimationType = when {
+                        battleSystem.isOpponentDodging -> DigimonAnimationType.WALK
+                        battleSystem.isOpponentHit -> DigimonAnimationType.SLEEP
+                        battleSystem.attackPhase == 1 -> DigimonAnimationType.ATTACK  // Both attacking
+                        else -> DigimonAnimationType.IDLE
+                    }
+                    
+                    // Calculate vertical offset for enemy dodge animation
+                    val enemyVerticalOffset = if (battleSystem.isOpponentDodging) {
+                        val dodgeHeight = 30.dp
+                        val progress = battleSystem.opponentDodgeProgress
+                        val direction = battleSystem.opponentDodgeDirection
+                        
+                        if (direction > 0) {
+                            -(progress * dodgeHeight.value).dp
+                        } else {
+                            -((1f - progress) * dodgeHeight.value).dp
+                        }
+                    } else {
+                        0.dp
+                    }
+                    
+                    // Calculate hit effect for enemy
+                    val enemyHitOffset = if (battleSystem.isOpponentHit) {
+                        val shakeAmount = 5.dp
+                        val progress = battleSystem.hitProgress
+                        val shake = if (progress < 0.5f) progress * 2f else (1f - progress) * 2f
+                        (shake * shakeAmount.value).dp
+                    } else {
+                        0.dp
+                    }
+                    
+                    AnimatedSpriteImage(
+                        characterId = opponentCharacter?.charaId ?: "dim011_mon01",
+                        animationType = enemyAnimationType,
+                        modifier = Modifier
+                            .size(80.dp)
+                            .offset(
+                                x = enemyHitOffset,
+                                y = enemyVerticalOffset
+                            ),
+                        contentScale = ContentScale.Fit,
+                        reloadMappings = false
+                    )
+                    
+                    // Enemy attack sprite (Phase 1 only)
+                    if (battleSystem.attackPhase == 1) {
+                        val xOffset = (attackAnimationProgress * 400 + 50).dp  // Move right off screen
+                        
+                        AttackSpriteImage(
+                            characterId = opponentCharacter?.charaId ?: "dim011_mon01",
+                            isLarge = true,
+                            modifier = Modifier
+                                .size(60.dp)
+                                .offset(
+                                    x = xOffset,
+                                    y = 0.dp
+                                ),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+                
+                // Horizontal line separator
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .background(Color.Black)
+                )
+                
+                // Player Digimon (bottom half)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    // Determine animation type for player
+                    val playerAnimationType = when {
+                        battleSystem.isPlayerDodging -> DigimonAnimationType.WALK
+                        battleSystem.isPlayerHit -> DigimonAnimationType.SLEEP
+                        battleSystem.attackPhase == 1 -> DigimonAnimationType.ATTACK  // Both attacking
+                        else -> DigimonAnimationType.IDLE
+                    }
+                    
+                    // Calculate vertical offset for player dodge animation
+                    val playerVerticalOffset = if (battleSystem.isPlayerDodging) {
+                        val dodgeHeight = 30.dp
+                        val progress = battleSystem.playerDodgeProgress
+                        val direction = battleSystem.playerDodgeDirection
+                        
+                        if (direction > 0) {
+                            -(progress * dodgeHeight.value).dp
+                        } else {
+                            -((1f - progress) * dodgeHeight.value).dp
+                        }
+                    } else {
+                        0.dp
+                    }
+                    
+                    // Calculate hit effect for player
+                    val playerHitOffset = if (battleSystem.isPlayerHit) {
+                        val shakeAmount = 5.dp
+                        val progress = battleSystem.hitProgress
+                        val shake = if (progress < 0.5f) progress * 2f else (1f - progress) * 2f
+                        (shake * shakeAmount.value).dp
+                    } else {
+                        0.dp
+                    }
+                    
+                    AnimatedSpriteImage(
+                        characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                        animationType = playerAnimationType,
+                        modifier = Modifier
+                            .size(80.dp)
+                            .scale(-1f, 1f) // Flip player Digimon horizontally
+                            .offset(
+                                x = playerHitOffset,
+                                y = playerVerticalOffset
+                            ),
+                        contentScale = ContentScale.Fit,
+                        reloadMappings = false
+                    )
+                    
+                    // Player attack sprite (Phase 1 only)
+                    if (battleSystem.attackPhase == 1) {
+                        val xOffset = (-attackAnimationProgress * 400 - 50).dp  // Move left off screen
+                        
+                        AttackSpriteImage(
+                            characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                            isLarge = true,
+                            modifier = Modifier
+                                .size(60.dp)
+                                .offset(
+                                    x = xOffset,
+                                    y = 0.dp
+                                )
+                                .scale(-1f, 1f), // Flip attack sprite
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+            }
+        }
+
+        // Bottom section: Critical bar and Attack button
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .align(Alignment.BottomCenter),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Critical bar
+            LinearProgressIndicator(
+                progress = battleSystem.critBarProgress / 100f,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp),
+                color = Color.Yellow,
+                trackColor = Color.Gray
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Attack button
+            Button(
+                onClick = {
+                    println("Attack button clicked!")
+                    
+                    // Get crit bar progress as float (0.0f to 100.0f)
+                    val critBarProgressFloat = battleSystem.critBarProgress.toFloat()
+                    
+                    // Determine player and opponent stages
+                    val playerStage = when (activeCharacter?.stage) {
+                        0 -> 0 // rookie
+                        1 -> 1 // champion
+                        2 -> 2 // ultimate
+                        3 -> 3 // mega
+                        else -> 0
+                    }
+                    
+                    val opponentStage = when (opponentCharacter?.stage) {
+                        0 -> 0 // rookie
+                        1 -> 1 // champion
+                        2 -> 2 // ultimate
+                        3 -> 3 // mega
+                        else -> 0
+                    }
+                    
+                    // Send API call with all parameters
+                    context?.let { ctx ->
+                        // Start both attacks simultaneously
+                        battleSystem.startPlayerAttack()
+                        
+                        RetrofitHelper().getPVPWinner(
+                            ctx, 
+                            1, 
+                            2, 
+                            activeCharacter?.name ?: "Player", 
+                            playerStage, 
+                            opponentStage, 
+                            opponentCharacter?.name ?: "Opponent", 
+                            opponentStage
+                        ) { apiResult ->
+                            // Handle API response here
+                            println("API Result: $apiResult")
+                            lastApiResult = apiResult // Store for debug display
+                            
+                            // Update HP based on API response
+                            when (apiResult.state) {
+                                 1 -> {
+                                     // Match is still ongoing - update HP and continue
+                                     println("Round ${apiResult.currentRound}: Player HP=${apiResult.playerHP}, Opponent HP=${apiResult.opponentHP}")
+                                     
+                                     // Set pending damage based on API result
+                                     if (apiResult.playerAttackDamage > 0) {
+                                         // Player attack hit - enemy takes damage at end of player animation
+                                         println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
+                                         onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
+                                         battleSystem.setAttackHitState(true)
+                                     } else {
+                                         // Player attack missed - enemy counter-attacks
+                                         println("Player attack missed! Enemy counter-attacks")
+                                         battleSystem.setAttackHitState(false)
+                                         // Set up counter-attack - determine if it hits based on API result
+                                         val counterAttackHits = apiResult.opponentAttackDamage > 0
+                                         println("Setting up counter-attack: counterAttackHits=$counterAttackHits, opponentAttackDamage=${apiResult.opponentAttackDamage}")
+                                         println("Full API response: status=${apiResult.status}, state=${apiResult.state}, playerAttackHit=${apiResult.playerAttackHit}, playerAttackDamage=${apiResult.playerAttackDamage}, opponentAttackDamage=${apiResult.opponentAttackDamage}, playerHP=${apiResult.playerHP}, opponentHP=${apiResult.opponentHP}")
+                                         println("DEBUG: Using playerAttackDamage > 0 instead of playerAttackHit for hit detection")
+                                         
+                                         // Use opponentAttackDamage to determine counter-attack hit
+                                         val finalCounterAttackHits = counterAttackHits
+                                         println("Using opponentAttackDamage > 0 for counter-attack: $finalCounterAttackHits")
+                                         
+                                         if (finalCounterAttackHits) {
+                                             println("Counter-attack hits! Player takes ${apiResult.opponentAttackDamage} damage")
+                                             onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), 0f) // Player takes damage
+                                         } else {
+                                             println("Counter-attack misses! Player dodges")
+                                             onSetPendingDamage(0f, 0f) // No damage
+                                         }
+                                         battleSystem.setupCounterAttack(finalCounterAttackHits)
+                                     }
+                                 }
+                                 2 -> {
+                                     // Match is over - transition to results screen
+                                     println("Match is over! Winner: ${apiResult.winner}")
+                                     battleSystem.updateHPFromAPI(apiResult.playerHP.toFloat(), apiResult.opponentHP.toFloat())
+                                     onAttackClick() // This will transition to battle-results screen
+                                 }
+                                 -1 -> {
+                                     // Error occurred
+                                     println("API Error: ${apiResult.status}")
+                                     battleSystem.resetAttackState()
+                                     battleSystem.enableAttackButton()
+                                 }
+                             }
+                         }
+                     }
+                 },
+                 enabled = battleSystem.isAttackButtonEnabled,
+                 modifier = Modifier
+                     .fillMaxWidth()
+                     .height(50.dp),
+                 colors = ButtonDefaults.buttonColors(
+                     containerColor = Color.Red,
+                     disabledContainerColor = Color.Gray
+                 ),
+                 shape = RoundedCornerShape(8.dp)
+             ) {
+                 Text("Attack", color = Color.White, fontSize = 18.sp)
+             }
         }
     }
 }
@@ -488,24 +883,21 @@ fun PlayerBattleView(
                 
                 // Attack sprite visibility and positioning based on attack phase
                 val shouldShowAttack = when (battleSystem.attackPhase) {
-                    1 -> true  // Player attack on player screen
-                    2 -> true  // Player attack on opponent screen  
-                    3 -> false // Opponent attack on opponent screen
-                    4 -> true  // Opponent attack on player screen
+                    1 -> false // Both attacks from middle screen
+                    2 -> false // Player attack on enemy screen
+                    3 -> true  // Enemy attack on player screen
                     else -> false
                 }
                 
                 if (shouldShowAttack) {
                     val xOffset = when (battleSystem.attackPhase) {
-                        1 -> (attackAnimationProgress * 400 + 50).dp  // Player attack on player screen - start and end more to the right
-                        2 -> (attackAnimationProgress * 400 - 200).dp  // Player attack on opponent screen
-                        4 -> (-attackAnimationProgress * 400 + 350).dp  // Opponent attack on player screen - start more to the right
+                        3 -> (-attackAnimationProgress * 400 + 350).dp  // Enemy attack on player screen - start more to the right
                         else -> 0.dp
                     }
                     
-                    // Use opponent character ID for Phase 4 (opponent attack)
+                    // Use opponent character ID for Phase 3 (enemy attack)
                     val characterId = when (battleSystem.attackPhase) {
-                        4 -> opponent?.charaId ?: "dim011_mon01"  // Use opponent's character ID
+                        3 -> opponent?.charaId ?: "dim011_mon01"  // Use opponent's character ID
                         else -> activeCharacter?.charaId ?: "dim011_mon01"  // Use player's character ID
                     }
                     
@@ -534,7 +926,7 @@ fun PlayerBattleView(
                                     x = xOffset,
                                     y = 0.dp
                                 )
-                                .scale(if (battleSystem.attackPhase == 4) 1f else -1f, 1f), // Don't flip opponent attacks
+                                .scale(if (battleSystem.attackPhase == 3) 1f else -1f, 1f), // Don't flip enemy attacks
                             contentScale = ContentScale.Fit
                         )
                     }
@@ -675,7 +1067,7 @@ fun PlayerBattleView(
 }
 
 @Composable
-fun OpponentBattleView(
+fun EnemyBattleView(
     battleSystem: ArenaBattleSystem,
     stage: String,
     opponentName: String,
@@ -715,14 +1107,14 @@ fun OpponentBattleView(
             )
         }
 
-        // Middle section: Opponent Digimon
+        // Middle section: Enemy Digimon
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Opponent Digimon
+            // Enemy Digimon
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -733,10 +1125,7 @@ fun OpponentBattleView(
                 val animationType = when {
                     battleSystem.isOpponentDodging -> DigimonAnimationType.WALK  // Use walk animation for dodge
                     battleSystem.isOpponentHit -> DigimonAnimationType.SLEEP     // Use sleep animation for hit effect (injured sprite)
-                    battleSystem.attackPhase == 1 -> DigimonAnimationType.IDLE    // Player attack on player screen
-                    battleSystem.attackPhase == 2 -> DigimonAnimationType.IDLE    // Player attack on opponent screen
-                    battleSystem.attackPhase == 3 -> DigimonAnimationType.ATTACK  // Opponent attack on opponent screen
-                    battleSystem.attackPhase == 4 -> DigimonAnimationType.ATTACK  // Opponent attack on player screen
+                    battleSystem.attackPhase == 2 -> DigimonAnimationType.IDLE    // Player attack on enemy screen
                     else -> DigimonAnimationType.IDLE
                 }
                 
@@ -783,26 +1172,15 @@ fun OpponentBattleView(
                 
                 // Attack sprite visibility and positioning based on attack phase
                 val shouldShowAttack = when (battleSystem.attackPhase) {
-                    1 -> false // Player attack on player screen
-                    2 -> true  // Player attack on opponent screen  
-                    3 -> true  // Opponent attack on opponent screen
-                    4 -> false // Opponent attack on player screen
+                    2 -> true  // Player attack on enemy screen
                     else -> false
                 }
                 
                 if (shouldShowAttack) {
-                    val xOffset = when (battleSystem.attackPhase) {
-                        2 -> (attackAnimationProgress * 400 - 350).dp  // Player attack on opponent screen - start more to the left
-                        3 -> (-attackAnimationProgress * 400 + -50).dp  // Opponent attack on opponent screen - start more to the left
-                        else -> 0.dp
-                    }
+                    val xOffset = (attackAnimationProgress * 400 - 350).dp  // Player attack on enemy screen - start more to the left
                     
-                    // Use correct character ID based on attack phase
-                    val characterId = when (battleSystem.attackPhase) {
-                        2 -> playerCharacter?.charaId ?: "dim011_mon01"  // Use player's character ID for player attack
-                        3 -> activeCharacter?.charaId ?: "dim011_mon01"  // Use opponent's character ID for opponent attack
-                        else -> "dim011_mon01"
-                    }
+                    // Use player's character ID for player attack
+                    val characterId = playerCharacter?.charaId ?: "dim011_mon01"
                     
                     // Handle sprite transition
                     LaunchedEffect(characterId, battleSystem.attackPhase) {
@@ -817,7 +1195,7 @@ fun OpponentBattleView(
                         previousAttackPhase = battleSystem.attackPhase
                     }
                     
-                    println("OpponentBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
+                    println("EnemyBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
                     
                     if (!isTransitioning) {
                         AttackSpriteImage(
@@ -829,7 +1207,7 @@ fun OpponentBattleView(
                                     x = xOffset,
                                     y = 0.dp
                                 )
-                                .scale(if (battleSystem.attackPhase == 2) -1f else 1f, 1f), // Flip player attacks only
+                                .scale(-1f, 1f), // Flip player attacks
                             contentScale = ContentScale.Fit
                         )
                     }
@@ -1201,9 +1579,12 @@ fun BattlesScreen() {
 
     Scaffold (
         topBar = {
-            TopBanner(
-                text = "Online battles"
-            )
+            // Only show TopBanner when not in battle mode
+            if (currentView != "battle-main" && currentView != "battle-results") {
+                TopBanner(
+                    text = "Online battles"
+                )
+            }
         }
     ) { contentPadding ->
         Column(
