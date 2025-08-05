@@ -66,6 +66,19 @@ class ArenaBattleSystem {
     private var _isOpponentDodging by mutableStateOf(false)
     val isOpponentDodging: Boolean get() = _isOpponentDodging
 
+    // Separate dodge progress and direction for player and opponent
+    private var _playerDodgeProgress by mutableStateOf(0f)
+    val playerDodgeProgress: Float get() = _playerDodgeProgress
+
+    private var _playerDodgeDirection by mutableStateOf(1f)
+    val playerDodgeDirection: Float get() = _playerDodgeDirection
+
+    private var _opponentDodgeProgress by mutableStateOf(0f)
+    val opponentDodgeProgress: Float get() = _opponentDodgeProgress
+
+    private var _opponentDodgeDirection by mutableStateOf(1f)
+    val opponentDodgeDirection: Float get() = _opponentDodgeDirection
+
     private var _isPlayerHit by mutableStateOf(false)
     val isPlayerHit: Boolean get() = _isPlayerHit
 
@@ -168,6 +181,10 @@ class ArenaBattleSystem {
         _hitProgress = 0f
         _isPlayerDodging = false
         _isOpponentDodging = false
+        _playerDodgeProgress = 0f
+        _playerDodgeDirection = 1f
+        _opponentDodgeProgress = 0f
+        _opponentDodgeDirection = 1f
         _isPlayerHit = false
         _isOpponentHit = false
         _shouldCounterAttack = false
@@ -232,29 +249,45 @@ class ArenaBattleSystem {
     // Player-specific dodge methods
     fun startPlayerDodge() {
         _isPlayerDodging = true
-        _dodgeProgress = 0f
-        _dodgeDirection = 1f
+        _playerDodgeProgress = 0f
+        _playerDodgeDirection = 1f
         Log.d(TAG, "Started player dodge animation")
     }
 
     fun endPlayerDodge() {
         _isPlayerDodging = false
-        _dodgeProgress = 0f
+        _playerDodgeProgress = 0f
         Log.d(TAG, "Ended player dodge animation")
+    }
+
+    fun setPlayerDodgeProgress(progress: Float) {
+        _playerDodgeProgress = progress
+    }
+
+    fun setPlayerDodgeDirection(direction: Float) {
+        _playerDodgeDirection = direction
     }
 
     // Opponent-specific dodge methods
     fun startOpponentDodge() {
         _isOpponentDodging = true
-        _dodgeProgress = 0f
-        _dodgeDirection = 1f
+        _opponentDodgeProgress = 0f
+        _opponentDodgeDirection = 1f
         Log.d(TAG, "Started opponent dodge animation")
     }
 
     fun endOpponentDodge() {
         _isOpponentDodging = false
-        _dodgeProgress = 0f
+        _opponentDodgeProgress = 0f
         Log.d(TAG, "Ended opponent dodge animation")
+    }
+
+    fun setOpponentDodgeProgress(progress: Float) {
+        _opponentDodgeProgress = progress
+    }
+
+    fun setOpponentDodgeDirection(direction: Float) {
+        _opponentDodgeDirection = direction
     }
 
     // Player-specific hit methods

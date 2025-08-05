@@ -212,8 +212,8 @@ fun BattleScreen(
             // Move up
             while (dodgeProgress < 1f) {
                 dodgeProgress += 0.05f // Faster dodge movement
-                battleSystem.setDodgeProgress(dodgeProgress)
-                battleSystem.setDodgeDirection(dodgeDirection)
+                battleSystem.setPlayerDodgeProgress(dodgeProgress)
+                battleSystem.setPlayerDodgeDirection(dodgeDirection)
                 delay(16) // 60 FPS
             }
             
@@ -225,8 +225,8 @@ fun BattleScreen(
             dodgeProgress = 0f
             while (dodgeProgress < 1f) {
                 dodgeProgress += 0.05f
-                battleSystem.setDodgeProgress(dodgeProgress)
-                battleSystem.setDodgeDirection(dodgeDirection)
+                battleSystem.setPlayerDodgeProgress(dodgeProgress)
+                battleSystem.setPlayerDodgeDirection(dodgeDirection)
                 delay(16)
             }
             
@@ -245,8 +245,8 @@ fun BattleScreen(
             // Move up
             while (dodgeProgress < 1f) {
                 dodgeProgress += 0.05f // Faster dodge movement
-                battleSystem.setDodgeProgress(dodgeProgress)
-                battleSystem.setDodgeDirection(dodgeDirection)
+                battleSystem.setOpponentDodgeProgress(dodgeProgress)
+                battleSystem.setOpponentDodgeDirection(dodgeDirection)
                 delay(16) // 60 FPS
             }
             
@@ -258,8 +258,8 @@ fun BattleScreen(
             dodgeProgress = 0f
             while (dodgeProgress < 1f) {
                 dodgeProgress += 0.05f
-                battleSystem.setDodgeProgress(dodgeProgress)
-                battleSystem.setDodgeDirection(dodgeDirection)
+                battleSystem.setOpponentDodgeProgress(dodgeProgress)
+                battleSystem.setOpponentDodgeDirection(dodgeDirection)
                 delay(16)
             }
             
@@ -447,15 +447,15 @@ fun PlayerBattleView(
                 // Calculate vertical offset for dodge animation
                 val verticalOffset = if (battleSystem.isPlayerDodging) {
                     val dodgeHeight = 30.dp
-                    val progress = battleSystem.dodgeProgress
-                    val direction = battleSystem.dodgeDirection
+                    val progress = battleSystem.playerDodgeProgress
+                    val direction = battleSystem.playerDodgeDirection
                     
                     if (direction > 0) {
-                        // Moving up
-                        (progress * dodgeHeight.value).dp
+                        // Moving up (negative offset to move UP visually)
+                        -(progress * dodgeHeight.value).dp
                     } else {
-                        // Moving back down
-                        ((1f - progress) * dodgeHeight.value).dp
+                        // Moving back down (from negative peak to 0)
+                        -((1f - progress) * dodgeHeight.value).dp
                     }
                 } else {
                     0.dp
@@ -743,15 +743,15 @@ fun OpponentBattleView(
                 // Calculate vertical offset for dodge animation
                 val verticalOffset = if (battleSystem.isOpponentDodging) {
                     val dodgeHeight = 30.dp
-                    val progress = battleSystem.dodgeProgress
-                    val direction = battleSystem.dodgeDirection
+                    val progress = battleSystem.opponentDodgeProgress
+                    val direction = battleSystem.opponentDodgeDirection
                     
                     if (direction > 0) {
-                        // Moving up
-                        (progress * dodgeHeight.value).dp
+                        // Moving up (negative offset to move UP visually)
+                        -(progress * dodgeHeight.value).dp
                     } else {
-                        // Moving back down
-                        ((1f - progress) * dodgeHeight.value).dp
+                        // Moving back down (from negative peak to 0)
+                        -((1f - progress) * dodgeHeight.value).dp
                     }
                 } else {
                     0.dp
