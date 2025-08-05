@@ -473,111 +473,119 @@ fun OpponentBattleView(
     var previousAttackPhase by remember { mutableStateOf<Int?>(null) }
     var isTransitioning by remember { mutableStateOf(false) }
     
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        // Opponent Digimon
-        Box(
+        // Top section: Enemy HP bar and HP numbers
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .size(80.dp),
-            contentAlignment = Alignment.CenterEnd
+                .padding(16.dp)
         ) {
-            // Determine animation type based on battle state
-            val animationType = when (battleSystem.attackPhase) {
-                1 -> DigimonAnimationType.IDLE    // Player attack on player screen
-                2 -> DigimonAnimationType.IDLE    // Player attack on opponent screen
-                3 -> DigimonAnimationType.ATTACK  // Opponent attack on opponent screen
-                4 -> DigimonAnimationType.ATTACK  // Opponent attack on player screen
-                else -> DigimonAnimationType.IDLE
-            }
-            
-            AnimatedSpriteImage(
-                characterId = activeCharacter?.charaId ?: "dim011_mon01",
-                animationType = animationType,
-                modifier = Modifier.size(80.dp),
-                contentScale = ContentScale.Fit,
-                reloadMappings = false
+            // Enemy HP bar
+            LinearProgressIndicator(
+                progress = battleSystem.opponentHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp),
+                color = Color.Red,
+                trackColor = Color.Gray
             )
-            
-            // Attack sprite visibility and positioning based on attack phase
-            val shouldShowAttack = when (battleSystem.attackPhase) {
-                1 -> false // Player attack on player screen
-                2 -> true  // Player attack on opponent screen  
-                3 -> true  // Opponent attack on opponent screen
-                4 -> false // Opponent attack on player screen
-                else -> false
-            }
-            
-            if (shouldShowAttack) {
-                val xOffset = when (battleSystem.attackPhase) {
-                    2 -> (attackAnimationProgress * 400 - 350).dp  // Player attack on opponent screen - start more to the left
-                    3 -> (-attackAnimationProgress * 400 + -50).dp  // Opponent attack on opponent screen - start more to the left
-                    else -> 0.dp
+
+            // Enemy HP display numbers
+            Text(
+                text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
+                fontSize = 14.sp,
+                color = Color.Black
+            )
+        }
+
+        // Middle section: Opponent Digimon
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // Opponent Digimon
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .size(80.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                // Determine animation type based on battle state
+                val animationType = when (battleSystem.attackPhase) {
+                    1 -> DigimonAnimationType.IDLE    // Player attack on player screen
+                    2 -> DigimonAnimationType.IDLE    // Player attack on opponent screen
+                    3 -> DigimonAnimationType.ATTACK  // Opponent attack on opponent screen
+                    4 -> DigimonAnimationType.ATTACK  // Opponent attack on player screen
+                    else -> DigimonAnimationType.IDLE
                 }
                 
-                // Use correct character ID based on attack phase
-                val characterId = when (battleSystem.attackPhase) {
-                    2 -> playerCharacter?.charaId ?: "dim011_mon01"  // Use player's character ID for player attack
-                    3 -> activeCharacter?.charaId ?: "dim011_mon01"  // Use opponent's character ID for opponent attack
-                    else -> "dim011_mon01"
+                AnimatedSpriteImage(
+                    characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                    animationType = animationType,
+                    modifier = Modifier.size(80.dp),
+                    contentScale = ContentScale.Fit,
+                    reloadMappings = false
+                )
+                
+                // Attack sprite visibility and positioning based on attack phase
+                val shouldShowAttack = when (battleSystem.attackPhase) {
+                    1 -> false // Player attack on player screen
+                    2 -> true  // Player attack on opponent screen  
+                    3 -> true  // Opponent attack on opponent screen
+                    4 -> false // Opponent attack on player screen
+                    else -> false
                 }
                 
-                // Handle sprite transition
-                LaunchedEffect(characterId, battleSystem.attackPhase) {
-                    if ((previousCharacterId != null && previousCharacterId != characterId) ||
-                        (previousAttackPhase != null && previousAttackPhase != battleSystem.attackPhase)) {
-                        // Character ID or attack phase changed, start transition
-                        isTransitioning = true
-                        delay(100) // Brief invisibility period
-                        isTransitioning = false
+                if (shouldShowAttack) {
+                    val xOffset = when (battleSystem.attackPhase) {
+                        2 -> (attackAnimationProgress * 400 - 350).dp  // Player attack on opponent screen - start more to the left
+                        3 -> (-attackAnimationProgress * 400 + -50).dp  // Opponent attack on opponent screen - start more to the left
+                        else -> 0.dp
                     }
-                    previousCharacterId = characterId
-                    previousAttackPhase = battleSystem.attackPhase
-                }
-                
-                println("OpponentBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
-                
-                if (!isTransitioning) {
-                    AttackSpriteImage(
-                        characterId = characterId,
-                        isLarge = true,
-                        modifier = Modifier
-                            .size(60.dp)
-                            .offset(
-                                x = xOffset,
-                                y = 0.dp
-                            )
-                            .scale(if (battleSystem.attackPhase == 2) -1f else 1f, 1f), // Flip player attacks only
-                        contentScale = ContentScale.Fit
-                    )
+                    
+                    // Use correct character ID based on attack phase
+                    val characterId = when (battleSystem.attackPhase) {
+                        2 -> playerCharacter?.charaId ?: "dim011_mon01"  // Use player's character ID for player attack
+                        3 -> activeCharacter?.charaId ?: "dim011_mon01"  // Use opponent's character ID for opponent attack
+                        else -> "dim011_mon01"
+                    }
+                    
+                    // Handle sprite transition
+                    LaunchedEffect(characterId, battleSystem.attackPhase) {
+                        if ((previousCharacterId != null && previousCharacterId != characterId) ||
+                            (previousAttackPhase != null && previousAttackPhase != battleSystem.attackPhase)) {
+                            // Character ID or attack phase changed, start transition
+                            isTransitioning = true
+                            delay(100) // Brief invisibility period
+                            isTransitioning = false
+                        }
+                        previousCharacterId = characterId
+                        previousAttackPhase = battleSystem.attackPhase
+                    }
+                    
+                    println("OpponentBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
+                    
+                    if (!isTransitioning) {
+                        AttackSpriteImage(
+                            characterId = characterId,
+                            isLarge = true,
+                            modifier = Modifier
+                                .size(60.dp)
+                                .offset(
+                                    x = xOffset,
+                                    y = 0.dp
+                                )
+                                .scale(if (battleSystem.attackPhase == 2) -1f else 1f, 1f), // Flip player attacks only
+                            contentScale = ContentScale.Fit
+                        )
+                    }
                 }
             }
         }
-
-        // Enemy HP bar
-        LinearProgressIndicator(
-            progress = battleSystem.opponentHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(10.dp),
-            color = Color.Red,
-            trackColor = Color.Gray
-        )
-
-        // Enemy HP display numbers
-        Text(
-            text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
-            fontSize = 14.sp,
-            color = Color.Black
-        )
-
-        // Spacer for layout balance
-        Spacer(modifier = Modifier.height(120.dp))
     }
 }
 
