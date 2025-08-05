@@ -742,15 +742,15 @@ fun MiddleBattleView(
                  },
                  enabled = battleSystem.isAttackButtonEnabled,
                  modifier = Modifier
-                     .fillMaxWidth()
-                     .height(50.dp),
+                     .fillMaxWidth(0.5f)
+                     .height(35.dp),
                  colors = ButtonDefaults.buttonColors(
-                     containerColor = Color.Red,
+                     containerColor = Color.Blue,
                      disabledContainerColor = Color.Gray
                  ),
                  shape = RoundedCornerShape(8.dp)
              ) {
-                 Text("Attack", color = Color.White, fontSize = 18.sp)
+                 Text("Attack", color = Color.White, fontSize = 12.sp)
              }
         }
     }
