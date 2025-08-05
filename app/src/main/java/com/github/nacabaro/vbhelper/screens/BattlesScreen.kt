@@ -400,6 +400,7 @@ fun MiddleBattleView(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Debug display
+            /*
             if (lastApiResult != null) {
                 Text(
                     text = "Debug: state=${lastApiResult!!.state}, playerAttackHit=${lastApiResult!!.playerAttackHit}, opponentDamage=${lastApiResult!!.opponentAttackDamage}",
@@ -408,6 +409,7 @@ fun MiddleBattleView(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
+            */
 
             // Enemy HP bar (top)
             LinearProgressIndicator(
@@ -428,22 +430,14 @@ fun MiddleBattleView(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Player HP bar (bottom)
-            LinearProgressIndicator(
-                progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp),
-                color = Color.Green,
-                trackColor = Color.Gray
-            )
-
             // Player HP display numbers
+            /*
             Text(
                 text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
                 fontSize = 14.sp,
                 color = Color.Black
             )
+            */
         }
 
         // Middle section: Both Digimon with horizontal line separator
@@ -611,7 +605,7 @@ fun MiddleBattleView(
             }
         }
 
-        // Bottom section: Critical bar and Attack button
+        // Bottom section: Player HP bar, Critical bar and Attack button
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -629,7 +623,26 @@ fun MiddleBattleView(
                 trackColor = Color.Gray
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Player HP bar
+            LinearProgressIndicator(
+                progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp),
+                color = Color.Green,
+                trackColor = Color.Gray
+            )
+
+            // Player HP display numbers
+            Text(
+                text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
+                fontSize = 14.sp,
+                color = Color.Black
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
 
             // Attack button
             Button(
@@ -780,13 +793,14 @@ fun PlayerBattleView(
                     modifier = Modifier.align(Alignment.TopEnd),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
-                    Text("Exit", color = Color.White, fontSize = 14.sp)
+                    Text("Exit", color = Color.White, fontSize = 12.sp)
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Debug display
+            /*
             if (lastApiResult != null) {
                 Text(
                     text = "Debug: state=${lastApiResult!!.state}, playerAttackHit=${lastApiResult!!.playerAttackHit}, opponentDamage=${lastApiResult!!.opponentAttackDamage}",
@@ -795,6 +809,7 @@ fun PlayerBattleView(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
+            */
 
             // Health bar
             LinearProgressIndicator(
@@ -1298,6 +1313,7 @@ fun BattlesScreen() {
                             opponentsList.clear()
                             opponentsList.addAll(opponents.opponentsList)
                             currentView = "rookie"
+                            currentStage = "rookie"
                         } catch (e: Exception) {
                             Log.d(TAG, "Error processing opponents data: ${e.message}")
                             e.printStackTrace()
@@ -1322,6 +1338,7 @@ fun BattlesScreen() {
                             opponentsList.clear()
                             opponentsList.addAll(opponents.opponentsList)
                             currentView = "champion"
+                            currentStage = "champion"
                         } catch (e: Exception) {
                             Log.d(TAG, "Error processing opponents data: ${e.message}")
                             e.printStackTrace()
@@ -1346,6 +1363,7 @@ fun BattlesScreen() {
                             opponentsList.clear()
                             opponentsList.addAll(opponents.opponentsList)
                             currentView = "ultimate"
+                            currentStage = "ultimate"
                         } catch (e: Exception) {
                             Log.d(TAG, "Error processing opponents data: ${e.message}")
                             e.printStackTrace()
@@ -1370,6 +1388,7 @@ fun BattlesScreen() {
                             opponentsList.clear()
                             opponentsList.addAll(opponents.opponentsList)
                             currentView = "mega"
+                            currentStage = "mega"
                         } catch (e: Exception) {
                             Log.d(TAG, "Error processing opponents data: ${e.message}")
                             e.printStackTrace()
@@ -1394,6 +1413,15 @@ fun BattlesScreen() {
     }
 
     val characterDropdown = @Composable { currentStage: String ->
+        // Get the appropriate character list based on the passed currentStage parameter
+        val characterListForStage = when (currentStage.lowercase()) {
+            "rookie" -> rookieCharacters
+            "champion" -> championCharacters
+            "ultimate" -> ultimateCharacters
+            "mega" -> megaCharacters
+            else -> rookieCharacters
+        }
+        
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
@@ -1410,7 +1438,7 @@ fun BattlesScreen() {
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                characterList.forEach { character ->
+                characterListForStage.forEach { character ->
                     DropdownMenuItem(
                         text = { Text(character.name) },
                         onClick = {
