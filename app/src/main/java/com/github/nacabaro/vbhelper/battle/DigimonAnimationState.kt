@@ -64,8 +64,8 @@ class DigimonAnimationStateMachine(
     
     // Animation durations for each type
     private val animationDurations = mapOf(
-        DigimonAnimationType.IDLE to 500L,
-        DigimonAnimationType.IDLE2 to 500L,
+        DigimonAnimationType.IDLE to 750L,
+        DigimonAnimationType.IDLE2 to 750L,
         DigimonAnimationType.WALK to 200L,
         DigimonAnimationType.WALK2 to 200L,
         DigimonAnimationType.RUN to 150L,
@@ -73,8 +73,8 @@ class DigimonAnimationStateMachine(
         DigimonAnimationType.WORKOUT to 300L,
         DigimonAnimationType.WORKOUT2 to 300L,
         DigimonAnimationType.HAPPY to 400L,
-        DigimonAnimationType.SLEEP to 1000L,
-        DigimonAnimationType.ATTACK to 300L,
+        DigimonAnimationType.SLEEP to 1500L,
+        DigimonAnimationType.ATTACK to 650L,
         DigimonAnimationType.FLEE to 150L
     )
     
