@@ -37,6 +37,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.ButtonDefaults
@@ -52,6 +54,8 @@ import com.github.nacabaro.vbhelper.battle.DigimonAnimationType
 import com.github.nacabaro.vbhelper.battle.AnimatedSpriteImage
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import kotlin.math.sin
+import kotlin.math.PI
 
 
 @Composable
@@ -65,6 +69,7 @@ fun BattleScreen(
     context: android.content.Context? = null
 ) {
     val battleSystem = remember { ArenaBattleSystem() }
+    val coroutineScope = rememberCoroutineScope()
     
     // Initialize HP when battle starts
     LaunchedEffect(activeCharacter, opponentCharacter) {
@@ -110,14 +115,36 @@ fun BattleScreen(
                 while (progress < 1f) {
                     progress += 0.016f // 60 FPS
                     battleSystem.setAttackProgress(progress)
+                    
+                    // Trigger animation when attack reaches the opponent (around 55% progress for opponent dodge)
+                    if (progress >= 0.55f && !battleSystem.isOpponentHit && !battleSystem.isOpponentDodging) {
+                        if (battleSystem.attackIsHit) {
+                            // Player attack hits opponent
+                            println("Player attack hits opponent at progress $progress")
+                            battleSystem.startOpponentHit()
+                        } else {
+                            // Player attack misses, opponent dodges
+                            println("Player attack misses, opponent dodges at progress $progress")
+                            battleSystem.startOpponentDodge()
+                        }
+                    }
+                    
                     delay(16) // 60 FPS
                 }
-                                 println("Phase 2 completed, applying damage and starting opponent attack")
-                 // Apply player's damage and start opponent attack
-                 battleSystem.completeAttackAnimation(opponentDamage = pendingOpponentDamage)
-                 pendingOpponentDamage = 0f
-                 delay(500)
-                 battleSystem.startOpponentAttack()
+                println("Phase 2 completed, applying damage and starting opponent attack")
+                // Apply player's damage
+                battleSystem.completeAttackAnimation(opponentDamage = pendingOpponentDamage)
+                pendingOpponentDamage = 0f
+                delay(500)
+                
+                // Check if there's a counter-attack set up
+                if (battleSystem.shouldCounterAttack) {
+                    println("Starting counter-attack")
+                    battleSystem.startCounterAttack()
+                } else {
+                    // Normal opponent attack
+                    battleSystem.startOpponentAttack()
+                }
             }
             3 -> {
                 // Phase 3: Opponent attack on opponent screen
@@ -140,14 +167,31 @@ fun BattleScreen(
                 while (progress < 1f) {
                     progress += 0.016f // 60 FPS
                     battleSystem.setAttackProgress(progress)
+                    
+                    // Trigger animation when attack reaches the player (around 75% progress - earlier for better timing)
+                    if (progress >= 0.75f && !battleSystem.isPlayerHit && !battleSystem.isPlayerDodging) {
+                        println("Phase 4: Checking player animation at progress $progress, opponentAttackIsHit=${battleSystem.opponentAttackIsHit}, shouldCounterAttack=${battleSystem.shouldCounterAttack}, counterAttackIsHit=${battleSystem.counterAttackIsHit}")
+                        println("Phase 4: Player animation decision - opponentAttackIsHit=${battleSystem.opponentAttackIsHit}, will ${if (battleSystem.opponentAttackIsHit) "HIT" else "DODGE"}")
+                        println("Phase 4: Full debug - attackPhase=${battleSystem.attackPhase}, isPlayerAttacking=${battleSystem.isPlayerAttacking}")
+                        if (battleSystem.opponentAttackIsHit) {
+                            // Opponent attack hits player
+                            println("Opponent attack hits player at progress $progress")
+                            battleSystem.startPlayerHit()
+                        } else {
+                            // Opponent attack misses, player dodges
+                            println("Opponent attack misses, player dodges at progress $progress")
+                            battleSystem.startPlayerDodge()
+                        }
+                    }
+                    
                     delay(16) // 60 FPS
                 }
-                                 println("Phase 4 completed, applying damage and resetting")
-                 // Apply opponent's damage and reset
-                 battleSystem.completeAttackAnimation(playerDamage = pendingPlayerDamage)
-                 pendingPlayerDamage = 0f
-                 battleSystem.resetAttackState()
-                 battleSystem.enableAttackButton()
+                println("Phase 4 completed, applying damage and resetting")
+                // Apply opponent's damage and reset
+                battleSystem.completeAttackAnimation(playerDamage = pendingPlayerDamage)
+                pendingPlayerDamage = 0f
+                battleSystem.resetAttackState()
+                battleSystem.enableAttackButton()
                 
                 // Check if battle is over
                 if (battleSystem.checkBattleOver()) {
@@ -155,6 +199,112 @@ fun BattleScreen(
                     onAttackClick()
                 }
             }
+        }
+    }
+
+    // Player dodge animation
+    LaunchedEffect(battleSystem.isPlayerDodging) {
+        if (battleSystem.isPlayerDodging) {
+            println("Starting player dodge animation")
+            var dodgeProgress = 0f
+            var dodgeDirection = 1f // Start moving up
+            
+            // Move up
+            while (dodgeProgress < 1f) {
+                dodgeProgress += 0.05f // Faster dodge movement
+                battleSystem.setDodgeProgress(dodgeProgress)
+                battleSystem.setDodgeDirection(dodgeDirection)
+                delay(16) // 60 FPS
+            }
+            
+            // Wait at the top
+            delay(200)
+            
+            // Move back down
+            dodgeDirection = -1f
+            dodgeProgress = 0f
+            while (dodgeProgress < 1f) {
+                dodgeProgress += 0.05f
+                battleSystem.setDodgeProgress(dodgeProgress)
+                battleSystem.setDodgeDirection(dodgeDirection)
+                delay(16)
+            }
+            
+            battleSystem.endPlayerDodge()
+            println("Player dodge animation completed")
+        }
+    }
+
+    // Opponent dodge animation
+    LaunchedEffect(battleSystem.isOpponentDodging) {
+        if (battleSystem.isOpponentDodging) {
+            println("Starting opponent dodge animation")
+            var dodgeProgress = 0f
+            var dodgeDirection = 1f // Start moving up
+            
+            // Move up
+            while (dodgeProgress < 1f) {
+                dodgeProgress += 0.05f // Faster dodge movement
+                battleSystem.setDodgeProgress(dodgeProgress)
+                battleSystem.setDodgeDirection(dodgeDirection)
+                delay(16) // 60 FPS
+            }
+            
+            // Wait at the top
+            delay(200)
+            
+            // Move back down
+            dodgeDirection = -1f
+            dodgeProgress = 0f
+            while (dodgeProgress < 1f) {
+                dodgeProgress += 0.05f
+                battleSystem.setDodgeProgress(dodgeProgress)
+                battleSystem.setDodgeDirection(dodgeDirection)
+                delay(16)
+            }
+            
+            battleSystem.endOpponentDodge()
+            println("Opponent dodge animation completed")
+        }
+    }
+
+    // Player hit animation
+    LaunchedEffect(battleSystem.isPlayerHit) {
+        if (battleSystem.isPlayerHit) {
+            println("Starting player hit animation")
+            var hitProgress = 0f
+            
+            // Quick hit effect
+            while (hitProgress < 1f) {
+                hitProgress += 0.1f // Fast hit effect
+                battleSystem.setHitProgress(hitProgress)
+                delay(16)
+            }
+            
+            delay(100) // Brief pause
+            
+            battleSystem.endPlayerHit()
+            println("Player hit animation completed")
+        }
+    }
+
+    // Opponent hit animation
+    LaunchedEffect(battleSystem.isOpponentHit) {
+        if (battleSystem.isOpponentHit) {
+            println("Starting opponent hit animation")
+            var hitProgress = 0f
+            
+            // Quick hit effect
+            while (hitProgress < 1f) {
+                hitProgress += 0.1f // Fast hit effect
+                battleSystem.setHitProgress(hitProgress)
+                delay(16)
+            }
+            
+            delay(100) // Brief pause
+            
+            battleSystem.endOpponentHit()
+            println("Opponent hit animation completed")
         }
     }
 
@@ -179,7 +329,8 @@ fun BattleScreen(
                     onSetPendingDamage = { playerDamage, opponentDamage ->
                         pendingPlayerDamage = playerDamage
                         pendingOpponentDamage = opponentDamage
-                    }
+                    },
+                    coroutineScope = coroutineScope
                 )
             }
             1 -> {
@@ -207,12 +358,14 @@ fun PlayerBattleView(
     activeCharacter: APIBattleCharacter?,
     context: android.content.Context?,
     opponent: APIBattleCharacter?,
-    onSetPendingDamage: (Float, Float) -> Unit
+    onSetPendingDamage: (Float, Float) -> Unit,
+    coroutineScope: kotlinx.coroutines.CoroutineScope
 ) {
     // Track previous character ID to detect transitions
     var previousCharacterId by remember { mutableStateOf<String?>(null) }
     var previousAttackPhase by remember { mutableStateOf<Int?>(null) }
     var isTransitioning by remember { mutableStateOf(false) }
+    var lastApiResult by remember { mutableStateOf<com.github.nacabaro.vbhelper.battle.PVPDataModel?>(null) }
     
     Box(
         modifier = Modifier.fillMaxSize()
@@ -237,6 +390,16 @@ fun PlayerBattleView(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Debug display
+            if (lastApiResult != null) {
+                Text(
+                    text = "Debug: state=${lastApiResult!!.state}, playerAttackHit=${lastApiResult!!.playerAttackHit}, opponentDamage=${lastApiResult!!.opponentAttackDamage}",
+                    color = Color.Red,
+                    fontSize = 10.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             // Health bar
             LinearProgressIndicator(
@@ -271,12 +434,42 @@ fun PlayerBattleView(
                 contentAlignment = Alignment.CenterStart
             ) {
                 // Determine animation type based on battle state
-                val animationType = when (battleSystem.attackPhase) {
-                    1 -> DigimonAnimationType.ATTACK  // Player attack on player screen
-                    2 -> DigimonAnimationType.ATTACK  // Player attack on opponent screen
-                    3 -> DigimonAnimationType.IDLE    // Opponent attack on opponent screen
-                    4 -> DigimonAnimationType.IDLE    // Opponent attack on player screen
+                val animationType = when {
+                    battleSystem.isPlayerDodging -> DigimonAnimationType.WALK  // Use walk animation for dodge
+                    battleSystem.isPlayerHit -> DigimonAnimationType.SLEEP     // Use sleep animation for hit effect (injured sprite)
+                    battleSystem.attackPhase == 1 -> DigimonAnimationType.ATTACK  // Player attack on player screen
+                    battleSystem.attackPhase == 2 -> DigimonAnimationType.ATTACK  // Player attack on opponent screen
+                    battleSystem.attackPhase == 3 -> DigimonAnimationType.IDLE    // Opponent attack on opponent screen
+                    battleSystem.attackPhase == 4 -> DigimonAnimationType.IDLE    // Opponent attack on player screen
                     else -> DigimonAnimationType.IDLE
+                }
+                
+                // Calculate vertical offset for dodge animation
+                val verticalOffset = if (battleSystem.isPlayerDodging) {
+                    val dodgeHeight = 30.dp
+                    val progress = battleSystem.dodgeProgress
+                    val direction = battleSystem.dodgeDirection
+                    
+                    if (direction > 0) {
+                        // Moving up
+                        (progress * dodgeHeight.value).dp
+                    } else {
+                        // Moving back down
+                        ((1f - progress) * dodgeHeight.value).dp
+                    }
+                } else {
+                    0.dp
+                }
+                
+                // Calculate hit effect (slight shake)
+                val hitOffset = if (battleSystem.isPlayerHit) {
+                    val shakeAmount = 5.dp
+                    val progress = battleSystem.hitProgress
+                    // Simple shake effect without complex math
+                    val shake = if (progress < 0.5f) progress * 2f else (1f - progress) * 2f
+                    (shake * shakeAmount.value).dp
+                } else {
+                    0.dp
                 }
                 
                 AnimatedSpriteImage(
@@ -284,7 +477,11 @@ fun PlayerBattleView(
                     animationType = animationType,
                     modifier = Modifier
                         .size(80.dp)
-                        .scale(-1f, 1f), // Flip player Digimon horizontally
+                        .scale(-1f, 1f) // Flip player Digimon horizontally
+                        .offset(
+                            x = hitOffset,
+                            y = verticalOffset
+                        ),
                     contentScale = ContentScale.Fit,
                     reloadMappings = false
                 )
@@ -407,6 +604,7 @@ fun PlayerBattleView(
                         ) { apiResult ->
                             // Handle API response here
                             println("API Result: $apiResult")
+                            lastApiResult = apiResult // Store for debug display
                             
                             // Update HP based on API response
                             when (apiResult.state) {
@@ -414,18 +612,35 @@ fun PlayerBattleView(
                                      // Match is still ongoing - update HP and continue
                                      println("Round ${apiResult.currentRound}: Player HP=${apiResult.playerHP}, Opponent HP=${apiResult.opponentHP}")
                                      
-                                                                                                         // Set pending damage based on API result
-                                      if (apiResult.playerAttackHit) {
-                                          // Player attack hit - enemy takes damage at end of player animation
-                                          println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
-                                          onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
-                                          battleSystem.setAttackHitState(true)
-                                      } else {
-                                          // Player attack missed - enemy counter-attacks and player takes damage
-                                          println("Player attack missed! Enemy counter-attacks and player takes ${apiResult.opponentAttackDamage} damage")
-                                          onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), 0f) // Player takes damage
-                                          battleSystem.setAttackHitState(false)
-                                      }
+                                     // Set pending damage based on API result
+                                     if (apiResult.playerAttackDamage > 0) {
+                                         // Player attack hit - enemy takes damage at end of player animation
+                                         println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
+                                         onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
+                                         battleSystem.setAttackHitState(true)
+                                     } else {
+                                         // Player attack missed - enemy counter-attacks
+                                         println("Player attack missed! Enemy counter-attacks")
+                                         battleSystem.setAttackHitState(false)
+                                         // Set up counter-attack - determine if it hits based on API result
+                                         val counterAttackHits = apiResult.opponentAttackDamage > 0
+                                         println("Setting up counter-attack: counterAttackHits=$counterAttackHits, opponentAttackDamage=${apiResult.opponentAttackDamage}")
+                                         println("Full API response: status=${apiResult.status}, state=${apiResult.state}, playerAttackHit=${apiResult.playerAttackHit}, playerAttackDamage=${apiResult.playerAttackDamage}, opponentAttackDamage=${apiResult.opponentAttackDamage}, playerHP=${apiResult.playerHP}, opponentHP=${apiResult.opponentHP}")
+                                         println("DEBUG: Using playerAttackDamage > 0 instead of playerAttackHit for hit detection")
+                                         
+                                         // Use opponentAttackDamage to determine counter-attack hit
+                                         val finalCounterAttackHits = counterAttackHits
+                                         println("Using opponentAttackDamage > 0 for counter-attack: $finalCounterAttackHits")
+                                         
+                                         if (finalCounterAttackHits) {
+                                             println("Counter-attack hits! Player takes ${apiResult.opponentAttackDamage} damage")
+                                             onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), 0f) // Player takes damage
+                                         } else {
+                                             println("Counter-attack misses! Player dodges")
+                                             onSetPendingDamage(0f, 0f) // No damage
+                                         }
+                                         battleSystem.setupCounterAttack(finalCounterAttackHits)
+                                     }
                                  }
                                  2 -> {
                                      // Match is over - transition to results screen
@@ -515,18 +730,53 @@ fun OpponentBattleView(
                 contentAlignment = Alignment.CenterEnd
             ) {
                 // Determine animation type based on battle state
-                val animationType = when (battleSystem.attackPhase) {
-                    1 -> DigimonAnimationType.IDLE    // Player attack on player screen
-                    2 -> DigimonAnimationType.IDLE    // Player attack on opponent screen
-                    3 -> DigimonAnimationType.ATTACK  // Opponent attack on opponent screen
-                    4 -> DigimonAnimationType.ATTACK  // Opponent attack on player screen
+                val animationType = when {
+                    battleSystem.isOpponentDodging -> DigimonAnimationType.WALK  // Use walk animation for dodge
+                    battleSystem.isOpponentHit -> DigimonAnimationType.SLEEP     // Use sleep animation for hit effect (injured sprite)
+                    battleSystem.attackPhase == 1 -> DigimonAnimationType.IDLE    // Player attack on player screen
+                    battleSystem.attackPhase == 2 -> DigimonAnimationType.IDLE    // Player attack on opponent screen
+                    battleSystem.attackPhase == 3 -> DigimonAnimationType.ATTACK  // Opponent attack on opponent screen
+                    battleSystem.attackPhase == 4 -> DigimonAnimationType.ATTACK  // Opponent attack on player screen
                     else -> DigimonAnimationType.IDLE
+                }
+                
+                // Calculate vertical offset for dodge animation
+                val verticalOffset = if (battleSystem.isOpponentDodging) {
+                    val dodgeHeight = 30.dp
+                    val progress = battleSystem.dodgeProgress
+                    val direction = battleSystem.dodgeDirection
+                    
+                    if (direction > 0) {
+                        // Moving up
+                        (progress * dodgeHeight.value).dp
+                    } else {
+                        // Moving back down
+                        ((1f - progress) * dodgeHeight.value).dp
+                    }
+                } else {
+                    0.dp
+                }
+                
+                // Calculate hit effect (slight shake)
+                val hitOffset = if (battleSystem.isOpponentHit) {
+                    val shakeAmount = 5.dp
+                    val progress = battleSystem.hitProgress
+                    // Simple shake effect without complex math
+                    val shake = if (progress < 0.5f) progress * 2f else (1f - progress) * 2f
+                    (shake * shakeAmount.value).dp
+                } else {
+                    0.dp
                 }
                 
                 AnimatedSpriteImage(
                     characterId = activeCharacter?.charaId ?: "dim011_mon01",
                     animationType = animationType,
-                    modifier = Modifier.size(80.dp),
+                    modifier = Modifier
+                        .size(80.dp)
+                        .offset(
+                            x = hitOffset,
+                            y = verticalOffset
+                        ),
                     contentScale = ContentScale.Fit,
                     reloadMappings = false
                 )
