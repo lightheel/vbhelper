@@ -498,7 +498,7 @@ fun MiddleBattleView(
                             .size(80.dp)
                             .offset(
                                 x = enemyHitOffset,
-                                y = enemyVerticalOffset
+                                y = enemyVerticalOffset + 40.dp
                             ),
                         contentScale = ContentScale.Fit,
                         reloadMappings = false
@@ -578,7 +578,7 @@ fun MiddleBattleView(
                             .scale(-1f, 1f) // Flip player Digimon horizontally
                             .offset(
                                 x = playerHitOffset,
-                                y = playerVerticalOffset
+                                y = playerVerticalOffset - 40.dp
                             ),
                         contentScale = ContentScale.Fit,
                         reloadMappings = false
