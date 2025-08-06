@@ -545,7 +545,7 @@ fun MiddleBattleView(
         modifier = Modifier.fillMaxSize()
     ) {
         // Animated background - positioned underneath all other sprites
-        AnimatedBattleBackground(
+        MultiLayerAnimatedBattleBackground(
             modifier = Modifier.fillMaxSize()
         )
         
@@ -596,11 +596,11 @@ fun MiddleBattleView(
             Text(
                 text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${opponentCharacter?.baseHp ?: 100}",
                 fontSize = 16.sp,
-                color = Color.LightGray,
+                color = Color.White,
                 style = TextStyle(
                     shadow = Shadow(
                         color = Color.Black,
-                        offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                        offset = androidx.compose.ui.geometry.Offset(4f, 4f),
                         //blurRadius = 2f
                     )
                 )
@@ -819,11 +819,11 @@ fun MiddleBattleView(
             Text(
                 text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
                 fontSize = 16.sp,
-                color = Color.LightGray,
+                color = Color.White,
                 style = TextStyle(
                     shadow = Shadow(
                         color = Color.Black,
-                        offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                        offset = androidx.compose.ui.geometry.Offset(4f, 4f),
                         //blurRadius = 2f
                     )
                 )
@@ -973,8 +973,8 @@ fun PlayerBattleView(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Animated Battle Background
-        AnimatedBattleBackground(modifier = Modifier.fillMaxSize())
+        // Multi-layer animated battle background
+        MultiLayerAnimatedBattleBackground(modifier = Modifier.fillMaxSize())
         
         // Top section: Exit button, HP bar, and HP numbers
         Column(
@@ -1023,11 +1023,11 @@ fun PlayerBattleView(
             Text(
                 text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
                 fontSize = 16.sp,
-                color = Color.LightGray,
+                color = Color.White,
                 style = TextStyle(
                     shadow = Shadow(
                         color = Color.Black,
-                        offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                        offset = androidx.compose.ui.geometry.Offset(4f, 4f),
                         //blurRadius = 2f
                     )
                 )
@@ -1311,8 +1311,8 @@ fun EnemyBattleView(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Animated Battle Background
-        AnimatedBattleBackground(modifier = Modifier.fillMaxSize())
+        // Multi-layer animated battle background
+        MultiLayerAnimatedBattleBackground(modifier = Modifier.fillMaxSize())
         
         // Top section: Enemy HP bar and HP numbers
         Column(
@@ -1334,11 +1334,11 @@ fun EnemyBattleView(
             Text(
                 text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
                 fontSize = 16.sp,
-                color = Color.LightGray,
+                color = Color.White,
                 style = TextStyle(
                     shadow = Shadow(
                         color = Color.Black,
-                        offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                        offset = androidx.compose.ui.geometry.Offset(4f, 4f),
                         //blurRadius = 2f
                     )
                 )
@@ -2222,6 +2222,155 @@ fun AnimatedBattleBackground(
                 modifier = Modifier
                     .fillMaxSize()
                     .offset(x = (xOffset + screenWidth.value).dp),
+                contentScale = ContentScale.FillBounds
+            )
+        }
+    }
+}
+
+@Composable
+fun MultiLayerAnimatedBattleBackground(
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    var backLayerBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    var middleLayerBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    var frontLayerBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    
+    var backLayerXOffset by remember { mutableStateOf(0f) }
+    var middleLayerXOffset by remember { mutableStateOf(0f) }
+    var frontLayerXOffset by remember { mutableStateOf(0f) }
+    
+    var screenWidth by remember { mutableStateOf(0.dp) }
+    var screenHeight by remember { mutableStateOf(0.dp) }
+
+    // Get screen dimensions
+    val density = LocalDensity.current
+    val configuration = LocalConfiguration.current
+    LaunchedEffect(Unit) {
+        screenWidth = with(density) { configuration.screenWidthDp.dp }
+        screenHeight = with(density) { configuration.screenHeightDp.dp }
+        println("DEBUG: Multi-layer screen dimensions = ${screenWidth.value}x${screenHeight.value}dp")
+    }
+
+    // Load all three background layers from internal storage
+    LaunchedEffect(Unit) {
+        try {
+            // Back layer (BattleBg_0018_BattleBg_0013.png)
+            val backLayerFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/BattleBg_0018_BattleBg_0013.png")
+            if (backLayerFile.exists()) {
+                backLayerBitmap = BitmapFactory.decodeFile(backLayerFile.absolutePath)
+                println("Successfully loaded back layer background: ${backLayerFile.absolutePath}")
+            } else {
+                println("Back layer background file not found: ${backLayerFile.absolutePath}")
+            }
+            
+            // Middle layer (BattleBg_0015_BattleBg_0012.png)
+            val middleLayerFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/BattleBg_0015_BattleBg_0012.png")
+            if (middleLayerFile.exists()) {
+                middleLayerBitmap = BitmapFactory.decodeFile(middleLayerFile.absolutePath)
+                println("Successfully loaded middle layer background: ${middleLayerFile.absolutePath}")
+            } else {
+                println("Middle layer background file not found: ${middleLayerFile.absolutePath}")
+            }
+            
+            // Front layer (BattleBg_0005_BattleBg_0011.png)
+            val frontLayerFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/BattleBg_0005_BattleBg_0011.png")
+            if (frontLayerFile.exists()) {
+                frontLayerBitmap = BitmapFactory.decodeFile(frontLayerFile.absolutePath)
+                println("Successfully loaded front layer background: ${frontLayerFile.absolutePath}")
+            } else {
+                println("Front layer background file not found: ${frontLayerFile.absolutePath}")
+            }
+        } catch (e: Exception) {
+            println("Error loading multi-layer battle backgrounds: ${e.message}")
+        }
+    }
+
+    // Animate all three layers with different speeds
+    LaunchedEffect(screenWidth) {
+        if (screenWidth > 0.dp) {
+            while (true) {
+                delay(50) // Update every 50ms for smooth animation
+                
+                // Back layer moves slowest (parallax effect)
+                backLayerXOffset -= 0.5f
+                if (backLayerXOffset <= -screenWidth.value) {
+                    backLayerXOffset = 0f
+                }
+                
+                // Middle layer moves at medium speed
+                middleLayerXOffset -= 1f
+                if (middleLayerXOffset <= -screenWidth.value) {
+                    middleLayerXOffset = 0f
+                }
+                
+                // Front layer moves fastest
+                frontLayerXOffset -= 1.5f
+                if (frontLayerXOffset <= -screenWidth.value) {
+                    frontLayerXOffset = 0f
+                }
+            }
+        }
+    }
+    
+    Box(modifier = modifier.fillMaxSize()) {
+        // Back layer (underneath everything)
+        backLayerBitmap?.let { bitmap ->
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Back Layer Battle Background 1",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(x = backLayerXOffset.dp),
+                contentScale = ContentScale.FillBounds
+            )
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Back Layer Battle Background 2",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(x = (backLayerXOffset + screenWidth.value).dp),
+                contentScale = ContentScale.FillBounds
+            )
+        }
+        
+        // Middle layer
+        middleLayerBitmap?.let { bitmap ->
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Middle Layer Battle Background 1",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(x = middleLayerXOffset.dp),
+                contentScale = ContentScale.FillBounds
+            )
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Middle Layer Battle Background 2",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(x = (middleLayerXOffset + screenWidth.value).dp),
+                contentScale = ContentScale.FillBounds
+            )
+        }
+        
+        // Front layer (on top of other backgrounds)
+        frontLayerBitmap?.let { bitmap ->
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Front Layer Battle Background 1",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(x = frontLayerXOffset.dp),
+                contentScale = ContentScale.FillBounds
+            )
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Front Layer Battle Background 2",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(x = (frontLayerXOffset + screenWidth.value).dp),
                 contentScale = ContentScale.FillBounds
             )
         }
