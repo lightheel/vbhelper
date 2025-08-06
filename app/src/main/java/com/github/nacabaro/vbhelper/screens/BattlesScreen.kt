@@ -56,7 +56,76 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import kotlin.math.sin
 import kotlin.math.PI
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.TextStyle
 
+
+@Composable
+fun AnimatedDamageNumber(
+    damage: Int,
+    isVisible: Boolean,
+    modifier: Modifier = Modifier
+) {
+    if (!isVisible) return
+    
+    println("DEBUG: AnimatedDamageNumber called with damage=$damage, isVisible=$isVisible")
+    
+    var animationProgress by remember { mutableStateOf(0f) }
+    var scale by remember { mutableStateOf(1f) }
+    var alpha by remember { mutableStateOf(1f) }
+    var yOffset by remember { mutableStateOf(0.dp) }
+    
+    LaunchedEffect(isVisible) {
+        if (isVisible) {
+            println("DEBUG: Starting damage number animation for damage=$damage")
+            // Start animation
+            animationProgress = 0f
+            scale = 0.5f
+            alpha = 1f
+            yOffset = 0.dp
+            
+            // Animate scale up
+            while (scale < 1.5f) {
+                scale += 0.1f
+                delay(16)
+            }
+            
+            // Hold at max scale briefly
+            delay(200)
+            
+            // Animate fade out and move up
+            while (alpha > 0f) {
+                alpha -= 0.05f
+                yOffset -= 1.dp
+                delay(16)
+            }
+            println("DEBUG: Damage number animation completed for damage=$damage")
+        }
+    }
+    
+    Text(
+        text = "-$damage",
+        fontSize = 32.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color.Red,
+        textAlign = TextAlign.Center,
+        style = TextStyle(
+            shadow = Shadow(
+                color = Color.Black,
+                offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                blurRadius = 4f
+            )
+        ),
+        modifier = modifier
+            .scale(scale)
+            .alpha(alpha)
+            .offset(y = yOffset)
+    )
+}
 
 @Composable
 fun BattleScreen(
@@ -81,6 +150,12 @@ fun BattleScreen(
     // Pending damage state for API integration
     var pendingPlayerDamage by remember { mutableStateOf(0f) }
     var pendingOpponentDamage by remember { mutableStateOf(0f) }
+    
+    // Damage number animation state
+    var showPlayerDamageNumber by remember { mutableStateOf(false) }
+    var showOpponentDamageNumber by remember { mutableStateOf(false) }
+    var playerDamageValue by remember { mutableStateOf(0) }
+    var opponentDamageValue by remember { mutableStateOf(0) }
     
     // Critical bar timer
     LaunchedEffect(Unit) {
@@ -132,9 +207,7 @@ fun BattleScreen(
                     delay(16) // 60 FPS
                 }
                 println("Phase 2 completed, applying damage and starting Phase 3")
-                // Apply player's damage
                 battleSystem.completeAttackAnimation(opponentDamage = pendingOpponentDamage)
-                pendingOpponentDamage = 0f
                 delay(500)
                 
                 // Check if there should be a counter-attack
@@ -173,9 +246,8 @@ fun BattleScreen(
                     delay(16) // 60 FPS
                 }
                 println("Phase 3 completed, applying damage and resetting")
-                // Apply enemy's damage and reset
+                println("DEBUG: pendingPlayerDamage = $pendingPlayerDamage")
                 battleSystem.completeAttackAnimation(playerDamage = pendingPlayerDamage)
-                pendingPlayerDamage = 0f
                 battleSystem.resetAttackState()
                 battleSystem.enableAttackButton()
                 
@@ -294,6 +366,45 @@ fun BattleScreen(
         }
     }
 
+    // Damage number handling
+    LaunchedEffect(pendingPlayerDamage) {
+        if (pendingPlayerDamage > 0) {
+            println("DEBUG: LaunchedEffect triggered for pendingPlayerDamage = $pendingPlayerDamage")
+            playerDamageValue = pendingPlayerDamage.toInt()
+            showPlayerDamageNumber = true
+            println("DEBUG: Setting player damage number: $playerDamageValue, showPlayerDamageNumber = $showPlayerDamageNumber")
+            
+            // Hide damage number after animation
+            delay(3000) // Increased delay to ensure UI recomposition
+            showPlayerDamageNumber = false
+            println("DEBUG: Hiding player damage number after delay")
+            
+            // Reset pending damage after animation completes
+            delay(500) // Additional delay before reset
+            pendingPlayerDamage = 0f
+            println("DEBUG: Resetting pendingPlayerDamage to 0")
+        }
+    }
+
+    LaunchedEffect(pendingOpponentDamage) {
+        if (pendingOpponentDamage > 0) {
+            println("DEBUG: LaunchedEffect triggered for pendingOpponentDamage = $pendingOpponentDamage")
+            opponentDamageValue = pendingOpponentDamage.toInt()
+            showOpponentDamageNumber = true
+            println("DEBUG: Setting opponent damage number: $opponentDamageValue, showOpponentDamageNumber = $showOpponentDamageNumber")
+            
+            // Hide damage number after animation
+            delay(3000) // Increased delay to ensure UI recomposition
+            showOpponentDamageNumber = false
+            println("DEBUG: Hiding opponent damage number after delay")
+            
+            // Reset pending damage after animation completes
+            delay(500) // Additional delay before reset
+            pendingOpponentDamage = 0f
+            println("DEBUG: Resetting pendingOpponentDamage to 0")
+        }
+    }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -349,6 +460,48 @@ fun BattleScreen(
                     attackAnimationProgress = battleSystem.attackProgress,
                     activeCharacter = opponentCharacter,
                     playerCharacter = activeCharacter
+                )
+            }
+        }
+        
+        // Damage number overlays - moved inside the Box for proper positioning
+        when (battleSystem.currentView) {
+            0 -> {
+                // Middle screen - NO damage numbers should show here
+                // This screen is for the initial attack phase only
+            }
+            1 -> {
+                // Player screen - show player damage (when opponent attacks player)
+                println("DEBUG: Player screen damage overlay - playerDamageValue=$playerDamageValue, showPlayerDamageNumber=$showPlayerDamageNumber")
+                AnimatedDamageNumber(
+                    damage = playerDamageValue,
+                    isVisible = showPlayerDamageNumber,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .offset(y = 0.dp)
+                        .background(Color.Yellow.copy(alpha = 0.3f)) // Debug background
+                )
+                
+                // Debug text overlay
+                Text(
+                    text = "View: ${battleSystem.currentView}, Player Damage: $playerDamageValue, Show: $showPlayerDamageNumber",
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .offset(y = 200.dp)
+                        .background(Color.White.copy(alpha = 0.8f))
+                )
+            }
+            2 -> {
+                // Enemy screen - show opponent damage (when player attacks opponent)
+                println("DEBUG: Enemy screen damage overlay - opponentDamageValue=$opponentDamageValue, showOpponentDamageNumber=$showOpponentDamageNumber")
+                AnimatedDamageNumber(
+                    damage = opponentDamageValue,
+                    isVisible = showOpponentDamageNumber,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .offset(y = (-100).dp)
                 )
             }
         }
@@ -702,6 +855,12 @@ fun MiddleBattleView(
                                          println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
                                          onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
                                          battleSystem.setAttackHitState(true)
+                                         
+                                         // Also check if enemy counter-attacks and hits
+                                         if (apiResult.opponentAttackDamage > 0) {
+                                             println("Enemy counter-attack hits! Player takes ${apiResult.opponentAttackDamage} damage")
+                                             onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), apiResult.playerAttackDamage.toFloat()) // Both take damage
+                                         }
                                      } else {
                                          // Player attack missed - enemy counter-attacks
                                          println("Player attack missed! Enemy counter-attacks")
@@ -1029,6 +1188,12 @@ fun PlayerBattleView(
                                          println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
                                          onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
                                          battleSystem.setAttackHitState(true)
+                                         
+                                         // Also check if enemy counter-attacks and hits
+                                         if (apiResult.opponentAttackDamage > 0) {
+                                             println("Enemy counter-attack hits! Player takes ${apiResult.opponentAttackDamage} damage")
+                                             onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), apiResult.playerAttackDamage.toFloat()) // Both take damage
+                                         }
                                      } else {
                                          // Player attack missed - enemy counter-attacks
                                          println("Player attack missed! Enemy counter-attacks")
