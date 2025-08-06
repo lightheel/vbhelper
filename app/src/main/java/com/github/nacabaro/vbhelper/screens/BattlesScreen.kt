@@ -116,8 +116,8 @@ fun BattleScreen(
                     progress += 0.016f // 60 FPS
                     battleSystem.setAttackProgress(progress)
                     
-                    // Trigger animation when attack reaches the enemy (around 55% progress for enemy dodge)
-                    if (progress >= 0.55f && !battleSystem.isOpponentHit && !battleSystem.isOpponentDodging) {
+                    // Trigger animation when attack reaches the enemy (around 40% progress for enemy dodge)
+                    if (progress >= 0.50f && !battleSystem.isOpponentHit && !battleSystem.isOpponentDodging) {
                         if (battleSystem.attackIsHit) {
                             // Player attack hits enemy
                             println("Player attack hits enemy at progress $progress")
@@ -155,8 +155,8 @@ fun BattleScreen(
                     progress += 0.016f // 60 FPS
                     battleSystem.setAttackProgress(progress)
                     
-                    // Trigger animation when attack reaches the player (around 75% progress for player dodge)
-                    if (progress >= 0.75f && !battleSystem.isPlayerHit && !battleSystem.isPlayerDodging) {
+                    // Trigger animation when attack reaches the player (around 60% progress for player dodge)
+                    if (progress >= 0.50f && !battleSystem.isPlayerHit && !battleSystem.isPlayerDodging) {
                         println("Phase 3: Checking player animation at progress $progress, opponentAttackIsHit=${battleSystem.opponentAttackIsHit}")
                         println("Phase 3: Player animation decision - opponentAttackIsHit=${battleSystem.opponentAttackIsHit}, will ${if (battleSystem.opponentAttackIsHit) "HIT" else "DODGE"}")
                         if (battleSystem.opponentAttackIsHit) {
