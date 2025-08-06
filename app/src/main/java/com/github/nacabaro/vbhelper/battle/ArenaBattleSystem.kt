@@ -5,6 +5,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.State
 
 class ArenaBattleSystem {
     companion object {
@@ -84,6 +85,20 @@ class ArenaBattleSystem {
 
     private var _isOpponentHit by mutableStateOf(false)
     val isOpponentHit: Boolean get() = _isOpponentHit
+
+    // Delayed hit states for SLEEP animation timing
+    private var _isPlayerHitDelayed by mutableStateOf(false)
+    val isPlayerHitDelayed: Boolean get() = _isPlayerHitDelayed
+
+    private var _isOpponentHitDelayed by mutableStateOf(false)
+    val isOpponentHitDelayed: Boolean get() = _isOpponentHitDelayed
+
+    // Delayed shake states for shake animation timing
+    private var _isPlayerShakeDelayed by mutableStateOf(false)
+    val isPlayerShakeDelayed: Boolean get() = _isPlayerShakeDelayed
+
+    private var _isOpponentShakeDelayed by mutableStateOf(false)
+    val isOpponentShakeDelayed: Boolean get() = _isOpponentShakeDelayed
 
     // Counter-attack tracking
     private var _shouldCounterAttack by mutableStateOf(false)
@@ -187,6 +202,10 @@ class ArenaBattleSystem {
         _opponentDodgeDirection = 1f
         _isPlayerHit = false
         _isOpponentHit = false
+        _isPlayerHitDelayed = false
+        _isOpponentHitDelayed = false
+        _isPlayerShakeDelayed = false
+        _isOpponentShakeDelayed = false
         _shouldCounterAttack = false
         _counterAttackIsHit = false
         _opponentAttackIsHit = false
@@ -297,10 +316,20 @@ class ArenaBattleSystem {
         Log.d(TAG, "Started player hit animation")
     }
 
+    fun startPlayerHitDelayed() {
+        _isPlayerHitDelayed = true
+        Log.d(TAG, "Started delayed player hit animation")
+    }
+
     fun endPlayerHit() {
         _isPlayerHit = false
         _hitProgress = 0f
         Log.d(TAG, "Ended player hit animation")
+    }
+
+    fun endPlayerHitDelayed() {
+        _isPlayerHitDelayed = false
+        Log.d(TAG, "Ended delayed player hit animation")
     }
 
     // Opponent-specific hit methods
@@ -310,10 +339,41 @@ class ArenaBattleSystem {
         Log.d(TAG, "Started opponent hit animation")
     }
 
+    fun startOpponentHitDelayed() {
+        _isOpponentHitDelayed = true
+        Log.d(TAG, "Started delayed opponent hit animation")
+    }
+
     fun endOpponentHit() {
         _isOpponentHit = false
         _hitProgress = 0f
         Log.d(TAG, "Ended opponent hit animation")
+    }
+
+    fun endOpponentHitDelayed() {
+        _isOpponentHitDelayed = false
+        Log.d(TAG, "Ended delayed opponent hit animation")
+    }
+
+    // Delayed shake methods
+    fun startPlayerShakeDelayed() {
+        _isPlayerShakeDelayed = true
+        Log.d(TAG, "Started delayed player shake animation")
+    }
+
+    fun endPlayerShakeDelayed() {
+        _isPlayerShakeDelayed = false
+        Log.d(TAG, "Ended delayed player shake animation")
+    }
+
+    fun startOpponentShakeDelayed() {
+        _isOpponentShakeDelayed = true
+        Log.d(TAG, "Started delayed opponent shake animation")
+    }
+
+    fun endOpponentShakeDelayed() {
+        _isOpponentShakeDelayed = false
+        Log.d(TAG, "Ended delayed opponent shake animation")
     }
 
     // Combined method to handle attack result

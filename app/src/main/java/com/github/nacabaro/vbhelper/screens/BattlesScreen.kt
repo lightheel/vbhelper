@@ -179,7 +179,11 @@ fun BattleScreen(
             showOpponentHitEffect = false
             hidePlayerAttackSprite = false
             hideEnemyAttackSprite = false
-            println("DEBUG: Reset hit effect states - attack phase returned to idle")
+                                        battleSystem.endPlayerHitDelayed()
+                            battleSystem.endOpponentHitDelayed()
+                            battleSystem.endPlayerShakeDelayed()
+                            battleSystem.endOpponentShakeDelayed()
+                            println("DEBUG: Reset hit effect states, attack sprite visibility, and delayed hit states")
         }
     }
     
@@ -239,6 +243,18 @@ fun BattleScreen(
                                     showOpponentDamageNumber = true
                                     println("DEBUG: Showing opponent damage number after delay")
                                 }
+                            }
+                            // Delay SLEEP animation to match hit effect timing
+                            coroutineScope.launch {
+                                delay(400) // Match the hit effect delay
+                                battleSystem.startOpponentHitDelayed()
+                                println("DEBUG: Starting delayed opponent hit animation")
+                            }
+                            // Delay shake animation to match hit effect timing
+                            coroutineScope.launch {
+                                delay(400) // Match the hit effect delay
+                                battleSystem.startOpponentShakeDelayed()
+                                println("DEBUG: Starting delayed opponent shake animation")
                             }
                         } else {
                             // Player attack misses, enemy dodges
@@ -304,6 +320,18 @@ fun BattleScreen(
                                     showPlayerDamageNumber = true
                                     println("DEBUG: Showing player damage number after delay")
                                 }
+                            }
+                            // Delay SLEEP animation to match hit effect timing
+                            coroutineScope.launch {
+                                delay(400) // Match the hit effect delay
+                                battleSystem.startPlayerHitDelayed()
+                                println("DEBUG: Starting delayed player hit animation")
+                            }
+                            // Delay shake animation to match hit effect timing
+                            coroutineScope.launch {
+                                delay(400) // Match the hit effect delay
+                                battleSystem.startPlayerShakeDelayed()
+                                println("DEBUG: Starting delayed player shake animation")
                             }
                         } else {
                             // Enemy attack misses, player dodges
@@ -424,6 +452,26 @@ fun BattleScreen(
         }
     }
 
+    // Player delayed shake animation
+    LaunchedEffect(battleSystem.isPlayerShakeDelayed) {
+        if (battleSystem.isPlayerShakeDelayed) {
+            println("Starting delayed player shake animation")
+            var hitProgress = 0f
+            
+            // Quick hit effect
+            while (hitProgress < 1f) {
+                hitProgress += 0.1f // Fast hit effect
+                battleSystem.setHitProgress(hitProgress)
+                delay(16)
+            }
+            
+            delay(100) // Brief pause
+            
+            battleSystem.endPlayerShakeDelayed()
+            println("Delayed player shake animation completed")
+        }
+    }
+
     // Opponent hit animation
     LaunchedEffect(battleSystem.isOpponentHit) {
         if (battleSystem.isOpponentHit) {
@@ -441,6 +489,26 @@ fun BattleScreen(
             
             battleSystem.endOpponentHit()
             println("Opponent hit animation completed")
+        }
+    }
+
+    // Opponent delayed shake animation
+    LaunchedEffect(battleSystem.isOpponentShakeDelayed) {
+        if (battleSystem.isOpponentShakeDelayed) {
+            println("Starting delayed opponent shake animation")
+            var hitProgress = 0f
+            
+            // Quick hit effect
+            while (hitProgress < 1f) {
+                hitProgress += 0.1f // Fast hit effect
+                battleSystem.setHitProgress(hitProgress)
+                delay(16)
+            }
+            
+            delay(100) // Brief pause
+            
+            battleSystem.endOpponentShakeDelayed()
+            println("Delayed opponent shake animation completed")
         }
     }
 
@@ -721,7 +789,7 @@ fun MiddleBattleView(
                     val enemyAnimationType = when {
                         battleSystem.attackPhase == 1 -> DigimonAnimationType.ATTACK  // Both attacking in Phase 1
                         battleSystem.isOpponentDodging -> DigimonAnimationType.WALK
-                        battleSystem.isOpponentHit -> DigimonAnimationType.SLEEP
+                        battleSystem.isOpponentHitDelayed -> DigimonAnimationType.SLEEP
                         else -> DigimonAnimationType.IDLE
                     }
                     
@@ -741,7 +809,7 @@ fun MiddleBattleView(
                     }
                     
                     // Calculate hit effect for enemy
-                    val enemyHitOffset = if (battleSystem.isOpponentHit) {
+                    val enemyHitOffset = if (battleSystem.isOpponentShakeDelayed) {
                         val shakeAmount = 5.dp
                         val progress = battleSystem.hitProgress
                         val shake = if (progress < 0.5f) progress * 2f else (1f - progress) * 2f
@@ -802,7 +870,7 @@ fun MiddleBattleView(
                     val playerAnimationType = when {
                         battleSystem.attackPhase == 1 -> DigimonAnimationType.ATTACK  // Both attacking in Phase 1
                         battleSystem.isPlayerDodging -> DigimonAnimationType.WALK
-                        battleSystem.isPlayerHit -> DigimonAnimationType.SLEEP
+                        battleSystem.isPlayerHitDelayed -> DigimonAnimationType.SLEEP
                         else -> DigimonAnimationType.IDLE
                     }
                     
@@ -822,7 +890,7 @@ fun MiddleBattleView(
                     }
                     
                     // Calculate hit effect for player
-                    val playerHitOffset = if (battleSystem.isPlayerHit) {
+                    val playerHitOffset = if (battleSystem.isPlayerShakeDelayed) {
                         val shakeAmount = 5.dp
                         val progress = battleSystem.hitProgress
                         val shake = if (progress < 0.5f) progress * 2f else (1f - progress) * 2f
@@ -1135,7 +1203,7 @@ fun PlayerBattleView(
                 // Determine animation type based on battle state
                 val animationType = when {
                     battleSystem.isPlayerDodging -> DigimonAnimationType.WALK  // Use walk animation for dodge
-                    battleSystem.isPlayerHit -> DigimonAnimationType.SLEEP     // Use sleep animation for hit effect (injured sprite)
+                    battleSystem.isPlayerHitDelayed -> DigimonAnimationType.SLEEP     // Use sleep animation for hit effect (injured sprite)
                     battleSystem.attackPhase == 1 -> DigimonAnimationType.ATTACK  // Player attack on player screen
                     battleSystem.attackPhase == 2 -> DigimonAnimationType.ATTACK  // Player attack on opponent screen
                     battleSystem.attackPhase == 3 -> DigimonAnimationType.IDLE    // Opponent attack on opponent screen
@@ -1161,7 +1229,7 @@ fun PlayerBattleView(
                 }
                 
                 // Calculate hit effect (slight shake)
-                val hitOffset = if (battleSystem.isPlayerHit) {
+                val hitOffset = if (battleSystem.isPlayerShakeDelayed) {
                     val shakeAmount = 5.dp
                     val progress = battleSystem.hitProgress
                     // Simple shake effect without complex math
@@ -1448,7 +1516,7 @@ fun EnemyBattleView(
                 // Determine animation type based on battle state
                 val animationType = when {
                     battleSystem.isOpponentDodging -> DigimonAnimationType.WALK  // Use walk animation for dodge
-                    battleSystem.isOpponentHit -> DigimonAnimationType.SLEEP     // Use sleep animation for hit effect (injured sprite)
+                    battleSystem.isOpponentHitDelayed -> DigimonAnimationType.SLEEP     // Use sleep animation for hit effect (injured sprite)
                     battleSystem.attackPhase == 2 -> DigimonAnimationType.IDLE    // Player attack on enemy screen
                     else -> DigimonAnimationType.IDLE
                 }
@@ -1471,7 +1539,7 @@ fun EnemyBattleView(
                 }
                 
                 // Calculate hit effect (slight shake)
-                val hitOffset = if (battleSystem.isOpponentHit) {
+                val hitOffset = if (battleSystem.isOpponentShakeDelayed) {
                     val shakeAmount = 5.dp
                     val progress = battleSystem.hitProgress
                     // Simple shake effect without complex math
