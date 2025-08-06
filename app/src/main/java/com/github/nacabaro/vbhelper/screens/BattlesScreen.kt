@@ -595,8 +595,15 @@ fun MiddleBattleView(
             // Enemy HP display numbers
             Text(
                 text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${opponentCharacter?.baseHp ?: 100}",
-                fontSize = 14.sp,
-                color = Color.Black
+                fontSize = 16.sp,
+                color = Color.LightGray,
+                style = TextStyle(
+                    shadow = Shadow(
+                        color = Color.Black,
+                        offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                        //blurRadius = 2f
+                    )
+                )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -811,8 +818,15 @@ fun MiddleBattleView(
             // Player HP display numbers
             Text(
                 text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
-                fontSize = 14.sp,
-                color = Color.Black
+                fontSize = 16.sp,
+                color = Color.LightGray,
+                style = TextStyle(
+                    shadow = Shadow(
+                        color = Color.Black,
+                        offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                        //blurRadius = 2f
+                    )
+                )
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -959,6 +973,9 @@ fun PlayerBattleView(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
+        // Animated Battle Background
+        AnimatedBattleBackground(modifier = Modifier.fillMaxSize())
+        
         // Top section: Exit button, HP bar, and HP numbers
         Column(
             modifier = Modifier
@@ -1005,8 +1022,15 @@ fun PlayerBattleView(
             // Health display numbers
             Text(
                 text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
-                fontSize = 14.sp,
-                color = Color.Black
+                fontSize = 16.sp,
+                color = Color.LightGray,
+                style = TextStyle(
+                    shadow = Shadow(
+                        color = Color.Black,
+                        offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                        //blurRadius = 2f
+                    )
+                )
             )
         }
 
@@ -1287,6 +1311,9 @@ fun EnemyBattleView(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
+        // Animated Battle Background
+        AnimatedBattleBackground(modifier = Modifier.fillMaxSize())
+        
         // Top section: Enemy HP bar and HP numbers
         Column(
             modifier = Modifier
@@ -1306,8 +1333,15 @@ fun EnemyBattleView(
             // Enemy HP display numbers
             Text(
                 text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
-                fontSize = 14.sp,
-                color = Color.Black
+                fontSize = 16.sp,
+                color = Color.LightGray,
+                style = TextStyle(
+                    shadow = Shadow(
+                        color = Color.Black,
+                        offset = androidx.compose.ui.geometry.Offset(2f, 2f),
+                        //blurRadius = 2f
+                    )
+                )
             )
         }
 
