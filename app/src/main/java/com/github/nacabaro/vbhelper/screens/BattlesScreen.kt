@@ -191,12 +191,17 @@ fun BattleScreen(
                     progress += 0.016f // 60 FPS
                     battleSystem.setAttackProgress(progress)
                     
-                    // Trigger animation when attack reaches the enemy (around 40% progress for enemy dodge)
+                    // Trigger animation when attack reaches the enemy (around 50% progress for enemy dodge)
                     if (progress >= 0.50f && !battleSystem.isOpponentHit && !battleSystem.isOpponentDodging) {
                         if (battleSystem.attackIsHit) {
                             // Player attack hits enemy
                             println("Player attack hits enemy at progress $progress")
                             battleSystem.startOpponentHit()
+                            // Show damage number when attack reaches enemy
+                            if (pendingOpponentDamage > 0) {
+                                showOpponentDamageNumber = true
+                                println("DEBUG: Showing opponent damage number at progress $progress")
+                            }
                         } else {
                             // Player attack misses, enemy dodges
                             println("Player attack misses, enemy dodges at progress $progress")
@@ -208,7 +213,16 @@ fun BattleScreen(
                 }
                 println("Phase 2 completed, applying damage and starting Phase 3")
                 battleSystem.completeAttackAnimation(opponentDamage = pendingOpponentDamage)
-                delay(500)
+                
+                // Hide damage number and reset pending damage after animation
+                if (showOpponentDamageNumber) {
+                    delay(800) // Wait for damage number animation (scale up + hold + fade out)
+                    showOpponentDamageNumber = false
+                    pendingOpponentDamage = 0f
+                    println("DEBUG: Hiding opponent damage number and resetting pending damage")
+                }
+                
+                delay(200)
                 
                 // Check if there should be a counter-attack
                 if (battleSystem.shouldCounterAttack) {
@@ -228,7 +242,7 @@ fun BattleScreen(
                     progress += 0.016f // 60 FPS
                     battleSystem.setAttackProgress(progress)
                     
-                    // Trigger animation when attack reaches the player (around 60% progress for player dodge)
+                    // Trigger animation when attack reaches the player (around 50% progress for player dodge)
                     if (progress >= 0.50f && !battleSystem.isPlayerHit && !battleSystem.isPlayerDodging) {
                         println("Phase 3: Checking player animation at progress $progress, opponentAttackIsHit=${battleSystem.opponentAttackIsHit}")
                         println("Phase 3: Player animation decision - opponentAttackIsHit=${battleSystem.opponentAttackIsHit}, will ${if (battleSystem.opponentAttackIsHit) "HIT" else "DODGE"}")
@@ -236,6 +250,11 @@ fun BattleScreen(
                             // Enemy attack hits player
                             println("Enemy attack hits player at progress $progress")
                             battleSystem.startPlayerHit()
+                            // Show damage number when attack reaches player
+                            if (pendingPlayerDamage > 0) {
+                                showPlayerDamageNumber = true
+                                println("DEBUG: Showing player damage number at progress $progress")
+                            }
                         } else {
                             // Enemy attack misses, player dodges
                             println("Enemy attack misses, player dodges at progress $progress")
@@ -248,6 +267,15 @@ fun BattleScreen(
                 println("Phase 3 completed, applying damage and resetting")
                 println("DEBUG: pendingPlayerDamage = $pendingPlayerDamage")
                 battleSystem.completeAttackAnimation(playerDamage = pendingPlayerDamage)
+                
+                // Hide damage number and reset pending damage after animation
+                if (showPlayerDamageNumber) {
+                    delay(800) // Wait for damage number animation (scale up + hold + fade out)
+                    showPlayerDamageNumber = false
+                    pendingPlayerDamage = 0f
+                    println("DEBUG: Hiding player damage number and resetting pending damage")
+                }
+                
                 battleSystem.resetAttackState()
                 battleSystem.enableAttackButton()
                 
@@ -366,23 +394,12 @@ fun BattleScreen(
         }
     }
 
-    // Damage number handling
+    // Damage number handling - store pending damage but don't show immediately
     LaunchedEffect(pendingPlayerDamage) {
         if (pendingPlayerDamage > 0) {
             println("DEBUG: LaunchedEffect triggered for pendingPlayerDamage = $pendingPlayerDamage")
             playerDamageValue = pendingPlayerDamage.toInt()
-            showPlayerDamageNumber = true
-            println("DEBUG: Setting player damage number: $playerDamageValue, showPlayerDamageNumber = $showPlayerDamageNumber")
-            
-            // Hide damage number after animation
-            delay(3000) // Increased delay to ensure UI recomposition
-            showPlayerDamageNumber = false
-            println("DEBUG: Hiding player damage number after delay")
-            
-            // Reset pending damage after animation completes
-            delay(500) // Additional delay before reset
-            pendingPlayerDamage = 0f
-            println("DEBUG: Resetting pendingPlayerDamage to 0")
+            // Don't show immediately - wait for attack animation to reach the Digimon
         }
     }
 
@@ -390,18 +407,7 @@ fun BattleScreen(
         if (pendingOpponentDamage > 0) {
             println("DEBUG: LaunchedEffect triggered for pendingOpponentDamage = $pendingOpponentDamage")
             opponentDamageValue = pendingOpponentDamage.toInt()
-            showOpponentDamageNumber = true
-            println("DEBUG: Setting opponent damage number: $opponentDamageValue, showOpponentDamageNumber = $showOpponentDamageNumber")
-            
-            // Hide damage number after animation
-            delay(3000) // Increased delay to ensure UI recomposition
-            showOpponentDamageNumber = false
-            println("DEBUG: Hiding opponent damage number after delay")
-            
-            // Reset pending damage after animation completes
-            delay(500) // Additional delay before reset
-            pendingOpponentDamage = 0f
-            println("DEBUG: Resetting pendingOpponentDamage to 0")
+            // Don't show immediately - wait for attack animation to reach the Digimon
         }
     }
 
@@ -478,11 +484,12 @@ fun BattleScreen(
                     isVisible = showPlayerDamageNumber,
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .offset(y = 0.dp)
-                        .background(Color.Yellow.copy(alpha = 0.3f)) // Debug background
+                        .offset(y = (-50).dp)
+                        //.background(Color.Yellow.copy(alpha = 0.3f)) // Debug background
                 )
                 
                 // Debug text overlay
+                /*
                 Text(
                     text = "View: ${battleSystem.currentView}, Player Damage: $playerDamageValue, Show: $showPlayerDamageNumber",
                     color = Color.Red,
@@ -492,6 +499,7 @@ fun BattleScreen(
                         .offset(y = 200.dp)
                         .background(Color.White.copy(alpha = 0.8f))
                 )
+                */
             }
             2 -> {
                 // Enemy screen - show opponent damage (when player attacks opponent)
@@ -501,7 +509,7 @@ fun BattleScreen(
                     isVisible = showOpponentDamageNumber,
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .offset(y = (-100).dp)
+                        .offset(y = (-50).dp)
                 )
             }
         }
