@@ -31,7 +31,9 @@ data class AnimationState(
 
 class DigimonAnimationStateMachine(
     private val characterId: String,
-    private val context: Context
+    private val context: Context,
+    private val initialFrameOffset: Int = 0, // New parameter for offsetting the starting frame
+    private val timingOffset: Long = 0L // New parameter for offsetting the timing
 ) {
     var currentAnimation by mutableStateOf<DigimonAnimationType>(DigimonAnimationType.IDLE)
         private set
@@ -79,7 +81,7 @@ class DigimonAnimationStateMachine(
     )
     
     init {
-        println("Initialized DigimonAnimationStateMachine for character: $characterId")
+        println("Initialized DigimonAnimationStateMachine for character: $characterId with frame offset: $initialFrameOffset, timing offset: $timingOffset")
         println("Available animation types: ${animationTypeToFrames.keys}")
     }
     
@@ -128,12 +130,17 @@ class DigimonAnimationStateMachine(
         // Combine frames for cycling idle animation
         val combinedFrames = (idleFrames + idle2Frames).distinct()
         
-        println("Playing idle animation with frames: $combinedFrames")
+        println("Playing idle animation with frames: $combinedFrames, starting at offset: $initialFrameOffset, timing offset: $timingOffset")
         
         val duration = animationDurations[DigimonAnimationType.IDLE] ?: 500L
         
-        // Cycle through idle frames
-        var frameIndex = 0
+        // Apply initial timing offset
+        if (timingOffset > 0L) {
+            delay(timingOffset)
+        }
+        
+        // Cycle through idle frames, starting from the offset
+        var frameIndex = initialFrameOffset
         while (isPlaying && currentAnimation == DigimonAnimationType.IDLE) {
             val frameNumber = combinedFrames[frameIndex % combinedFrames.size]
             currentFrameNumber = frameNumber

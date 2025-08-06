@@ -730,7 +730,8 @@ fun MiddleBattleView(
                                 y = enemyVerticalOffset + 40.dp
                             ),
                         contentScale = ContentScale.Fit,
-                        reloadMappings = false
+                        reloadMappings = false,
+                        animationOffset = 375L // Offset enemy animation by half the idle duration
                     )
                     
                     // Enemy attack sprite (Phase 1 only)
@@ -811,7 +812,8 @@ fun MiddleBattleView(
                                 y = playerVerticalOffset - 40.dp
                             ),
                         contentScale = ContentScale.Fit,
-                        reloadMappings = false
+                        reloadMappings = false,
+                        animationOffset = 0L // Player animation starts immediately
                     )
                     
                     // Player attack sprite (Phase 1 only)
@@ -1149,7 +1151,8 @@ fun PlayerBattleView(
                             y = verticalOffset
                         ),
                     contentScale = ContentScale.Fit,
-                    reloadMappings = false
+                    reloadMappings = false,
+                    animationOffset = 0L // Player animation starts immediately
                 )
                 
                 // Attack sprite visibility and positioning based on attack phase
@@ -1456,7 +1459,8 @@ fun EnemyBattleView(
                             y = verticalOffset
                         ),
                     contentScale = ContentScale.Fit,
-                    reloadMappings = false
+                    reloadMappings = false,
+                    animationOffset = 375L // Offset enemy animation by half the idle duration
                 )
                 
                 // Attack sprite visibility and positioning based on attack phase
@@ -1797,7 +1801,8 @@ fun BattlesScreen() {
                 animationType = currentTestAnimation,
                 modifier = Modifier.size(120.dp),
                 contentScale = ContentScale.Fit,
-                reloadMappings = false
+                reloadMappings = false,
+                animationOffset = 0L // No offset for sprite tester
             )
             
             Spacer(modifier = Modifier.height(16.dp))

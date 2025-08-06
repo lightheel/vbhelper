@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @Composable
 fun AnimatedSpriteImage(
@@ -14,11 +15,22 @@ fun AnimatedSpriteImage(
     animationType: DigimonAnimationType = DigimonAnimationType.IDLE,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
-    reloadMappings: Boolean = false
+    reloadMappings: Boolean = false,
+    animationOffset: Long = 0L // New parameter for offsetting animation timing
 ) {
     val context = LocalContext.current
     val spriteManager = remember { IndividualSpriteManager(context) }
-    val animationStateMachine = remember { DigimonAnimationStateMachine(characterId, context) }
+    
+    // Calculate frame offset based on animation offset
+    // 750ms is the idle animation duration, so we calculate how many frames to offset
+    val frameOffset = if (animationOffset > 0L) {
+        // Convert time offset to frame offset (2 frames per cycle, 750ms per frame)
+        ((animationOffset / 750L) * 2).toInt()
+    } else {
+        0
+    }
+    
+    val animationStateMachine = remember { DigimonAnimationStateMachine(characterId, context, frameOffset, animationOffset) }
     val coroutineScope = rememberCoroutineScope()
     
     var bitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
