@@ -62,7 +62,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
-
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
+import android.graphics.BitmapFactory
+import java.io.File
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalConfiguration
 
 @Composable
 fun AnimatedDamageNumber(
@@ -222,7 +227,7 @@ fun BattleScreen(
                     println("DEBUG: Hiding opponent damage number and resetting pending damage")
                 }
                 
-                delay(200)
+                delay(100)
                 
                 // Check if there should be a counter-attack
                 if (battleSystem.shouldCounterAttack) {
@@ -539,6 +544,11 @@ fun MiddleBattleView(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
+        // Animated background - positioned underneath all other sprites
+        AnimatedBattleBackground(
+            modifier = Modifier.fillMaxSize()
+        )
+        
         // Top section: Exit button, HP bars, and HP numbers
         Column(
             modifier = Modifier
@@ -2104,6 +2114,82 @@ fun BattlesScreen() {
                     }
                 }
             }
+        }
+    }
+} 
+
+@Composable
+fun AnimatedBattleBackground(
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    var backgroundBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    var xOffset by remember { mutableStateOf(0f) }
+    var screenWidth by remember { mutableStateOf(0.dp) }
+    var screenHeight by remember { mutableStateOf(0.dp) }
+
+    // Get screen dimensions
+    val density = LocalDensity.current
+    val configuration = LocalConfiguration.current
+    LaunchedEffect(Unit) {
+        screenWidth = with(density) { configuration.screenWidthDp.dp }
+        screenHeight = with(density) { configuration.screenHeightDp.dp }
+        println("DEBUG: Screen dimensions = ${screenWidth.value}x${screenHeight.value}dp")
+    }
+
+    // Load background image from internal storage
+    LaunchedEffect(Unit) {
+        try {
+            val backgroundFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/BattleBg_0015_BattleBg_0012.png")
+            if (backgroundFile.exists()) {
+                backgroundBitmap = BitmapFactory.decodeFile(backgroundFile.absolutePath)
+                println("Successfully loaded battle background: ${backgroundFile.absolutePath}")
+                println("DEBUG: Image dimensions = ${backgroundBitmap?.width}x${backgroundBitmap?.height} pixels")
+            } else {
+                println("Battle background file not found: ${backgroundFile.absolutePath}")
+            }
+        } catch (e: Exception) {
+            println("Error loading battle background: ${e.message}")
+        }
+    }
+
+    // Animate horizontal movement to the left with perfect loop
+    LaunchedEffect(screenWidth) {
+        if (screenWidth > 0.dp) {
+            while (true) {
+                delay(50) // Update every 50ms for smooth animation
+                xOffset -= 1f // Move 1 pixel to the left
+                
+                // Create perfect loop by resetting when one full screen width has moved
+                if (xOffset <= -screenWidth.value) {
+                    xOffset = 0f
+                    println("DEBUG: Background loop reset at xOffset = ${xOffset}")
+                }
+            }
+        }
+    }
+    
+    backgroundBitmap?.let { bitmap ->
+        Box(modifier = modifier.fillMaxSize()) {
+            // First image (main)
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Animated Battle Background 1",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(x = xOffset.dp),
+                contentScale = ContentScale.FillBounds
+            )
+            
+            // Second image (for seamless loop)
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Animated Battle Background 2",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(x = (xOffset + screenWidth.value).dp),
+                contentScale = ContentScale.FillBounds
+            )
         }
     }
 } 
