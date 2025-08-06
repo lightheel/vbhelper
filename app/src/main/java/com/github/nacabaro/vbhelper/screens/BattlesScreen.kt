@@ -232,10 +232,13 @@ fun BattleScreen(
                                 delay(400) // Match the hit effect delay
                                 hideEnemyAttackSprite = true
                             }
-                            // Show damage number when attack reaches enemy
+                            // Delay showing damage number to match hit effect timing
                             if (pendingOpponentDamage > 0) {
-                                showOpponentDamageNumber = true
-                                println("DEBUG: Showing opponent damage number at progress $progress")
+                                coroutineScope.launch {
+                                    delay(400) // Match the hit effect delay
+                                    showOpponentDamageNumber = true
+                                    println("DEBUG: Showing opponent damage number after delay")
+                                }
                             }
                         } else {
                             // Player attack misses, enemy dodges
@@ -294,10 +297,13 @@ fun BattleScreen(
                                 delay(400) // Match the hit effect delay
                                 hidePlayerAttackSprite = true
                             }
-                            // Show damage number when attack reaches player
+                            // Delay showing damage number to match hit effect timing
                             if (pendingPlayerDamage > 0) {
-                                showPlayerDamageNumber = true
-                                println("DEBUG: Showing player damage number at progress $progress")
+                                coroutineScope.launch {
+                                    delay(400) // Match the hit effect delay
+                                    showPlayerDamageNumber = true
+                                    println("DEBUG: Showing player damage number after delay")
+                                }
                             }
                         } else {
                             // Enemy attack misses, player dodges
