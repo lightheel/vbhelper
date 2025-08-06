@@ -38,6 +38,9 @@ fun HitEffectOverlay(
         if (isVisible) {
             println("DEBUG: Starting hit effect animation")
             
+            // Add delay before starting hit effect animation
+            delay(400) // Increased from 200ms to 400ms delay before hit effect appears
+            
             // Randomly choose between hit_01, hit_02, and hit_02_white
             val hitSpriteName = when (kotlin.random.Random.nextInt(3)) {
                 0 -> "hit_01"

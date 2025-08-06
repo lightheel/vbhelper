@@ -167,12 +167,18 @@ fun BattleScreen(
     var showPlayerHitEffect by remember { mutableStateOf(false) }
     var showOpponentHitEffect by remember { mutableStateOf(false) }
     
+    // Attack sprite visibility state
+    var hidePlayerAttackSprite by remember { mutableStateOf(false) }
+    var hideEnemyAttackSprite by remember { mutableStateOf(false) }
+    
     // Reset hit effect states when attack phase returns to idle
     LaunchedEffect(battleSystem.attackPhase) {
         if (battleSystem.attackPhase == 0) {
             // Reset hit effect states when returning to idle
             showPlayerHitEffect = false
             showOpponentHitEffect = false
+            hidePlayerAttackSprite = false
+            hideEnemyAttackSprite = false
             println("DEBUG: Reset hit effect states - attack phase returned to idle")
         }
     }
@@ -221,6 +227,11 @@ fun BattleScreen(
                             // Show hit effect and damage effect
                             println("DEBUG: Setting showOpponentHitEffect = true (player attack hits enemy)")
                             showOpponentHitEffect = true
+                            // Delay hiding the attack sprite to match hit effect timing
+                            coroutineScope.launch {
+                                delay(400) // Match the hit effect delay
+                                hideEnemyAttackSprite = true
+                            }
                             // Show damage number when attack reaches enemy
                             if (pendingOpponentDamage > 0) {
                                 showOpponentDamageNumber = true
@@ -278,6 +289,11 @@ fun BattleScreen(
                             // Show hit effect and damage effect
                             println("DEBUG: Setting showPlayerHitEffect = true (enemy attack hits player)")
                             showPlayerHitEffect = true
+                            // Delay hiding the attack sprite to match hit effect timing
+                            coroutineScope.launch {
+                                delay(400) // Match the hit effect delay
+                                hidePlayerAttackSprite = true
+                            }
                             // Show damage number when attack reaches player
                             if (pendingPlayerDamage > 0) {
                                 showPlayerDamageNumber = true
@@ -462,7 +478,9 @@ fun BattleScreen(
                         pendingPlayerDamage = playerDamage
                         pendingOpponentDamage = opponentDamage
                     },
-                    coroutineScope = coroutineScope
+                    coroutineScope = coroutineScope,
+                    hidePlayerAttackSprite = hidePlayerAttackSprite,
+                    hideEnemyAttackSprite = hideEnemyAttackSprite
                 )
             }
             1 -> {
@@ -482,7 +500,8 @@ fun BattleScreen(
                         pendingPlayerDamage = playerDamage
                         pendingOpponentDamage = opponentDamage
                     },
-                    coroutineScope = coroutineScope
+                    coroutineScope = coroutineScope,
+                    hidePlayerAttackSprite = hidePlayerAttackSprite
                 )
             }
             2 -> {
@@ -493,7 +512,8 @@ fun BattleScreen(
                     opponentName = opponentName,
                     attackAnimationProgress = battleSystem.attackProgress,
                     activeCharacter = opponentCharacter,
-                    playerCharacter = activeCharacter
+                    playerCharacter = activeCharacter,
+                    hideEnemyAttackSprite = hideEnemyAttackSprite
                 )
             }
         }
@@ -524,6 +544,7 @@ fun BattleScreen(
                     onAnimationComplete = {
                         println("DEBUG: Player hit effect animation completed, setting showPlayerHitEffect = false")
                         showPlayerHitEffect = false
+                        hidePlayerAttackSprite = false // Show attack sprite again
                         println("DEBUG: Player hit effect animation completed")
                     }
                 )
@@ -562,6 +583,7 @@ fun BattleScreen(
                     onAnimationComplete = {
                         println("DEBUG: Enemy hit effect animation completed, setting showOpponentHitEffect = false")
                         showOpponentHitEffect = false
+                        hideEnemyAttackSprite = false // Show attack sprite again
                         println("DEBUG: Enemy hit effect animation completed")
                     }
                 )
@@ -584,7 +606,9 @@ fun MiddleBattleView(
     opponentCharacter: APIBattleCharacter?,
     context: android.content.Context?,
     onSetPendingDamage: (Float, Float) -> Unit,
-    coroutineScope: kotlinx.coroutines.CoroutineScope
+    coroutineScope: kotlinx.coroutines.CoroutineScope,
+    hidePlayerAttackSprite: Boolean,
+    hideEnemyAttackSprite: Boolean
 ) {
     // Track previous character ID to detect transitions
     var previousCharacterId by remember { mutableStateOf<String?>(null) }
@@ -735,7 +759,7 @@ fun MiddleBattleView(
                     )
                     
                     // Enemy attack sprite (Phase 1 only)
-                    if (battleSystem.attackPhase == 1) {
+                    if (battleSystem.attackPhase == 1 && !hideEnemyAttackSprite) {
                         val xOffset = (-attackAnimationProgress * 400).dp  // Start at center, move left off screen
                         val yOffset = 30.dp  // Lower enemy attack sprite by 30 pixels
                         
@@ -817,7 +841,7 @@ fun MiddleBattleView(
                     )
                     
                     // Player attack sprite (Phase 1 only)
-                    if (battleSystem.attackPhase == 1) {
+                    if (battleSystem.attackPhase == 1 && !hidePlayerAttackSprite) {
                         val xOffset = (attackAnimationProgress * 400).dp  // Start at center, move right off screen
                         val yOffset = (-30).dp  // Raise player attack sprite by 30 pixels
                         
@@ -1015,7 +1039,8 @@ fun PlayerBattleView(
     context: android.content.Context?,
     opponent: APIBattleCharacter?,
     onSetPendingDamage: (Float, Float) -> Unit,
-    coroutineScope: kotlinx.coroutines.CoroutineScope
+    coroutineScope: kotlinx.coroutines.CoroutineScope,
+    hidePlayerAttackSprite: Boolean
 ) {
     // Track previous character ID to detect transitions
     var previousCharacterId by remember { mutableStateOf<String?>(null) }
@@ -1190,7 +1215,7 @@ fun PlayerBattleView(
                     
                     println("PlayerBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
                     
-                    if (!isTransitioning) {
+                    if (!isTransitioning && !hidePlayerAttackSprite) {
                         AttackSpriteImage(
                             characterId = characterId,
                             isLarge = true,
@@ -1200,7 +1225,7 @@ fun PlayerBattleView(
                                     x = xOffset,
                                     y = 0.dp
                                 )
-                                .scale(if (battleSystem.attackPhase == 3) 1f else -1f, 1f), // Don't flip enemy attacks
+                                .scale(1f, 1f), // Don't flip enemy attacks on player screen
                             contentScale = ContentScale.Fit
                         )
                     }
@@ -1355,7 +1380,8 @@ fun EnemyBattleView(
     opponentName: String,
     attackAnimationProgress: Float,
     activeCharacter: APIBattleCharacter? = null,
-    playerCharacter: APIBattleCharacter? = null
+    playerCharacter: APIBattleCharacter? = null,
+    hideEnemyAttackSprite: Boolean
 ) {
     // Track previous character ID to detect transitions
     var previousCharacterId by remember { mutableStateOf<String?>(null) }
@@ -1490,7 +1516,7 @@ fun EnemyBattleView(
                     
                     println("EnemyBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
                     
-                    if (!isTransitioning) {
+                    if (!isTransitioning && !hideEnemyAttackSprite) {
                         AttackSpriteImage(
                             characterId = characterId,
                             isLarge = true,
