@@ -52,6 +52,7 @@ import com.github.nacabaro.vbhelper.battle.SpriteFileManager
 import com.github.nacabaro.vbhelper.battle.ArenaBattleSystem
 import com.github.nacabaro.vbhelper.battle.DigimonAnimationType
 import com.github.nacabaro.vbhelper.battle.AnimatedSpriteImage
+import com.github.nacabaro.vbhelper.battle.HitEffectOverlay
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import kotlin.math.sin
@@ -162,6 +163,20 @@ fun BattleScreen(
     var playerDamageValue by remember { mutableStateOf(0) }
     var opponentDamageValue by remember { mutableStateOf(0) }
     
+    // Hit effect animation state
+    var showPlayerHitEffect by remember { mutableStateOf(false) }
+    var showOpponentHitEffect by remember { mutableStateOf(false) }
+    
+    // Reset hit effect states when attack phase returns to idle
+    LaunchedEffect(battleSystem.attackPhase) {
+        if (battleSystem.attackPhase == 0) {
+            // Reset hit effect states when returning to idle
+            showPlayerHitEffect = false
+            showOpponentHitEffect = false
+            println("DEBUG: Reset hit effect states - attack phase returned to idle")
+        }
+    }
+    
     // Critical bar timer
     LaunchedEffect(Unit) {
         while (true) {
@@ -190,6 +205,7 @@ fun BattleScreen(
             2 -> {
                 // Phase 2: Player attack on enemy screen
                 println("Starting Phase 2: Player attack on enemy screen")
+                println("DEBUG: Phase 2 - showPlayerHitEffect=$showPlayerHitEffect, showOpponentHitEffect=$showOpponentHitEffect")
                 battleSystem.switchToView(2) // Enemy screen
                 var progress = 0f
                 while (progress < 1f) {
@@ -202,6 +218,9 @@ fun BattleScreen(
                             // Player attack hits enemy
                             println("Player attack hits enemy at progress $progress")
                             battleSystem.startOpponentHit()
+                            // Show hit effect and damage effect
+                            println("DEBUG: Setting showOpponentHitEffect = true (player attack hits enemy)")
+                            showOpponentHitEffect = true
                             // Show damage number when attack reaches enemy
                             if (pendingOpponentDamage > 0) {
                                 showOpponentDamageNumber = true
@@ -241,6 +260,7 @@ fun BattleScreen(
             3 -> {
                 // Phase 3: Enemy attack on player screen
                 println("Starting Phase 3: Enemy attack on player screen")
+                println("DEBUG: Phase 3 - showPlayerHitEffect=$showPlayerHitEffect, showOpponentHitEffect=$showOpponentHitEffect")
                 battleSystem.switchToView(1) // Player screen
                 var progress = 0f
                 while (progress < 1f) {
@@ -255,6 +275,9 @@ fun BattleScreen(
                             // Enemy attack hits player
                             println("Enemy attack hits player at progress $progress")
                             battleSystem.startPlayerHit()
+                            // Show hit effect and damage effect
+                            println("DEBUG: Setting showPlayerHitEffect = true (enemy attack hits player)")
+                            showPlayerHitEffect = true
                             // Show damage number when attack reaches player
                             if (pendingPlayerDamage > 0) {
                                 showPlayerDamageNumber = true
@@ -493,6 +516,20 @@ fun BattleScreen(
                         //.background(Color.Yellow.copy(alpha = 0.3f)) // Debug background
                 )
                 
+                // Player hit effects
+                HitEffectOverlay(
+                    isVisible = showPlayerHitEffect,
+                    modifier = Modifier.fillMaxSize(),
+                    isPlayerScreen = true,
+                    onAnimationComplete = {
+                        println("DEBUG: Player hit effect animation completed, setting showPlayerHitEffect = false")
+                        showPlayerHitEffect = false
+                        println("DEBUG: Player hit effect animation completed")
+                    }
+                )
+                
+
+                
                 // Debug text overlay
                 /*
                 Text(
@@ -516,6 +553,20 @@ fun BattleScreen(
                         .align(Alignment.Center)
                         .offset(y = (-50).dp)
                 )
+                
+                // Enemy hit effects
+                HitEffectOverlay(
+                    isVisible = showOpponentHitEffect,
+                    modifier = Modifier.fillMaxSize(),
+                    isPlayerScreen = false,
+                    onAnimationComplete = {
+                        println("DEBUG: Enemy hit effect animation completed, setting showOpponentHitEffect = false")
+                        showOpponentHitEffect = false
+                        println("DEBUG: Enemy hit effect animation completed")
+                    }
+                )
+                
+
             }
         }
     }
