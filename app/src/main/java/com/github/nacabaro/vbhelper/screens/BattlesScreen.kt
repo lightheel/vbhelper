@@ -460,9 +460,9 @@ fun MiddleBattleView(
                 ) {
                     // Determine animation type for enemy
                     val enemyAnimationType = when {
+                        battleSystem.attackPhase == 1 -> DigimonAnimationType.ATTACK  // Both attacking in Phase 1
                         battleSystem.isOpponentDodging -> DigimonAnimationType.WALK
                         battleSystem.isOpponentHit -> DigimonAnimationType.SLEEP
-                        battleSystem.attackPhase == 1 -> DigimonAnimationType.ATTACK  // Both attacking
                         else -> DigimonAnimationType.IDLE
                     }
                     
@@ -506,7 +506,8 @@ fun MiddleBattleView(
                     
                     // Enemy attack sprite (Phase 1 only)
                     if (battleSystem.attackPhase == 1) {
-                        val xOffset = (attackAnimationProgress * 400 + 50).dp  // Move right off screen
+                        val xOffset = (-attackAnimationProgress * 400).dp  // Start at center, move left off screen
+                        val yOffset = 30.dp  // Lower enemy attack sprite by 30 pixels
                         
                         AttackSpriteImage(
                             characterId = opponentCharacter?.charaId ?: "dim011_mon01",
@@ -515,7 +516,7 @@ fun MiddleBattleView(
                                 .size(60.dp)
                                 .offset(
                                     x = xOffset,
-                                    y = 0.dp
+                                    y = yOffset
                                 ),
                             contentScale = ContentScale.Fit
                         )
@@ -539,9 +540,9 @@ fun MiddleBattleView(
                 ) {
                     // Determine animation type for player
                     val playerAnimationType = when {
+                        battleSystem.attackPhase == 1 -> DigimonAnimationType.ATTACK  // Both attacking in Phase 1
                         battleSystem.isPlayerDodging -> DigimonAnimationType.WALK
                         battleSystem.isPlayerHit -> DigimonAnimationType.SLEEP
-                        battleSystem.attackPhase == 1 -> DigimonAnimationType.ATTACK  // Both attacking
                         else -> DigimonAnimationType.IDLE
                     }
                     
@@ -586,7 +587,8 @@ fun MiddleBattleView(
                     
                     // Player attack sprite (Phase 1 only)
                     if (battleSystem.attackPhase == 1) {
-                        val xOffset = (-attackAnimationProgress * 400 - 50).dp  // Move left off screen
+                        val xOffset = (attackAnimationProgress * 400).dp  // Start at center, move right off screen
+                        val yOffset = (-30).dp  // Raise player attack sprite by 30 pixels
                         
                         AttackSpriteImage(
                             characterId = activeCharacter?.charaId ?: "dim011_mon01",
@@ -595,7 +597,7 @@ fun MiddleBattleView(
                                 .size(60.dp)
                                 .offset(
                                     x = xOffset,
-                                    y = 0.dp
+                                    y = yOffset
                                 )
                                 .scale(-1f, 1f), // Flip attack sprite
                             contentScale = ContentScale.Fit
@@ -722,6 +724,8 @@ fun MiddleBattleView(
                                              onSetPendingDamage(0f, 0f) // No damage
                                          }
                                          battleSystem.setupCounterAttack(finalCounterAttackHits)
+                                         // Set the opponent attack hit state for Phase 3
+                                         battleSystem.handleOpponentAttackResult(finalCounterAttackHits)
                                      }
                                  }
                                  2 -> {
@@ -1047,6 +1051,8 @@ fun PlayerBattleView(
                                              onSetPendingDamage(0f, 0f) // No damage
                                          }
                                          battleSystem.setupCounterAttack(finalCounterAttackHits)
+                                         // Set the opponent attack hit state for Phase 3
+                                         battleSystem.handleOpponentAttackResult(finalCounterAttackHits)
                                      }
                                  }
                                  2 -> {
