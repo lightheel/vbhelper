@@ -731,29 +731,44 @@ fun MiddleBattleView(
             }
             */
 
-            // Enemy HP bar (top)
-            LinearProgressIndicator(
-                progress = battleSystem.opponentHP / (opponentCharacter?.baseHp?.toFloat() ?: 100f),
+            // Enemy HP bar and text with background box
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(10.dp),
-                color = Color.Red,
-                trackColor = Color.Gray
-            )
-
-            // Enemy HP display numbers
-            Text(
-                text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${opponentCharacter?.baseHp ?: 100}",
-                fontSize = 16.sp,
-                color = Color.White,
-                style = TextStyle(
-                    shadow = Shadow(
-                        color = Color.Black,
-                        offset = androidx.compose.ui.geometry.Offset(4f, 4f),
-                        //blurRadius = 2f
+                    .background(
+                        color = Color.Gray.copy(alpha = 0.6f),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                     )
-                )
-            )
+                    .padding(8.dp)
+            ) {
+                Column {
+                    // Enemy HP bar (top)
+                    LinearProgressIndicator(
+                        progress = battleSystem.opponentHP / (opponentCharacter?.baseHp?.toFloat() ?: 100f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp),
+                        color = Color.Red,
+                        trackColor = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Enemy HP display numbers
+                    Text(
+                        text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${opponentCharacter?.baseHp ?: 100}",
+                        fontSize = 16.sp,
+                        color = Color.White,
+                        style = TextStyle(
+                            shadow = Shadow(
+                                color = Color.Black,
+                                offset = androidx.compose.ui.geometry.Offset(4f, 4f),
+                                //blurRadius = 2f
+                            )
+                        )
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -956,29 +971,44 @@ fun MiddleBattleView(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Player HP bar
-            LinearProgressIndicator(
-                progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+            // Player HP bar and text with background box
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(10.dp),
-                color = Color.Green,
-                trackColor = Color.Gray
-            )
-
-            // Player HP display numbers
-            Text(
-                text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
-                fontSize = 16.sp,
-                color = Color.White,
-                style = TextStyle(
-                    shadow = Shadow(
-                        color = Color.Black,
-                        offset = androidx.compose.ui.geometry.Offset(4f, 4f),
-                        //blurRadius = 2f
+                    .background(
+                        color = Color.Gray.copy(alpha = 0.6f),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                     )
-                )
-            )
+                    .padding(8.dp)
+            ) {
+                Column {
+                    // Player HP bar
+                    LinearProgressIndicator(
+                        progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp),
+                        color = Color.Green,
+                        trackColor = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Player HP display numbers
+                    Text(
+                        text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
+                        fontSize = 16.sp,
+                        color = Color.White,
+                        style = TextStyle(
+                            shadow = Shadow(
+                                color = Color.Black,
+                                offset = androidx.compose.ui.geometry.Offset(4f, 4f),
+                                //blurRadius = 2f
+                            )
+                        )
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(6.dp))
 
@@ -1161,29 +1191,44 @@ fun PlayerBattleView(
             }
             */
 
-            // Health bar
-            LinearProgressIndicator(
-                progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+            // Health bar and text with background box
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(10.dp),
-                color = Color.Green,
-                trackColor = Color.Gray
-            )
-
-            // Health display numbers
-            Text(
-                text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
-                fontSize = 16.sp,
-                color = Color.White,
-                style = TextStyle(
-                    shadow = Shadow(
-                        color = Color.Black,
-                        offset = androidx.compose.ui.geometry.Offset(4f, 4f),
-                        //blurRadius = 2f
+                    .background(
+                        color = Color.Gray.copy(alpha = 0.6f),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                     )
-                )
-            )
+                    .padding(8.dp)
+            ) {
+                Column {
+                    // Health bar
+                    LinearProgressIndicator(
+                        progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp),
+                        color = Color.Green,
+                        trackColor = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Health display numbers
+                    Text(
+                        text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
+                        fontSize = 16.sp,
+                        color = Color.White,
+                        style = TextStyle(
+                            shadow = Shadow(
+                                color = Color.Black,
+                                offset = androidx.compose.ui.geometry.Offset(4f, 4f),
+                                //blurRadius = 2f
+                            )
+                        )
+                    )
+                }
+            }
         }
 
         // Middle section: Player Digimon only
@@ -1474,29 +1519,44 @@ fun EnemyBattleView(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Enemy HP bar
-            LinearProgressIndicator(
-                progress = battleSystem.opponentHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+            // Enemy HP bar and text with background box
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(10.dp),
-                color = Color.Red,
-                trackColor = Color.Gray
-            )
-
-            // Enemy HP display numbers
-            Text(
-                text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
-                fontSize = 16.sp,
-                color = Color.White,
-                style = TextStyle(
-                    shadow = Shadow(
-                        color = Color.Black,
-                        offset = androidx.compose.ui.geometry.Offset(4f, 4f),
-                        //blurRadius = 2f
+                    .background(
+                        color = Color.Gray.copy(alpha = 0.6f),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                     )
-                )
-            )
+                    .padding(8.dp)
+            ) {
+                Column {
+                    // Enemy HP bar
+                    LinearProgressIndicator(
+                        progress = battleSystem.opponentHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp),
+                        color = Color.Red,
+                        trackColor = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Enemy HP display numbers
+                    Text(
+                        text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
+                        fontSize = 16.sp,
+                        color = Color.White,
+                        style = TextStyle(
+                            shadow = Shadow(
+                                color = Color.Black,
+                                offset = androidx.compose.ui.geometry.Offset(4f, 4f),
+                                //blurRadius = 2f
+                            )
+                        )
+                    )
+                }
+            }
         }
 
         // Middle section: Enemy Digimon
