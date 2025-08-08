@@ -1941,7 +1941,6 @@ fun BattlesScreen() {
                             ) {
                                 Text("Sprite Animation Tester")
                             }
-                            */
                             Button(
                                 onClick = {
                                     val spriteFileManager = SpriteFileManager(context)
@@ -1951,6 +1950,7 @@ fun BattlesScreen() {
                             ) {
                                 Text("Clear Sprite Files")
                             }
+                             */
                         }
                     }
                 }

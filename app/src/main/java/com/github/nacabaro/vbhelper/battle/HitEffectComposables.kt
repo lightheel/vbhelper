@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -25,6 +26,8 @@ fun HitEffectOverlay(
     if (!isVisible) return
     
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val isLandscapeMode = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     val hitEffectManager = remember { HitEffectSpriteManager(context) }
     val coroutineScope = rememberCoroutineScope()
     
@@ -92,10 +95,22 @@ fun HitEffectOverlay(
                     .offset(
                         x = if (isPlayerScreen) {
                             // On player screen, position further to the left
-                            (-sprite.width * scale / 2 - 100).dp
+                            if (isLandscapeMode) {
+                                // In landscape mode, move even further left for player screen
+                                (-sprite.width * scale / 2 - 300).dp
+                            } else {
+                                // In portrait mode, use original positioning
+                                (-sprite.width * scale / 2 - 100).dp
+                            }
                         } else {
                             // On enemy screen, position further to the right
-                            (-sprite.width * scale / 2 + 150).dp
+                            if (isLandscapeMode) {
+                                // In landscape mode, move even further right for enemy screen
+                                (-sprite.width * scale / 2 + 350).dp
+                            } else {
+                                // In portrait mode, use original positioning
+                                (-sprite.width * scale / 2 + 150).dp
+                            }
                         },
                         y = (-sprite.height * scale / 2 + 40).dp  // Position lower on screen (was -60, now +40)
                     ),
