@@ -204,7 +204,8 @@ fun BattleScreen(
     activeCharacter: APIBattleCharacter?,
     opponentCharacter: APIBattleCharacter?,
     onAttackClick: () -> Unit,
-    context: android.content.Context? = null
+    context: android.content.Context? = null,
+    selectedBackgroundSet: Int = 0
 ) {
     val battleSystem = remember { ArenaBattleSystem() }
     val coroutineScope = rememberCoroutineScope()
@@ -617,7 +618,8 @@ fun BattleScreen(
                     },
                     coroutineScope = coroutineScope,
                     hidePlayerAttackSprite = hidePlayerAttackSprite,
-                    hideEnemyAttackSprite = hideEnemyAttackSprite
+                    hideEnemyAttackSprite = hideEnemyAttackSprite,
+                    selectedBackgroundSet = selectedBackgroundSet
                 )
             }
             1 -> {
@@ -638,7 +640,8 @@ fun BattleScreen(
                         pendingOpponentDamage = opponentDamage
                     },
                     coroutineScope = coroutineScope,
-                    hidePlayerAttackSprite = hidePlayerAttackSprite
+                    hidePlayerAttackSprite = hidePlayerAttackSprite,
+                    selectedBackgroundSet = selectedBackgroundSet
                 )
             }
             2 -> {
@@ -650,7 +653,8 @@ fun BattleScreen(
                     attackAnimationProgress = battleSystem.attackProgress,
                     activeCharacter = opponentCharacter,
                     playerCharacter = activeCharacter,
-                    hideEnemyAttackSprite = hideEnemyAttackSprite
+                    hideEnemyAttackSprite = hideEnemyAttackSprite,
+                    selectedBackgroundSet = selectedBackgroundSet
                 )
             }
         }
@@ -745,7 +749,8 @@ fun MiddleBattleView(
     onSetPendingDamage: (Float, Float) -> Unit,
     coroutineScope: kotlinx.coroutines.CoroutineScope,
     hidePlayerAttackSprite: Boolean,
-    hideEnemyAttackSprite: Boolean
+    hideEnemyAttackSprite: Boolean,
+    selectedBackgroundSet: Int = 0
 ) {
     // Track previous character ID to detect transitions
     var previousCharacterId by remember { mutableStateOf<String?>(null) }
@@ -758,7 +763,8 @@ fun MiddleBattleView(
     ) {
         // Animated background - positioned underneath all other sprites
         MultiLayerAnimatedBattleBackground(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            backgroundSetIndex = selectedBackgroundSet
         )
         
         // Top section: HP bars and HP numbers
@@ -1168,7 +1174,8 @@ fun PlayerBattleView(
     opponent: APIBattleCharacter?,
     onSetPendingDamage: (Float, Float) -> Unit,
     coroutineScope: kotlinx.coroutines.CoroutineScope,
-    hidePlayerAttackSprite: Boolean
+    hidePlayerAttackSprite: Boolean,
+    selectedBackgroundSet: Int = 0
 ) {
     // Track previous character ID to detect transitions
     var previousCharacterId by remember { mutableStateOf<String?>(null) }
@@ -1180,7 +1187,7 @@ fun PlayerBattleView(
         modifier = Modifier.fillMaxSize()
     ) {
         // Multi-layer animated battle background
-        MultiLayerAnimatedBattleBackground(modifier = Modifier.fillMaxSize())
+        MultiLayerAnimatedBattleBackground(modifier = Modifier.fillMaxSize(), backgroundSetIndex = selectedBackgroundSet)
         
         // Top section: HP bar and HP numbers
         Column(
@@ -1356,7 +1363,8 @@ fun EnemyBattleView(
     attackAnimationProgress: Float,
     activeCharacter: APIBattleCharacter? = null,
     playerCharacter: APIBattleCharacter? = null,
-    hideEnemyAttackSprite: Boolean
+    hideEnemyAttackSprite: Boolean,
+    selectedBackgroundSet: Int = 0
 ) {
     // Track previous character ID to detect transitions
     var previousCharacterId by remember { mutableStateOf<String?>(null) }
@@ -1367,7 +1375,7 @@ fun EnemyBattleView(
         modifier = Modifier.fillMaxSize()
     ) {
         // Multi-layer animated battle background
-        MultiLayerAnimatedBattleBackground(modifier = Modifier.fillMaxSize())
+        MultiLayerAnimatedBattleBackground(modifier = Modifier.fillMaxSize(), backgroundSetIndex = selectedBackgroundSet)
         
         // Top section: Enemy HP bar and HP numbers
     Column(
@@ -1536,6 +1544,9 @@ fun BattlesScreen() {
     var expanded by remember { mutableStateOf(false) }
     var selectedStage by remember { mutableStateOf("") }
     var currentStage by remember { mutableStateOf("rookie") }
+    
+    // Random background set selection
+    var selectedBackgroundSet by remember { mutableStateOf(0) }
     
     // Sprite animation tester state
     var showSpriteTester by remember { mutableStateOf(false) }
@@ -1970,6 +1981,8 @@ fun BattlesScreen() {
                                     onClick = {
                                         activeCharacter?.let {
                                             selectedOpponent = opponent
+                                            // Randomly select background set (0, 1, or 2)
+                                            selectedBackgroundSet = kotlin.random.Random.nextInt(3)
                                             RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 0, 0, opponent.name, 0) { apiResult ->
                                                 currentView = "battle-main"
                                             }
@@ -2008,6 +2021,8 @@ fun BattlesScreen() {
                                     onClick = {
                                         activeCharacter?.let {
                                             selectedOpponent = opponent
+                                            // Randomly select background set (0, 1, or 2)
+                                            selectedBackgroundSet = kotlin.random.Random.nextInt(3)
                                             RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 1, 0, opponent.name, 1) { apiResult ->
                                                 currentView = "battle-main"
                                             }
@@ -2046,6 +2061,8 @@ fun BattlesScreen() {
                                     onClick = {
                                         activeCharacter?.let {
                                             selectedOpponent = opponent
+                                            // Randomly select background set (0, 1, or 2)
+                                            selectedBackgroundSet = kotlin.random.Random.nextInt(3)
                                             RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 2, 0, opponent.name, 2) { apiResult ->
                                                 currentView = "battle-main"
                                             }
@@ -2084,6 +2101,8 @@ fun BattlesScreen() {
                                     onClick = {
                                         activeCharacter?.let {
                                             selectedOpponent = opponent
+                                            // Randomly select background set (0, 1, or 2)
+                                            selectedBackgroundSet = kotlin.random.Random.nextInt(3)
                                             RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 3, 0, opponent.name, 3) { apiResult ->
                                                 currentView = "battle-main"
                                             }
@@ -2118,7 +2137,8 @@ fun BattlesScreen() {
                             // This will be called when the battle is over
                             currentView = "battle-results"
                         },
-                        context = context
+                        context = context,
+                        selectedBackgroundSet = selectedBackgroundSet
                     )
                 }
 
@@ -2298,9 +2318,36 @@ fun AnimatedBattleBackground(
     }
 }
 
+// Data class to define background sets
+data class BackgroundSet(
+    val backLayer: String,
+    val middleLayer: String,
+    val frontLayer: String
+)
+
+// Define the three background sets
+val backgroundSets = listOf(
+    BackgroundSet(
+        backLayer = "BattleBg_0018_BattleBg_0013.png",
+        middleLayer = "BattleBg_0015_BattleBg_0012.png",
+        frontLayer = "BattleBg_0005_BattleBg_0011.png"
+    ),
+    BackgroundSet(
+        backLayer = "BattleBg_0014_BattleBg_0013.png",
+        middleLayer = "BattleBg_0010_BattleBg_0012.png",
+        frontLayer = "BattleBg_0011_BattleBg_0011.png"
+    ),
+    BackgroundSet(
+        backLayer = "BattleBg_0019_BattleBg_0013.png",
+        middleLayer = "BattleBg_0004_BattleBg_0012.png",
+        frontLayer = "BattleBg_0009_BattleBg_0011.png"
+    )
+)
+
 @Composable
 fun MultiLayerAnimatedBattleBackground(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    backgroundSetIndex: Int = 0
 ) {
     val context = LocalContext.current
     var backLayerBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
@@ -2324,33 +2371,34 @@ fun MultiLayerAnimatedBattleBackground(
     }
 
     // Load all three background layers from external storage
-    LaunchedEffect(Unit) {
+    LaunchedEffect(backgroundSetIndex) {
         try {
             val externalDir = Environment.getExternalStorageDirectory()
+            val selectedSet = backgroundSets[backgroundSetIndex]
             
-            // Back layer (BattleBg_0018_BattleBg_0013.png)
-            val backLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/BattleBg_0018_BattleBg_0013.png")
+            // Back layer
+            val backLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/${selectedSet.backLayer}")
             if (backLayerFile.exists()) {
                 backLayerBitmap = BitmapFactory.decodeFile(backLayerFile.absolutePath)
-                println("Successfully loaded back layer background: ${backLayerFile.absolutePath}")
+                println("Successfully loaded back layer background (Set ${backgroundSetIndex + 1}): ${backLayerFile.absolutePath}")
             } else {
                 println("Back layer background file not found: ${backLayerFile.absolutePath}")
             }
             
-            // Middle layer (BattleBg_0015_BattleBg_0012.png)
-            val middleLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/BattleBg_0015_BattleBg_0012.png")
+            // Middle layer
+            val middleLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/${selectedSet.middleLayer}")
             if (middleLayerFile.exists()) {
                 middleLayerBitmap = BitmapFactory.decodeFile(middleLayerFile.absolutePath)
-                println("Successfully loaded middle layer background: ${middleLayerFile.absolutePath}")
+                println("Successfully loaded middle layer background (Set ${backgroundSetIndex + 1}): ${middleLayerFile.absolutePath}")
             } else {
                 println("Middle layer background file not found: ${middleLayerFile.absolutePath}")
             }
             
-            // Front layer (BattleBg_0005_BattleBg_0011.png)
-            val frontLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/BattleBg_0005_BattleBg_0011.png")
+            // Front layer
+            val frontLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/${selectedSet.frontLayer}")
             if (frontLayerFile.exists()) {
                 frontLayerBitmap = BitmapFactory.decodeFile(frontLayerFile.absolutePath)
-                println("Successfully loaded front layer background: ${frontLayerFile.absolutePath}")
+                println("Successfully loaded front layer background (Set ${backgroundSetIndex + 1}): ${frontLayerFile.absolutePath}")
             } else {
                 println("Front layer background file not found: ${frontLayerFile.absolutePath}")
             }
