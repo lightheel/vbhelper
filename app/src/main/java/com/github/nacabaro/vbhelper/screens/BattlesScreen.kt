@@ -903,13 +903,18 @@ fun MiddleBattleView(
                     }
                 }
                 
-                // Horizontal line separator
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(Color.Black)
-                )
+                // Horizontal line separator (hidden in landscape mode)
+                val lineConfiguration = LocalConfiguration.current
+                val isLandscapeMode = lineConfiguration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                
+                if (!isLandscapeMode) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(2.dp)
+                            .background(Color.Black)
+                    )
+                }
                 
                 // Player Digimon (bottom half)
                 Box(
@@ -2295,25 +2300,22 @@ fun AnimatedBattleBackground(
     
     backgroundBitmap?.let { bitmap ->
         Box(modifier = modifier.fillMaxSize()) {
-            // First image (main)
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Animated Battle Background 1",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset(x = xOffset.dp),
-                contentScale = ContentScale.FillBounds
-            )
+            // Calculate how many times to repeat the image to fill the screen width
+            val configuration = LocalConfiguration.current
+            val isLandscapeMode = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+            val imageWidth = if (isLandscapeMode) screenWidth.value * 1.5f else screenWidth.value
+            val repeatCount = (imageWidth / screenWidth.value).toInt() + 2 // Add 2 for seamless looping
             
-            // Second image (for seamless loop)
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Animated Battle Background 2",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset(x = (xOffset + screenWidth.value).dp),
-                contentScale = ContentScale.FillBounds
-            )
+            repeat(repeatCount) { index ->
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Animated Battle Background ${index + 1}",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .offset(x = (xOffset + (index * screenWidth.value)).dp),
+                    contentScale = ContentScale.FillBounds
+                )
+            }
         }
     }
 }
@@ -2407,26 +2409,32 @@ fun MultiLayerAnimatedBattleBackground(
         }
     }
 
-    // Animate all three layers with different speeds
+    // Animate all three layers with different speeds (slower in landscape mode)
+    val bgConfiguration = LocalConfiguration.current
+    val isLandscapeMode = bgConfiguration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    
     LaunchedEffect(screenWidth) {
         if (screenWidth > 0.dp) {
             while (true) {
                 delay(50) // Update every 50ms for smooth animation
                 
+                // Adjust speed based on orientation
+                val speedMultiplier = if (isLandscapeMode) 0.5f else 1f
+                
                 // Back layer moves slowest (parallax effect)
-                backLayerXOffset -= 0.5f
+                backLayerXOffset -= 0.5f * speedMultiplier
                 if (backLayerXOffset <= -screenWidth.value) {
                     backLayerXOffset = 0f
                 }
                 
                 // Middle layer moves at medium speed
-                middleLayerXOffset -= 1f
+                middleLayerXOffset -= 1f * speedMultiplier
                 if (middleLayerXOffset <= -screenWidth.value) {
                     middleLayerXOffset = 0f
                 }
                 
                 // Front layer moves fastest
-                frontLayerXOffset -= 1.5f
+                frontLayerXOffset -= 1.5f * speedMultiplier
                 if (frontLayerXOffset <= -screenWidth.value) {
                     frontLayerXOffset = 0f
                 }
@@ -2435,64 +2443,50 @@ fun MultiLayerAnimatedBattleBackground(
     }
     
     Box(modifier = modifier.fillMaxSize()) {
+        // Calculate how many times to repeat the image to fill the screen width
+        val imageWidth = if (isLandscapeMode) screenWidth.value * 1.5f else screenWidth.value
+        val repeatCount = (imageWidth / screenWidth.value).toInt() + 2 // Add 2 for seamless looping
+        
         // Back layer (underneath everything)
         backLayerBitmap?.let { bitmap ->
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Back Layer Battle Background 1",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset(x = backLayerXOffset.dp),
-                contentScale = ContentScale.FillBounds
-            )
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Back Layer Battle Background 2",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset(x = (backLayerXOffset + screenWidth.value).dp),
-                contentScale = ContentScale.FillBounds
-            )
+            repeat(repeatCount) { index ->
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Back Layer Battle Background ${index + 1}",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .offset(x = (backLayerXOffset + (index * screenWidth.value)).dp),
+                    contentScale = ContentScale.FillBounds
+                )
+            }
         }
         
         // Middle layer
         middleLayerBitmap?.let { bitmap ->
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Middle Layer Battle Background 1",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset(x = middleLayerXOffset.dp),
-                contentScale = ContentScale.FillBounds
-            )
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Middle Layer Battle Background 2",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset(x = (middleLayerXOffset + screenWidth.value).dp),
-                contentScale = ContentScale.FillBounds
-            )
+            repeat(repeatCount) { index ->
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Middle Layer Battle Background ${index + 1}",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .offset(x = (middleLayerXOffset + (index * screenWidth.value)).dp),
+                    contentScale = ContentScale.FillBounds
+                )
+            }
         }
         
         // Front layer (on top of other backgrounds)
         frontLayerBitmap?.let { bitmap ->
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Front Layer Battle Background 1",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset(x = frontLayerXOffset.dp),
-                contentScale = ContentScale.FillBounds
-            )
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Front Layer Battle Background 2",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset(x = (frontLayerXOffset + screenWidth.value).dp),
-                contentScale = ContentScale.FillBounds
-            )
+            repeat(repeatCount) { index ->
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Front Layer Battle Background ${index + 1}",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .offset(x = (frontLayerXOffset + (index * screenWidth.value)).dp),
+                    contentScale = ContentScale.FillBounds
+                )
+            }
         }
     }
 } 
