@@ -761,39 +761,12 @@ fun MiddleBattleView(
             modifier = Modifier.fillMaxSize()
         )
         
-        // Top section: Exit button, HP bars, and HP numbers
+        // Top section: HP bars and HP numbers
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Exit button at the top-right
-            Box(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Button(
-                    onClick = { /* TODO: Add exit functionality */ },
-                    modifier = Modifier.align(Alignment.TopEnd),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) {
-                    Text("Exit", color = Color.White, fontSize = 14.sp)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Debug display
-            /*
-            if (lastApiResult != null) {
-                Text(
-                    text = "Debug: state=${lastApiResult!!.state}, playerAttackHit=${lastApiResult!!.playerAttackHit}, opponentDamage=${lastApiResult!!.opponentAttackDamage}",
-                    color = Color.Red,
-                    fontSize = 10.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-            */
-
             // Enemy HP bar and text with background box
             Box(
                 modifier = getLandscapeBoxModifier(),
@@ -1209,39 +1182,12 @@ fun PlayerBattleView(
         // Multi-layer animated battle background
         MultiLayerAnimatedBattleBackground(modifier = Modifier.fillMaxSize())
         
-        // Top section: Exit button, HP bar, and HP numbers
+        // Top section: HP bar and HP numbers
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Exit button at the top-right
-            Box(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Button(
-                    onClick = { /* TODO: Add exit functionality */ },
-                    modifier = Modifier.align(Alignment.TopEnd),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) {
-                    Text("Exit", color = Color.White, fontSize = 12.sp)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Debug display
-            /*
-            if (lastApiResult != null) {
-                Text(
-                    text = "Debug: state=${lastApiResult!!.state}, playerAttackHit=${lastApiResult!!.playerAttackHit}, opponentDamage=${lastApiResult!!.opponentAttackDamage}",
-                    color = Color.Red,
-                    fontSize = 10.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-            */
-
             // Health bar and text with background box
             Box(
                 modifier = getLandscapeBoxModifier(),
@@ -1995,6 +1941,7 @@ fun BattlesScreen() {
                             ) {
                                 Text("Sprite Animation Tester")
                             }
+                            */
                             Button(
                                 onClick = {
                                     val spriteFileManager = SpriteFileManager(context)
@@ -2004,8 +1951,6 @@ fun BattlesScreen() {
                             ) {
                                 Text("Clear Sprite Files")
                             }
-
-                             */
                         }
                     }
                 }
