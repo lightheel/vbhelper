@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.battle
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Environment
 import com.google.gson.Gson
 import java.io.File
 
@@ -37,8 +38,11 @@ class BattleSpriteManager(private val context: Context) {
     private val gson = Gson()
     private val spriteCache = mutableMapOf<String, Bitmap>()
     
-    // Base directory where your sprites are stored
-    private val spriteBaseDir = File(context.filesDir, "battle_sprites/extracted_assets")
+    // Get the external storage directory for sprite files
+    private fun getSpriteBaseDir(): File {
+        val externalDir = Environment.getExternalStorageDirectory()
+        return File(externalDir, "VBHelper/battle_sprites/extracted_assets")
+    }
     
     fun loadSprite(spriteName: String, atlasName: String): Bitmap? {
         val cacheKey = "${spriteName}_${atlasName}"
@@ -49,6 +53,7 @@ class BattleSpriteManager(private val context: Context) {
         }
         
         // Debug: Check if base directory exists
+        val spriteBaseDir = getSpriteBaseDir()
         if (!spriteBaseDir.exists()) {
             println("Sprite base directory does not exist: ${spriteBaseDir.absolutePath}")
             return null
@@ -130,7 +135,7 @@ class BattleSpriteManager(private val context: Context) {
     // Helper method to get available sprites for an atlas
     fun getAvailableSprites(atlasName: String): List<String> {
         try {
-            val spritesDir = File(spriteBaseDir, "sprites")
+            val spritesDir = File(getSpriteBaseDir(), "sprites")
             if (!spritesDir.exists()) {
                 return emptyList()
             }
@@ -154,7 +159,7 @@ class BattleSpriteManager(private val context: Context) {
     // Helper method to get available atlases
     fun getAvailableAtlases(): List<String> {
         try {
-            val texturesDir = File(spriteBaseDir, "extracted_textures")
+            val texturesDir = File(getSpriteBaseDir(), "extracted_textures")
             if (!texturesDir.exists()) {
                 return emptyList()
             }

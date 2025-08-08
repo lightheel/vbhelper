@@ -1,15 +1,22 @@
 package com.github.nacabaro.vbhelper.battle
 
 import android.content.Context
+import android.os.Environment
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
 class SpriteFileManager(private val context: Context) {
     
-    fun copySpriteFilesToInternalStorage() {
+    // Get the external storage directory for sprite files
+    private fun getSpriteBaseDir(): File {
+        val externalDir = Environment.getExternalStorageDirectory()
+        return File(externalDir, "VBHelper/battle_sprites")
+    }
+    
+    fun copySpriteFilesToExternalStorage() {
         try {
-            println("Starting sprite file copy process...")
+            println("Starting sprite file copy process to external storage...")
             
             // Debug: List what's in the assets directory
             val assetManager = context.assets
@@ -47,17 +54,17 @@ class SpriteFileManager(private val context: Context) {
                 }
             }
             
-            // Create the base directory for battle_sprites
-            val battleSpritesDir = File(context.filesDir, "battle_sprites")
+            // Create the base directory for battle_sprites in external storage
+            val battleSpritesDir = getSpriteBaseDir()
             if (!battleSpritesDir.exists()) {
                 battleSpritesDir.mkdirs()
-                println("Created battle_sprites directory: ${battleSpritesDir.absolutePath}")
+                println("Created battle_sprites directory in external storage: ${battleSpritesDir.absolutePath}")
             } else {
-                println("battle_sprites directory already exists: ${battleSpritesDir.absolutePath}")
+                println("battle_sprites directory already exists in external storage: ${battleSpritesDir.absolutePath}")
             }
             
-            // Copy all subdirectories from battle_sprites assets to internal storage
-            println("Copying all battle_sprites subdirectories...")
+            // Copy all subdirectories from battle_sprites assets to external storage
+            println("Copying all battle_sprites subdirectories to external storage...")
             battleSpritesFiles?.forEach { subdir ->
                 val sourcePath = "battle_sprites/$subdir"
                 val targetDir = File(battleSpritesDir, subdir)
@@ -65,7 +72,7 @@ class SpriteFileManager(private val context: Context) {
                 copyAssetDirectory(sourcePath, targetDir)
             }
             
-            println("Sprite files copied successfully to: ${battleSpritesDir.absolutePath}")
+            println("Sprite files copied successfully to external storage: ${battleSpritesDir.absolutePath}")
             
             // Verify that attack sprites were copied
             val atkspritesDir = File(battleSpritesDir, "extracted_atksprites")
@@ -95,7 +102,7 @@ class SpriteFileManager(private val context: Context) {
             }
             
         } catch (e: Exception) {
-            println("Error copying sprite files: ${e.message}")
+            println("Error copying sprite files to external storage: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -180,7 +187,7 @@ class SpriteFileManager(private val context: Context) {
     }
     
     fun checkSpriteFilesExist(): Boolean {
-        val battleSpritesDir = File(context.filesDir, "battle_sprites")
+        val battleSpritesDir = getSpriteBaseDir()
         val extractedAssetsDir = File(battleSpritesDir, "extracted_assets")
         val extractedStatsDir = File(battleSpritesDir, "extracted_digimon_stats")
         val atkspritesDir = File(battleSpritesDir, "extracted_atksprites")
@@ -204,7 +211,7 @@ class SpriteFileManager(private val context: Context) {
     
     fun clearSpriteFiles() {
         try {
-            val battleSpritesDir = File(context.filesDir, "battle_sprites")
+            val battleSpritesDir = getSpriteBaseDir()
             
             if (battleSpritesDir.exists()) {
                 deleteDirectory(battleSpritesDir)

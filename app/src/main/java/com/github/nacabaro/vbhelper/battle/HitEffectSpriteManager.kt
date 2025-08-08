@@ -4,13 +4,17 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Rect
+import android.os.Environment
 import java.io.File
 
 class HitEffectSpriteManager(private val context: Context) {
     private val spriteCache = mutableMapOf<String, Bitmap>()
     
-    // Base directory where hit effect sprites are stored
-    private val hitSpritesDir = File(context.filesDir, "battle_sprites/extracted_hit_sprites")
+    // Get the external storage directory for hit effect sprites
+    private fun getHitSpritesDir(): File {
+        val externalDir = Environment.getExternalStorageDirectory()
+        return File(externalDir, "VBHelper/battle_sprites/extracted_hit_sprites")
+    }
     
     /**
      * Load a hit sprite (hit_01.png, hit_02.png, hit_02_white.png)
@@ -26,6 +30,7 @@ class HitEffectSpriteManager(private val context: Context) {
         }
         
         try {
+            val hitSpritesDir = getHitSpritesDir()
             val spriteFile = File(hitSpritesDir, "$spriteName.png")
             
             if (!spriteFile.exists()) {
@@ -68,7 +73,7 @@ class HitEffectSpriteManager(private val context: Context) {
         }
         
         try {
-            val spritesheetFile = File(hitSpritesDir, "$spritesheetName.png")
+            val spritesheetFile = File(getHitSpritesDir(), "$spritesheetName.png")
             
             if (!spritesheetFile.exists()) {
                 println("Damage effect spritesheet not found: ${spritesheetFile.absolutePath}")
@@ -118,28 +123,21 @@ class HitEffectSpriteManager(private val context: Context) {
     }
     
     /**
-     * Get available hit sprite names
-     * @return List of available hit sprite names
+     * Get all available hit sprites
+     * @return List of hit sprite names (without .png extension)
      */
     fun getAvailableHitSprites(): List<String> {
-        try {
-            if (!hitSpritesDir.exists()) {
-                return emptyList()
-            }
-            
-            val hitFiles = hitSpritesDir.listFiles { file ->
-                file.name.startsWith("hit_") && file.name.endsWith(".png")
-            } ?: emptyArray()
-            
-            return hitFiles.map { file ->
-                file.name.substringBefore(".png")
-            }.sorted()
-            
-        } catch (e: Exception) {
-            println("Error getting available hit sprites: ${e.message}")
-            e.printStackTrace()
+        val hitSpritesDir = getHitSpritesDir()
+        
+        if (!hitSpritesDir.exists()) {
             return emptyList()
         }
+        
+        return hitSpritesDir.listFiles { file ->
+            file.name.startsWith("hit_") && file.name.endsWith(".png")
+        }?.map { file ->
+            file.name.substringBefore(".png")
+        }?.sorted() ?: emptyList()
     }
     
     /**
@@ -148,11 +146,11 @@ class HitEffectSpriteManager(private val context: Context) {
      */
     fun getAvailableDamageEffectSpritesheets(): List<String> {
         try {
-            if (!hitSpritesDir.exists()) {
+            if (!getHitSpritesDir().exists()) {
                 return emptyList()
             }
             
-            val dmgFiles = hitSpritesDir.listFiles { file ->
+            val dmgFiles = getHitSpritesDir().listFiles { file ->
                 file.name.startsWith("dmg_ef") && file.name.endsWith(".png")
             } ?: emptyArray()
             

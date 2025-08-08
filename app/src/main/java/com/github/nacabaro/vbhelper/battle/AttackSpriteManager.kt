@@ -3,6 +3,7 @@ package com.github.nacabaro.vbhelper.battle
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Environment
 import com.google.gson.Gson
 import java.io.File
 
@@ -31,8 +32,10 @@ class AttackSpriteManager(private val context: Context) {
     private val gson = Gson()
     private val characterDataCache = mutableMapOf<String, CharacterData>()
     
-    // Base path for attack textures (updated for new folder structure)
-    private val attackTexturesPath = "battle_sprites/extracted_atksprites"
+    // Get the external storage directory for attack sprites
+    private fun getAttackTexturesPath(): String {
+        return "VBHelper/battle_sprites/extracted_atksprites"
+    }
     
     fun getAttackSprite(characterId: String, isLarge: Boolean = false): Bitmap? {
         println("AttackSpriteManager: Getting attack sprite for characterId=$characterId, isLarge=$isLarge")
@@ -55,9 +58,10 @@ class AttackSpriteManager(private val context: Context) {
                 return null
             }
             
-            // Load the attack sprite
-            val attackFilePath = "$attackTexturesPath/$attackFileName.png"
-            val attackFile = File(context.filesDir, attackFilePath)
+            // Load the attack sprite from external storage
+            val externalDir = Environment.getExternalStorageDirectory()
+            val attackFilePath = "${getAttackTexturesPath()}/$attackFileName.png"
+            val attackFile = File(externalDir, attackFilePath)
             println("AttackSpriteManager: Attack file path = ${attackFile.absolutePath}")
             println("AttackSpriteManager: Attack file exists = ${attackFile.exists()}")
             
@@ -85,8 +89,9 @@ class AttackSpriteManager(private val context: Context) {
         }
         
         try {
-            // Load character data from JSON file
-            val characterDataFile = File(context.filesDir, "battle_sprites/extracted_digimon_stats/character_data/CharacterData.json")
+            // Load character data from JSON file in external storage
+            val externalDir = Environment.getExternalStorageDirectory()
+            val characterDataFile = File(externalDir, "VBHelper/battle_sprites/extracted_digimon_stats/character_data/CharacterData.json")
             println("AttackSpriteManager: Character data file path = ${characterDataFile.absolutePath}")
             println("AttackSpriteManager: Character data file exists = ${characterDataFile.exists()}")
             

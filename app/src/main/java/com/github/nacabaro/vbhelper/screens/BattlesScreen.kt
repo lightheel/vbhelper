@@ -66,9 +66,72 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.BitmapFactory
+import android.os.Environment
 import java.io.File
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.layout.width
+
+@Composable
+fun isLandscapeMode(): Boolean {
+    val configuration = LocalConfiguration.current
+    return configuration.screenWidthDp > configuration.screenHeightDp
+}
+
+@Composable
+fun getLandscapeModifier(): Modifier {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
+    return if (isLandscape) {
+        Modifier.width(200.dp).height(8.dp)
+    } else {
+        Modifier.fillMaxWidth().height(10.dp)
+    }
+}
+
+@Composable
+fun getLandscapeAlignment(): Alignment {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
+    return if (isLandscape) Alignment.Center else Alignment.TopStart
+}
+
+@Composable
+fun getLandscapeHorizontalAlignment(): Alignment.Horizontal {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
+    return if (isLandscape) Alignment.CenterHorizontally else Alignment.Start
+}
+
+@Composable
+fun getLandscapeFontSize(): androidx.compose.ui.unit.TextUnit {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
+    return if (isLandscape) 14.sp else 16.sp
+}
+
+@Composable
+fun getLandscapeBoxModifier(): Modifier {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
+    return if (isLandscape) {
+        Modifier
+            .width(220.dp) // Slightly wider than the progress bar to accommodate padding
+            .background(
+                color = Color.Gray.copy(alpha = 0.6f),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+            )
+            .padding(8.dp)
+    } else {
+        Modifier
+            .fillMaxWidth()
+            .background(
+                color = Color.Gray.copy(alpha = 0.6f),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+            )
+            .padding(8.dp)
+    }
+}
 
 @Composable
 fun AnimatedDamageNumber(
@@ -266,13 +329,13 @@ fun BattleScreen(
                     delay(16) // 60 FPS
                 }
                 println("Phase 2 completed, applying damage and starting Phase 3")
-                battleSystem.completeAttackAnimation(opponentDamage = pendingOpponentDamage)
+                 battleSystem.completeAttackAnimation(opponentDamage = pendingOpponentDamage)
                 
                 // Hide damage number and reset pending damage after animation
                 if (showOpponentDamageNumber) {
                     delay(800) // Wait for damage number animation (scale up + hold + fade out)
                     showOpponentDamageNumber = false
-                    pendingOpponentDamage = 0f
+                 pendingOpponentDamage = 0f
                     println("DEBUG: Hiding opponent damage number and resetting pending damage")
                 }
                 
@@ -344,18 +407,18 @@ fun BattleScreen(
                 }
                 println("Phase 3 completed, applying damage and resetting")
                 println("DEBUG: pendingPlayerDamage = $pendingPlayerDamage")
-                battleSystem.completeAttackAnimation(playerDamage = pendingPlayerDamage)
+                 battleSystem.completeAttackAnimation(playerDamage = pendingPlayerDamage)
                 
                 // Hide damage number and reset pending damage after animation
                 if (showPlayerDamageNumber) {
                     delay(800) // Wait for damage number animation (scale up + hold + fade out)
                     showPlayerDamageNumber = false
-                    pendingPlayerDamage = 0f
+                 pendingPlayerDamage = 0f
                     println("DEBUG: Hiding player damage number and resetting pending damage")
                 }
                 
-                battleSystem.resetAttackState()
-                battleSystem.enableAttackButton()
+                 battleSystem.resetAttackState()
+                 battleSystem.enableAttackButton()
                 
                 // Check if battle is over
                 if (battleSystem.checkBattleOver()) {
@@ -733,21 +796,16 @@ fun MiddleBattleView(
 
             // Enemy HP bar and text with background box
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color.Gray.copy(alpha = 0.6f),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-                    )
-                    .padding(8.dp)
+                modifier = getLandscapeBoxModifier(),
+                contentAlignment = getLandscapeAlignment()
             ) {
-                Column {
+                Column(
+                    horizontalAlignment = getLandscapeHorizontalAlignment()
+                ) {
                     // Enemy HP bar (top)
                     LinearProgressIndicator(
                         progress = battleSystem.opponentHP / (opponentCharacter?.baseHp?.toFloat() ?: 100f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(10.dp),
+                        modifier = getLandscapeModifier(),
                         color = Color.Red,
                         trackColor = Color.Gray
                     )
@@ -757,7 +815,7 @@ fun MiddleBattleView(
                     // Enemy HP display numbers
                     Text(
                         text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${opponentCharacter?.baseHp ?: 100}",
-                        fontSize = 16.sp,
+                        fontSize = getLandscapeFontSize(),
                         color = Color.White,
                         style = TextStyle(
                             shadow = Shadow(
@@ -962,9 +1020,7 @@ fun MiddleBattleView(
             // Critical bar
             LinearProgressIndicator(
                 progress = battleSystem.critBarProgress / 100f,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp),
+                modifier = getLandscapeModifier(),
                 color = Color.Yellow,
                 trackColor = Color.Gray
             )
@@ -973,21 +1029,16 @@ fun MiddleBattleView(
 
             // Player HP bar and text with background box
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color.Gray.copy(alpha = 0.6f),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-                    )
-                    .padding(8.dp)
+                modifier = getLandscapeBoxModifier(),
+                contentAlignment = getLandscapeAlignment()
             ) {
-                Column {
+                Column(
+                    horizontalAlignment = getLandscapeHorizontalAlignment()
+                ) {
                     // Player HP bar
                     LinearProgressIndicator(
                         progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(10.dp),
+                        modifier = getLandscapeModifier(),
                         color = Color.Green,
                         trackColor = Color.Gray
                     )
@@ -997,7 +1048,7 @@ fun MiddleBattleView(
                     // Player HP display numbers
                     Text(
                         text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
-                        fontSize = 16.sp,
+                        fontSize = getLandscapeFontSize(),
                         color = Color.White,
                         style = TextStyle(
                             shadow = Shadow(
@@ -1193,31 +1244,26 @@ fun PlayerBattleView(
 
             // Health bar and text with background box
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color.Gray.copy(alpha = 0.6f),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-                    )
-                    .padding(8.dp)
+                modifier = getLandscapeBoxModifier(),
+                contentAlignment = getLandscapeAlignment()
             ) {
-                Column {
-                    // Health bar
-                    LinearProgressIndicator(
-                        progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(10.dp),
-                        color = Color.Green,
-                        trackColor = Color.Gray
-                    )
+                Column(
+                    horizontalAlignment = getLandscapeHorizontalAlignment()
+                ) {
+            // Health bar
+            LinearProgressIndicator(
+                progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+                modifier = getLandscapeModifier(),
+                color = Color.Green,
+                trackColor = Color.Gray
+            )
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Health display numbers
-                    Text(
-                        text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
-                        fontSize = 16.sp,
+            // Health display numbers
+            Text(
+                text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
+                        fontSize = getLandscapeFontSize(),
                         color = Color.White,
                         style = TextStyle(
                             shadow = Shadow(
@@ -1363,9 +1409,7 @@ fun PlayerBattleView(
             // Critical bar
             LinearProgressIndicator(
                 progress = battleSystem.critBarProgress / 100f,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp),
+                modifier = getLandscapeModifier(),
                 color = Color.Yellow,
                 trackColor = Color.Gray
             )
@@ -1422,22 +1466,22 @@ fun PlayerBattleView(
                                      // Match is still ongoing - update HP and continue
                                      println("Round ${apiResult.currentRound}: Player HP=${apiResult.playerHP}, Opponent HP=${apiResult.opponentHP}")
                                      
-                                     // Set pending damage based on API result
+                                                                                                         // Set pending damage based on API result
                                      if (apiResult.playerAttackDamage > 0) {
-                                         // Player attack hit - enemy takes damage at end of player animation
-                                         println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
-                                         onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
-                                         battleSystem.setAttackHitState(true)
+                                          // Player attack hit - enemy takes damage at end of player animation
+                                          println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
+                                          onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
+                                          battleSystem.setAttackHitState(true)
                                          
                                          // Also check if enemy counter-attacks and hits
                                          if (apiResult.opponentAttackDamage > 0) {
                                              println("Enemy counter-attack hits! Player takes ${apiResult.opponentAttackDamage} damage")
                                              onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), apiResult.playerAttackDamage.toFloat()) // Both take damage
                                          }
-                                     } else {
+                                      } else {
                                          // Player attack missed - enemy counter-attacks
                                          println("Player attack missed! Enemy counter-attacks")
-                                         battleSystem.setAttackHitState(false)
+                                          battleSystem.setAttackHitState(false)
                                          // Set up counter-attack - determine if it hits based on API result
                                          val counterAttackHits = apiResult.opponentAttackDamage > 0
                                          println("Setting up counter-attack: counterAttackHits=$counterAttackHits, opponentAttackDamage=${apiResult.opponentAttackDamage}")
@@ -1458,7 +1502,7 @@ fun PlayerBattleView(
                                          battleSystem.setupCounterAttack(finalCounterAttackHits)
                                          // Set the opponent attack hit state for Phase 3
                                          battleSystem.handleOpponentAttackResult(finalCounterAttackHits)
-                                     }
+                                      }
                                  }
                                  2 -> {
                                      // Match is over - transition to results screen
@@ -1514,28 +1558,23 @@ fun EnemyBattleView(
         MultiLayerAnimatedBattleBackground(modifier = Modifier.fillMaxSize())
         
         // Top section: Enemy HP bar and HP numbers
-        Column(
+    Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
             // Enemy HP bar and text with background box
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color.Gray.copy(alpha = 0.6f),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-                    )
-                    .padding(8.dp)
+                modifier = getLandscapeBoxModifier(),
+                contentAlignment = getLandscapeAlignment()
             ) {
-                Column {
+                Column(
+                    horizontalAlignment = getLandscapeHorizontalAlignment()
+                ) {
                     // Enemy HP bar
                     LinearProgressIndicator(
                         progress = battleSystem.opponentHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(10.dp),
+                        modifier = getLandscapeModifier(),
                         color = Color.Red,
                         trackColor = Color.Gray
                     )
@@ -1545,7 +1584,7 @@ fun EnemyBattleView(
                     // Enemy HP display numbers
                     Text(
                         text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
-                        fontSize = 16.sp,
+                        fontSize = getLandscapeFontSize(),
                         color = Color.White,
                         style = TextStyle(
                             shadow = Shadow(
@@ -1561,25 +1600,25 @@ fun EnemyBattleView(
 
         // Middle section: Enemy Digimon
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
             contentAlignment = Alignment.Center
-        ) {
+    ) {
             // Enemy Digimon
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .size(80.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                // Determine animation type based on battle state
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .size(80.dp),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            // Determine animation type based on battle state
                 val animationType = when {
                     battleSystem.isOpponentDodging -> DigimonAnimationType.WALK  // Use walk animation for dodge
                     battleSystem.isOpponentHitDelayed -> DigimonAnimationType.SLEEP     // Use sleep animation for hit effect (injured sprite)
                     battleSystem.attackPhase == 2 -> DigimonAnimationType.IDLE    // Player attack on enemy screen
-                    else -> DigimonAnimationType.IDLE
-                }
+                else -> DigimonAnimationType.IDLE
+            }
                 
                 // Calculate vertical offset for dodge animation
                 val verticalOffset = if (battleSystem.isOpponentDodging) {
@@ -1608,64 +1647,64 @@ fun EnemyBattleView(
                 } else {
                     0.dp
                 }
-                
-                AnimatedSpriteImage(
-                    characterId = activeCharacter?.charaId ?: "dim011_mon01",
-                    animationType = animationType,
+            
+            AnimatedSpriteImage(
+                characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                animationType = animationType,
                     modifier = Modifier
                         .size(80.dp)
                         .offset(
                             x = hitOffset,
                             y = verticalOffset
                         ),
-                    contentScale = ContentScale.Fit,
+                contentScale = ContentScale.Fit,
                     reloadMappings = false,
                     animationOffset = 375L // Offset enemy animation by half the idle duration
-                )
-                
-                // Attack sprite visibility and positioning based on attack phase
-                val shouldShowAttack = when (battleSystem.attackPhase) {
+            )
+            
+            // Attack sprite visibility and positioning based on attack phase
+            val shouldShowAttack = when (battleSystem.attackPhase) {
                     2 -> true  // Player attack on enemy screen
-                    else -> false
-                }
-                
-                if (shouldShowAttack) {
+                else -> false
+            }
+            
+            if (shouldShowAttack) {
                     val xOffset = (attackAnimationProgress * 400 - 350).dp  // Player attack on enemy screen - start more to the left
                     
                     // Use player's character ID for player attack
                     val characterId = playerCharacter?.charaId ?: "dim011_mon01"
-                    
-                    // Handle sprite transition
-                    LaunchedEffect(characterId, battleSystem.attackPhase) {
-                        if ((previousCharacterId != null && previousCharacterId != characterId) ||
-                            (previousAttackPhase != null && previousAttackPhase != battleSystem.attackPhase)) {
-                            // Character ID or attack phase changed, start transition
-                            isTransitioning = true
-                            delay(100) // Brief invisibility period
-                            isTransitioning = false
-                        }
-                        previousCharacterId = characterId
-                        previousAttackPhase = battleSystem.attackPhase
+                
+                // Handle sprite transition
+                LaunchedEffect(characterId, battleSystem.attackPhase) {
+                    if ((previousCharacterId != null && previousCharacterId != characterId) ||
+                        (previousAttackPhase != null && previousAttackPhase != battleSystem.attackPhase)) {
+                        // Character ID or attack phase changed, start transition
+                        isTransitioning = true
+                        delay(100) // Brief invisibility period
+                        isTransitioning = false
                     }
-                    
+                    previousCharacterId = characterId
+                    previousAttackPhase = battleSystem.attackPhase
+                }
+                
                     println("EnemyBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
-                    
+                
                     if (!isTransitioning && !hideEnemyAttackSprite) {
-                        AttackSpriteImage(
-                            characterId = characterId,
-                            isLarge = true,
-                            modifier = Modifier
-                                .size(60.dp)
-                                .offset(
-                                    x = xOffset,
-                                    y = 0.dp
-                                )
+                    AttackSpriteImage(
+                        characterId = characterId,
+                        isLarge = true,
+                        modifier = Modifier
+                            .size(60.dp)
+                            .offset(
+                                x = xOffset,
+                                y = 0.dp
+                            )
                                 .scale(-1f, 1f), // Flip player attacks
-                            contentScale = ContentScale.Fit
-                        )
-                    }
+                        contentScale = ContentScale.Fit
+                    )
                 }
             }
+        }
         }
     }
 }
@@ -1735,10 +1774,10 @@ fun BattlesScreen() {
         println("BATTLESCREEN: LaunchedEffect triggered - checking sprite files...")
         val spriteFileManager = SpriteFileManager(context)
         if (!spriteFileManager.checkSpriteFilesExist()) {
-            println("BATTLESCREEN: Copying sprite files to internal storage...")
-            spriteFileManager.copySpriteFilesToInternalStorage()
+            println("BATTLESCREEN: Copying sprite files to external storage...")
+            spriteFileManager.copySpriteFilesToExternalStorage()
         } else {
-            println("BATTLESCREEN: Sprite files already exist in internal storage")
+            println("BATTLESCREEN: Sprite files already exist in external storage")
         }
     }
 
@@ -2048,9 +2087,9 @@ fun BattlesScreen() {
         topBar = {
             // Only show TopBanner when not in battle mode
             if (currentView != "battle-main" && currentView != "battle-results") {
-                TopBanner(
-                    text = "Online battles"
-                )
+            TopBanner(
+                text = "Online battles"
+            )
             }
         }
     ) { contentPadding ->
@@ -2077,6 +2116,7 @@ fun BattlesScreen() {
                             championButton()
                             ultimateButton()
                             megaButton()
+                            /*
                             Button(
                                 onClick = { 
                                     showSpriteTester = true
@@ -2098,6 +2138,8 @@ fun BattlesScreen() {
                             ) {
                                 Text("Clear Sprite Files")
                             }
+
+                             */
                         }
                     }
                 }
@@ -2387,10 +2429,11 @@ fun AnimatedBattleBackground(
         println("DEBUG: Screen dimensions = ${screenWidth.value}x${screenHeight.value}dp")
     }
 
-    // Load background image from internal storage
+    // Load background image from external storage
     LaunchedEffect(Unit) {
         try {
-            val backgroundFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/BattleBg_0015_BattleBg_0012.png")
+            val externalDir = Environment.getExternalStorageDirectory()
+            val backgroundFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/BattleBg_0015_BattleBg_0012.png")
             if (backgroundFile.exists()) {
                 backgroundBitmap = BitmapFactory.decodeFile(backgroundFile.absolutePath)
                 println("Successfully loaded battle background: ${backgroundFile.absolutePath}")
@@ -2469,11 +2512,13 @@ fun MultiLayerAnimatedBattleBackground(
         println("DEBUG: Multi-layer screen dimensions = ${screenWidth.value}x${screenHeight.value}dp")
     }
 
-    // Load all three background layers from internal storage
+    // Load all three background layers from external storage
     LaunchedEffect(Unit) {
         try {
+            val externalDir = Environment.getExternalStorageDirectory()
+            
             // Back layer (BattleBg_0018_BattleBg_0013.png)
-            val backLayerFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/BattleBg_0018_BattleBg_0013.png")
+            val backLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/BattleBg_0018_BattleBg_0013.png")
             if (backLayerFile.exists()) {
                 backLayerBitmap = BitmapFactory.decodeFile(backLayerFile.absolutePath)
                 println("Successfully loaded back layer background: ${backLayerFile.absolutePath}")
@@ -2482,7 +2527,7 @@ fun MultiLayerAnimatedBattleBackground(
             }
             
             // Middle layer (BattleBg_0015_BattleBg_0012.png)
-            val middleLayerFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/BattleBg_0015_BattleBg_0012.png")
+            val middleLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/BattleBg_0015_BattleBg_0012.png")
             if (middleLayerFile.exists()) {
                 middleLayerBitmap = BitmapFactory.decodeFile(middleLayerFile.absolutePath)
                 println("Successfully loaded middle layer background: ${middleLayerFile.absolutePath}")
@@ -2491,7 +2536,7 @@ fun MultiLayerAnimatedBattleBackground(
             }
             
             // Front layer (BattleBg_0005_BattleBg_0011.png)
-            val frontLayerFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/BattleBg_0005_BattleBg_0011.png")
+            val frontLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/BattleBg_0005_BattleBg_0011.png")
             if (frontLayerFile.exists()) {
                 frontLayerBitmap = BitmapFactory.decodeFile(frontLayerFile.absolutePath)
                 println("Successfully loaded front layer background: ${frontLayerFile.absolutePath}")
