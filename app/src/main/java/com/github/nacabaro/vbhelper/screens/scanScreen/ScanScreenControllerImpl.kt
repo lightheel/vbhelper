@@ -11,8 +11,11 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.github.cfogrady.vbnfc.TagCommunicator
+import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.NfcCharacter
+import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.ActivityLifecycleListener
+import com.github.nacabaro.vbhelper.domain.card.Card
 import com.github.nacabaro.vbhelper.screens.scanScreen.converters.FromNfcConverter
 import com.github.nacabaro.vbhelper.screens.scanScreen.converters.ToNfcConverter
 import com.github.nacabaro.vbhelper.source.getCryptographicTransformerMap
@@ -29,7 +32,7 @@ class ScanScreenControllerImpl(
     private val registerActivityLifecycleListener: (String, ActivityLifecycleListener)->Unit,
     private val unregisterActivityLifecycleListener: (String)->Unit,
 ): ScanScreenController {
-
+    private var lastScannedCharacter: NfcCharacter? = null
     private val nfcAdapter: NfcAdapter
 
     init {
@@ -41,10 +44,14 @@ class ScanScreenControllerImpl(
         checkSecrets()
     }
 
-    override fun onClickRead(secrets: Secrets, onComplete: ()->Unit) {
+    override fun onClickRead(secrets: Secrets, onComplete: ()->Unit, onMultipleCards: (List<Card>) -> Unit) {
         handleTag(secrets) { tagCommunicator ->
             val character = tagCommunicator.receiveCharacter()
-            val resultMessage = characterFromNfc(character)
+            val resultMessage = characterFromNfc(character) { cards, nfcCharacter ->
+                lastScannedCharacter = nfcCharacter
+                onMultipleCards(cards)
+
+            }
             onComplete.invoke()
             resultMessage
         }
@@ -118,7 +125,15 @@ class ScanScreenControllerImpl(
     ) {
         handleTag(secrets) { tagCommunicator ->
             try {
-                tagCommunicator.sendCharacter(nfcCharacter)
+                if (nfcCharacter is VBNfcCharacter) {
+                    Log.d("SendCharacter", "VBNfcCharacter")
+                    val castNfcCharacter: VBNfcCharacter = nfcCharacter
+                    tagCommunicator.sendCharacter(castNfcCharacter)
+                } else if (nfcCharacter is BENfcCharacter) {
+                    Log.d("SendCharacter", "BENfcCharacter")
+                    val castNfcCharacter: BENfcCharacter = nfcCharacter
+                    tagCommunicator.sendCharacter(castNfcCharacter)
+                }
                 onComplete.invoke()
                 "Sent character successfully!"
             } catch (e: Throwable) {
@@ -146,17 +161,36 @@ class ScanScreenControllerImpl(
         componentActivity.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
     }
 
-    override fun characterFromNfc(nfcCharacter: NfcCharacter): String {
+    override fun characterFromNfc(
+        nfcCharacter: NfcCharacter,
+        onMultipleCards: (List<Card>, NfcCharacter) -> Unit
+    ): String {
         val nfcConverter = FromNfcConverter(
             componentActivity = componentActivity
         )
-        return nfcConverter.addCharacter(nfcCharacter)
+        return nfcConverter.addCharacter(nfcCharacter, onMultipleCards)
     }
 
     override suspend fun characterToNfc(characterId: Long): NfcCharacter {
         val nfcGenerator = ToNfcConverter(
             componentActivity = componentActivity
         )
-        return nfcGenerator.characterToNfc(characterId)
+
+        val character = nfcGenerator.characterToNfc(characterId)
+        Log.d("CharacterType", character.toString())
+        return character
+    }
+
+    override fun flushCharacter(cardId: Long) {
+        val nfcConverter = FromNfcConverter(
+            componentActivity = componentActivity
+        )
+
+        componentActivity.lifecycleScope.launch(Dispatchers.IO) {
+            if (lastScannedCharacter != null) {
+                nfcConverter.addCharacterUsingCard(lastScannedCharacter!!, cardId)
+                lastScannedCharacter = null
+            }
+        }
     }
 }

@@ -59,7 +59,7 @@ class ToNfcConverter(
             .userCharacterDao()
             .getVbData(characterId)
 
-        val paddedTransformationArray = generateTransformationHistory(characterId)
+        val paddedTransformationArray = generateTransformationHistory(characterId, 9)
 
         val watchSpecialMissions = generateSpecialMissionsArray(characterId)
 
@@ -84,13 +84,30 @@ class ToNfcConverter(
             transformationHistory = paddedTransformationArray,
             vitalHistory = generateVitalsHistoryArray(characterId),
             appReserved1 = ByteArray(12) {0},
-            appReserved2 = Array(3) {0u},
+            appReserved2 = generateUShortAppReserved(userCharacter),
             generation = vbData.generation.toUShort(),
             totalTrophies = vbData.totalTrophies.toUShort(),
             specialMissions = watchSpecialMissions.toTypedArray()
         )
 
         return nfcData
+    }
+
+
+    private suspend fun generateUShortAppReserved(
+        userCharacter: UserCharacter
+    ): Array<UShort> {
+        val cardData = database
+            .cardDao()
+            .getCardByCharacterId(userCharacter.id)
+
+        val appReserved = Array<UShort>(3) {
+            0u
+        }
+
+        appReserved[0] = cardData.id.toUShort()
+
+        return appReserved
     }
 
 
@@ -218,7 +235,8 @@ class ToNfcConverter(
 
 
     private suspend fun generateTransformationHistory(
-        characterId: Long
+        characterId: Long,
+        length: Int = 8
     ): Array<NfcCharacter.Transformation> {
         val transformationHistory = database
             .userCharacterDao()
@@ -242,7 +260,7 @@ class ToNfcConverter(
                 )
             }.toTypedArray()
 
-        val paddedTransformationArray = padTransformationArray(transformationHistory)
+        val paddedTransformationArray = padTransformationArray(transformationHistory, length)
 
         return paddedTransformationArray
     }
@@ -250,13 +268,14 @@ class ToNfcConverter(
 
 
     private fun padTransformationArray(
-        transformationArray: Array<NfcCharacter.Transformation>
+        transformationArray: Array<NfcCharacter.Transformation>,
+        length: Int
     ): Array<NfcCharacter.Transformation> {
         if (transformationArray.size >= 8) {
             return transformationArray
         }
 
-        val paddedArray = Array(8) {
+        val paddedArray = Array(length) {
             NfcCharacter.Transformation(
                 toCharIndex = 255u,
                 year = 65535u,

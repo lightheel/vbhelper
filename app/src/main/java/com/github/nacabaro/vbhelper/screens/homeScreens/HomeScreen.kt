@@ -1,5 +1,6 @@
 package com.github.nacabaro.vbhelper.screens.homeScreens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,9 +28,15 @@ import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
+import com.github.nacabaro.vbhelper.screens.homeScreens.screens.BEBEmHomeScreen
+import com.github.nacabaro.vbhelper.screens.homeScreens.screens.BEDiMHomeScreen
+import com.github.nacabaro.vbhelper.screens.homeScreens.screens.VBDiMHomeScreen
+import com.github.nacabaro.vbhelper.screens.itemsScreen.ObtainedItemDialog
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -45,14 +52,20 @@ fun HomeScreen(
     val transformationHistory = remember { mutableStateOf<List<CharacterDtos.TransformationHistory>?>(null) }
     val beData = remember { mutableStateOf<BECharacterData?>(null) }
     val vbData = remember { mutableStateOf<VBCharacterData?>(null) }
+    val vbSpecialMissions = remember { mutableStateOf<List<SpecialMissions>>(emptyList()) }
     var adventureMissionsFinished by rememberSaveable { mutableStateOf(false) }
     var betaWarning by rememberSaveable { mutableStateOf(true) }
+    var collectedItem by remember { mutableStateOf<ItemDtos.PurchasedItem?>(null) }
 
-    LaunchedEffect(storageRepository, activeMon) {
+    LaunchedEffect(storageRepository, activeMon, collectedItem) {
         withContext(Dispatchers.IO) {
             activeMon.value = storageRepository.getActiveCharacter()
-            if (activeMon.value != null) {
+            if (activeMon.value != null && activeMon.value!!.characterType == DeviceType.BEDevice) {
                 beData.value = storageRepository.getCharacterBeData(activeMon.value!!.id)
+                transformationHistory.value = storageRepository.getTransformationHistory(activeMon.value!!.id)
+            } else if (activeMon.value != null && activeMon.value!!.characterType == DeviceType.VBDevice) {
+                vbData.value = storageRepository.getCharacterVbData(activeMon.value!!.id)
+                vbSpecialMissions.value = storageRepository.getSpecialMissions(activeMon.value!!.id)
                 transformationHistory.value = storageRepository.getTransformationHistory(activeMon.value!!.id)
             }
         }
@@ -79,6 +92,7 @@ fun HomeScreen(
         }
     ) { contentPadding ->
         if (activeMon.value == null || (beData.value == null && vbData.value == null) || transformationHistory.value == null) {
+            Log.d("TetTet", "Something is null")
             Column (
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -89,6 +103,7 @@ fun HomeScreen(
                 Text(text = "Nothing to see here")
             }
         } else {
+            Log.d("TetTet", "Something is not null")
             if (activeMon.value!!.isBemCard) {
                 BEBEmHomeScreen(
                     activeMon = activeMon.value!!,
@@ -108,10 +123,24 @@ fun HomeScreen(
                     activeMon = activeMon.value!!,
                     vbData = vbData.value!!,
                     transformationHistory = transformationHistory.value!!,
-                    contentPadding = contentPadding
+                    contentPadding = contentPadding,
+                    specialMissions = vbSpecialMissions.value,
+                    homeScreenController = homeScreenController,
+                    onClickCollect = { item ->
+                        collectedItem = item
+                    }
                 )
             }
         }
+    }
+
+    if (collectedItem != null) {
+        ObtainedItemDialog(
+            obtainedItem = collectedItem!!,
+            onClickDismiss = {
+                collectedItem = null
+            }
+        )
     }
 
     if (adventureMissionsFinished) {

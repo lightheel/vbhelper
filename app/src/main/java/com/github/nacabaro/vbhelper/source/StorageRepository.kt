@@ -2,7 +2,10 @@ package com.github.nacabaro.vbhelper.source
 
 import com.github.nacabaro.vbhelper.database.AppDatabase
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
+import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
+import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import com.github.nacabaro.vbhelper.dtos.ItemDtos
 
 class StorageRepository (
     private val db: AppDatabase
@@ -23,6 +26,18 @@ class StorageRepository (
         return db.userCharacterDao().getTransformationHistory(characterId)
     }
 
+    suspend fun getCharacterVbData(id: Long): VBCharacterData {
+        return db.userCharacterDao().getVbData(id)
+    }
+
+    suspend fun getSpecialMissions(id: Long): List<SpecialMissions> {
+        return db.userCharacterDao().getSpecialMissions(id)
+    }
+
+    suspend fun getItem(id: Long): ItemDtos.ItemsWithQuantities {
+        return db.itemDao().getItem(id)
+    }
+
     suspend fun getActiveCharacter(): CharacterDtos.CharacterWithSprites? {
         return db.userCharacterDao().getActiveCharacter()
     }
@@ -33,5 +48,13 @@ class StorageRepository (
 
     suspend fun getAdventureCharacters(): List<CharacterDtos.AdventureCharacterWithSprites> {
         return db.adventureDao().getAdventureCharacters()
+    }
+
+    suspend fun getBECharacters(): List<CharacterDtos.CharacterWithSprites> {
+        return db.userCharacterDao().getBECharacters()
+    }
+
+    suspend fun getVBCharacters(): List<CharacterDtos.CharacterWithSprites> {
+        return db.userCharacterDao().getVBDimCharacters()
     }
 }
