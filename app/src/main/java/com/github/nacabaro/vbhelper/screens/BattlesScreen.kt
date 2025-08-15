@@ -1576,7 +1576,7 @@ fun BattlesScreen() {
 
     val ultimateCharacters = listOf(
         APIBattleCharacter("METALGREYMON (VIRUS)","degimon_name_Dim014_005","dim014_mon05",2,2,2640, 2640, 2450.0f,800.0f),
-        APIBattleCharacter("MAMEMON", "degimon_name_Dim000_005", "dim000_mon05", 2, 1, 3000, 3000, 4000.0f, 1000.0f),
+        APIBattleCharacter("MAMEMON", "degimon_name_Dim012_011", "dim012_mon11", 2, 1, 3000, 3000, 4000.0f, 1000.0f),
         APIBattleCharacter("DORUGREYMON","degimon_name_dim137_mon09","dim137_mon09",2,3,5000, 5000, 6400.0f,1400.0f)
     )
 
