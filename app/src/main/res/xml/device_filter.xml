@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ACR122U NFC Reader -->
+    <usb-device vendor-id="0x072f" product-id="0x2200" />
+    <!-- Alternative ACR122U variant -->
+    <usb-device vendor-id="0x072f" product-id="0x90cc" />
+</resources>

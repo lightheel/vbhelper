@@ -18,4 +18,7 @@ interface ScanScreenController {
 
     fun characterFromNfc(nfcCharacter: NfcCharacter): String
     suspend fun characterToNfc(characterId: Long): NfcCharacter?
+    
+    fun isAcr122uConnected(): Boolean
+    fun isBuiltInNfcEnabled(): Boolean
 }

@@ -3,10 +3,14 @@ package com.github.nacabaro.vbhelper.screens.scanScreen
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -211,7 +215,8 @@ fun ScanScreen(
                     }
                 }
             },
-            navController = navController
+            navController = navController,
+            scanScreenController = scanScreenController
         )
     }
 }
@@ -220,7 +225,8 @@ fun ScanScreen(
 fun ChooseConnectOption(
     onClickRead: (() -> Unit)? = null,
     onClickWrite: (() -> Unit)? = null,
-    navController: NavController
+    navController: NavController,
+    scanScreenController: ScanScreenController? = null
 ) {
     Scaffold(
         topBar = {
@@ -239,6 +245,12 @@ fun ChooseConnectOption(
                 .fillMaxSize()
                 .padding(contentPadding)
         ) {
+            // USB NFC Status Indicator
+            scanScreenController?.let { controller ->
+                UsbNfcStatusIndicator(controller)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
             ScanButton(
                 text = "Vital Bracelet to App",
                 disabled = onClickRead == null,
@@ -276,6 +288,60 @@ fun ScanButton(
     }
 }
 
+@Composable
+fun UsbNfcStatusIndicator(
+    scanScreenController: ScanScreenController
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "USB NFC Reader Status",
+                fontSize = 16.sp,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("ACR122U Connected:")
+                Text(
+                    text = if (scanScreenController.isAcr122uConnected()) "Yes" else "No",
+                    color = if (scanScreenController.isAcr122uConnected()) Color.Green else Color.Red
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Built-in NFC:")
+                Text(
+                    text = if (scanScreenController.isBuiltInNfcEnabled()) "Available" else "Not Available",
+                    color = if (scanScreenController.isBuiltInNfcEnabled()) Color.Green else Color.Red
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Bridge Status:")
+                Text(
+                    text = if (scanScreenController.isAcr122uConnected()) "USB Bridge Active" else "Bridge Offline",
+                    color = if (scanScreenController.isAcr122uConnected()) Color.Green else Color.Red
+                )
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun ScanScreenPreview() {
@@ -296,6 +362,8 @@ fun ScanScreenPreview() {
             override fun cancelRead() {}
             override fun characterFromNfc(nfcCharacter: NfcCharacter): String { return "" }
             override suspend fun characterToNfc(characterId: Long): NfcCharacter? { return null }
+            override fun isAcr122uConnected(): Boolean { return false }
+            override fun isBuiltInNfcEnabled(): Boolean { return false }
         },
         characterId = null,
         launchedFromHomeScreen = false
