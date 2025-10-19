@@ -1602,10 +1602,10 @@ fun BattlesScreen() {
         println("BATTLESCREEN: LaunchedEffect triggered - checking sprite files...")
         val spriteFileManager = SpriteFileManager(context)
         if (!spriteFileManager.checkSpriteFilesExist()) {
-            println("BATTLESCREEN: Copying sprite files to external storage...")
-            spriteFileManager.copySpriteFilesToExternalStorage()
+            println("BATTLESCREEN: Copying sprite files from external storage to internal storage...")
+            spriteFileManager.copySpriteFilesToInternalStorage()
         } else {
-            println("BATTLESCREEN: Sprite files already exist in external storage")
+            println("BATTLESCREEN: Sprite files already exist in internal storage")
         }
     }
 
@@ -2265,11 +2265,10 @@ fun AnimatedBattleBackground(
         println("DEBUG: Screen dimensions = ${screenWidth.value}x${screenHeight.value}dp")
     }
 
-    // Load background image from external storage
+    // Load background image from internal storage
     LaunchedEffect(Unit) {
         try {
-            val externalDir = Environment.getExternalStorageDirectory()
-            val backgroundFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/BattleBg_0015_BattleBg_0012.png")
+            val backgroundFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/BattleBg_0015_BattleBg_0012.png")
             if (backgroundFile.exists()) {
                 backgroundBitmap = BitmapFactory.decodeFile(backgroundFile.absolutePath)
                 println("Successfully loaded battle background: ${backgroundFile.absolutePath}")
@@ -2372,14 +2371,13 @@ fun MultiLayerAnimatedBattleBackground(
         println("DEBUG: Multi-layer screen dimensions = ${screenWidth.value}x${screenHeight.value}dp")
     }
 
-    // Load all three background layers from external storage
+    // Load all three background layers from internal storage
     LaunchedEffect(backgroundSetIndex) {
         try {
-            val externalDir = Environment.getExternalStorageDirectory()
             val selectedSet = backgroundSets[backgroundSetIndex]
             
             // Back layer
-            val backLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/${selectedSet.backLayer}")
+            val backLayerFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/${selectedSet.backLayer}")
             if (backLayerFile.exists()) {
                 backLayerBitmap = BitmapFactory.decodeFile(backLayerFile.absolutePath)
                 println("Successfully loaded back layer background (Set ${backgroundSetIndex + 1}): ${backLayerFile.absolutePath}")
@@ -2388,7 +2386,7 @@ fun MultiLayerAnimatedBattleBackground(
             }
             
             // Middle layer
-            val middleLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/${selectedSet.middleLayer}")
+            val middleLayerFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/${selectedSet.middleLayer}")
             if (middleLayerFile.exists()) {
                 middleLayerBitmap = BitmapFactory.decodeFile(middleLayerFile.absolutePath)
                 println("Successfully loaded middle layer background (Set ${backgroundSetIndex + 1}): ${middleLayerFile.absolutePath}")
@@ -2397,7 +2395,7 @@ fun MultiLayerAnimatedBattleBackground(
             }
             
             // Front layer
-            val frontLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/${selectedSet.frontLayer}")
+            val frontLayerFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/${selectedSet.frontLayer}")
             if (frontLayerFile.exists()) {
                 frontLayerBitmap = BitmapFactory.decodeFile(frontLayerFile.absolutePath)
                 println("Successfully loaded front layer background (Set ${backgroundSetIndex + 1}): ${frontLayerFile.absolutePath}")

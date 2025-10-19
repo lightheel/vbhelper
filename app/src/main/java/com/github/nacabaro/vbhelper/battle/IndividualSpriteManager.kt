@@ -9,10 +9,9 @@ import java.io.File
 class IndividualSpriteManager(private val context: Context) {
     private val spriteCache = mutableMapOf<String, Bitmap>()
     
-    // Get the external storage directory for sprite files
+    // Get the internal storage directory for sprite files
     private fun getSpriteBaseDir(): File {
-        val externalDir = Environment.getExternalStorageDirectory()
-        return File(externalDir, "VBHelper/battle_sprites/extracted_assets/sprites")
+        return File(context.filesDir, "battle_sprites/extracted_assets/sprites")
     }
     
     /**
