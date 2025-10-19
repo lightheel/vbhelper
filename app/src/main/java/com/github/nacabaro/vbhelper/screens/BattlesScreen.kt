@@ -2007,7 +2007,7 @@ fun BattlesScreen() {
                                                 selectedOpponent = opponent
                                                 // Randomly select background set (0, 1, or 2)
                                                 selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 0, 0, opponent.name, 0) { apiResult ->
+                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.charaId, 0, 0, opponent.charaId, 0) { apiResult ->
                                                     currentView = "battle-main"
                                                 }
                                             }
@@ -2059,7 +2059,7 @@ fun BattlesScreen() {
                                                 selectedOpponent = opponent
                                                 // Randomly select background set (0, 1, or 2)
                                                 selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 1, 0, opponent.name, 1) { apiResult ->
+                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.charaId, 1, 0, opponent.charaId, 1) { apiResult ->
                                                     currentView = "battle-main"
                                                 }
                                             }
@@ -2111,7 +2111,7 @@ fun BattlesScreen() {
                                                 selectedOpponent = opponent
                                                 // Randomly select background set (0, 1, or 2)
                                                 selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 2, 0, opponent.name, 2) { apiResult ->
+                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.charaId, 2, 0, opponent.charaId, 2) { apiResult ->
                                                     currentView = "battle-main"
                                                 }
                                             }
@@ -2163,7 +2163,7 @@ fun BattlesScreen() {
                                                 selectedOpponent = opponent
                                                 // Randomly select background set (0, 1, or 2)
                                                 selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 3, 0, opponent.name, 3) { apiResult ->
+                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.charaId, 3, 0, opponent.charaId, 3) { apiResult ->
                                                     currentView = "battle-main"
                                                 }
                                             }
