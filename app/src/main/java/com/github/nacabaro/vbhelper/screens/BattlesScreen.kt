@@ -835,9 +835,9 @@ fun MiddleBattleView(
                 verticalArrangement = Arrangement.SpaceEvenly
             ) {
                 // Enemy Digimon (top half)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
                         .weight(1f),
                     contentAlignment = Alignment.CenterEnd
                 ) {
@@ -846,8 +846,8 @@ fun MiddleBattleView(
                         battleSystem.attackPhase == 1 -> DigimonAnimationType.ATTACK  // Both attacking in Phase 1
                         battleSystem.isOpponentDodging -> DigimonAnimationType.WALK
                         battleSystem.isOpponentHitDelayed -> DigimonAnimationType.SLEEP
-                        else -> DigimonAnimationType.IDLE
-                    }
+                    else -> DigimonAnimationType.IDLE
+                }
                     
                     // Calculate vertical offset for enemy dodge animation
                     val enemyVerticalOffset = if (battleSystem.isOpponentDodging) {
@@ -873,17 +873,17 @@ fun MiddleBattleView(
                     } else {
                         0.dp
                     }
-                    
-                    AnimatedSpriteImage(
+                
+                AnimatedSpriteImage(
                         characterId = opponentCharacter?.charaId ?: "dim011_mon01",
                         animationType = enemyAnimationType,
-                        modifier = Modifier
-                            .size(80.dp)
+                    modifier = Modifier
+                        .size(80.dp)
                             .offset(
                                 x = enemyHitOffset,
                                 y = enemyVerticalOffset + 40.dp
                             ),
-                        contentScale = ContentScale.Fit,
+                    contentScale = ContentScale.Fit,
                         reloadMappings = false,
                         animationOffset = 375L // Offset enemy animation by half the idle duration
                     )
@@ -1101,22 +1101,22 @@ fun MiddleBattleView(
                                      // Match is still ongoing - update HP and continue
                                      println("Round ${apiResult.currentRound}: Player HP=${apiResult.playerHP}, Opponent HP=${apiResult.opponentHP}")
                                      
-                                     // Set pending damage based on API result
+                                                                                                         // Set pending damage based on API result
                                      if (apiResult.playerAttackDamage > 0) {
-                                         // Player attack hit - enemy takes damage at end of player animation
-                                         println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
-                                         onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
-                                         battleSystem.setAttackHitState(true)
+                                          // Player attack hit - enemy takes damage at end of player animation
+                                          println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
+                                          onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
+                                          battleSystem.setAttackHitState(true)
                                          
                                          // Also check if enemy counter-attacks and hits
                                          if (apiResult.opponentAttackDamage > 0) {
                                              println("Enemy counter-attack hits! Player takes ${apiResult.opponentAttackDamage} damage")
                                              onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), apiResult.playerAttackDamage.toFloat()) // Both take damage
                                          }
-                                     } else {
+                                      } else {
                                          // Player attack missed - enemy counter-attacks
                                          println("Player attack missed! Enemy counter-attacks")
-                                         battleSystem.setAttackHitState(false)
+                                          battleSystem.setAttackHitState(false)
                                          // Set up counter-attack - determine if it hits based on API result
                                          val counterAttackHits = apiResult.opponentAttackDamage > 0
                                          println("Setting up counter-attack: counterAttackHits=$counterAttackHits, opponentAttackDamage=${apiResult.opponentAttackDamage}")
@@ -1137,7 +1137,7 @@ fun MiddleBattleView(
                                          battleSystem.setupCounterAttack(finalCounterAttackHits)
                                          // Set the opponent attack hit state for Phase 3
                                          battleSystem.handleOpponentAttackResult(finalCounterAttackHits)
-                                     }
+                                      }
                                  }
                                  2 -> {
                                      // Match is over - transition to results screen
@@ -1199,7 +1199,7 @@ fun PlayerBattleView(
         MultiLayerAnimatedBattleBackground(modifier = Modifier.fillMaxSize(), backgroundSetIndex = selectedBackgroundSet)
         
         // Top section: HP bar and HP numbers
-        Column(
+    Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
@@ -1241,19 +1241,19 @@ fun PlayerBattleView(
 
         // Middle section: Player Digimon only
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
             contentAlignment = Alignment.Center
-        ) {
+    ) {
             // Player Digimon (left side)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .size(80.dp),
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .size(80.dp),
                 contentAlignment = Alignment.CenterStart
-            ) {
-                // Determine animation type based on battle state
+        ) {
+            // Determine animation type based on battle state
                 val animationType = when {
                     battleSystem.isPlayerDodging -> DigimonAnimationType.WALK  // Use walk animation for dodge
                     battleSystem.isPlayerHitDelayed -> DigimonAnimationType.SLEEP     // Use sleep animation for hit effect (injured sprite)
@@ -1261,8 +1261,8 @@ fun PlayerBattleView(
                     battleSystem.attackPhase == 2 -> DigimonAnimationType.ATTACK  // Player attack on opponent screen
                     battleSystem.attackPhase == 3 -> DigimonAnimationType.IDLE    // Opponent attack on opponent screen
                     battleSystem.attackPhase == 4 -> DigimonAnimationType.IDLE    // Opponent attack on player screen
-                    else -> DigimonAnimationType.IDLE
-                }
+                else -> DigimonAnimationType.IDLE
+            }
                 
                 // Calculate vertical offset for dodge animation
                 val verticalOffset = if (battleSystem.isPlayerDodging) {
@@ -1291,10 +1291,10 @@ fun PlayerBattleView(
                 } else {
                     0.dp
                 }
-                
-                AnimatedSpriteImage(
-                    characterId = activeCharacter?.charaId ?: "dim011_mon01",
-                    animationType = animationType,
+            
+            AnimatedSpriteImage(
+                characterId = activeCharacter?.charaId ?: "dim011_mon01",
+                animationType = animationType,
                     modifier = Modifier
                         .size(80.dp)
                         .scale(-1f, 1f) // Flip player Digimon horizontally
@@ -1302,59 +1302,59 @@ fun PlayerBattleView(
                             x = hitOffset,
                             y = verticalOffset
                         ),
-                    contentScale = ContentScale.Fit,
+                contentScale = ContentScale.Fit,
                     reloadMappings = false,
                     animationOffset = 0L // Player animation starts immediately
-                )
-                
-                // Attack sprite visibility and positioning based on attack phase
-                val shouldShowAttack = when (battleSystem.attackPhase) {
+            )
+            
+            // Attack sprite visibility and positioning based on attack phase
+            val shouldShowAttack = when (battleSystem.attackPhase) {
                     1 -> false // Both attacks from middle screen
                     2 -> false // Player attack on enemy screen
                     3 -> true  // Enemy attack on player screen
-                    else -> false
+                else -> false
+            }
+            
+            if (shouldShowAttack) {
+                val xOffset = when (battleSystem.attackPhase) {
+                        3 -> (-attackAnimationProgress * 400 + 350).dp  // Enemy attack on player screen - start more to the right
+                    else -> 0.dp
                 }
                 
-                if (shouldShowAttack) {
-                    val xOffset = when (battleSystem.attackPhase) {
-                        3 -> (-attackAnimationProgress * 400 + 350).dp  // Enemy attack on player screen - start more to the right
-                        else -> 0.dp
-                    }
-                    
                     // Use opponent character ID for Phase 3 (enemy attack)
-                    val characterId = when (battleSystem.attackPhase) {
+                val characterId = when (battleSystem.attackPhase) {
                         3 -> opponent?.charaId ?: "dim011_mon01"  // Use opponent's character ID
                         else -> activeCharacter?.charaId ?: "dim011_mon01"  // Use player's character ID
+                }
+                
+                // Handle sprite transition
+                LaunchedEffect(characterId, battleSystem.attackPhase) {
+                    if ((previousCharacterId != null && previousCharacterId != characterId) ||
+                        (previousAttackPhase != null && previousAttackPhase != battleSystem.attackPhase)) {
+                        // Character ID or attack phase changed, start transition
+                        isTransitioning = true
+                        delay(100) // Brief invisibility period
+                        isTransitioning = false
                     }
-                    
-                    // Handle sprite transition
-                    LaunchedEffect(characterId, battleSystem.attackPhase) {
-                        if ((previousCharacterId != null && previousCharacterId != characterId) ||
-                            (previousAttackPhase != null && previousAttackPhase != battleSystem.attackPhase)) {
-                            // Character ID or attack phase changed, start transition
-                            isTransitioning = true
-                            delay(100) // Brief invisibility period
-                            isTransitioning = false
-                        }
-                        previousCharacterId = characterId
-                        previousAttackPhase = battleSystem.attackPhase
-                    }
-                    
+                    previousCharacterId = characterId
+                    previousAttackPhase = battleSystem.attackPhase
+                }
+                
                     println("PlayerBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
-                    
+                
                     if (!isTransitioning && !hidePlayerAttackSprite) {
-                        AttackSpriteImage(
-                            characterId = characterId,
-                            isLarge = true,
-                            modifier = Modifier
-                                .size(60.dp)
-                                .offset(
-                                    x = xOffset,
-                                    y = 0.dp
-                                )
+                    AttackSpriteImage(
+                        characterId = characterId,
+                        isLarge = true,
+                        modifier = Modifier
+                            .size(60.dp)
+                            .offset(
+                                x = xOffset,
+                                y = 0.dp
+                            )
                                 .scale(1f, 1f), // Don't flip enemy attacks on player screen
-                            contentScale = ContentScale.Fit
-                        )
+                        contentScale = ContentScale.Fit
+                    )
                     }
                 }
             }
@@ -1400,19 +1400,19 @@ fun EnemyBattleView(
                 Column(
                     horizontalAlignment = getLandscapeHorizontalAlignment()
                 ) {
-                    // Enemy HP bar
-                    LinearProgressIndicator(
-                        progress = battleSystem.opponentHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+        // Enemy HP bar
+        LinearProgressIndicator(
+            progress = battleSystem.opponentHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
                         modifier = getLandscapeModifier(),
-                        color = Color.Red,
-                        trackColor = Color.Gray
-                    )
+            color = Color.Red,
+            trackColor = Color.Gray
+        )
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Enemy HP display numbers
-                    Text(
-                        text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
+        // Enemy HP display numbers
+        Text(
+            text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
                         fontSize = getLandscapeFontSize(),
                         color = Color.White,
                         style = TextStyle(
@@ -1649,10 +1649,24 @@ fun BattlesScreen() {
                     // Format as "dim" + cardId + "_mon" + (charaIndex + 1)
                     val formattedCardId = String.format("dim%03d_mon%02d", cardId, charaIndex + 1)
                     
+                    // Create APIBattleCharacter from database character
+                    val playerCharacter = APIBattleCharacter(
+                        name = "Player Digimon", // We could get this from the database if needed
+                        namekey = "player_digimon", // Name key for the character
+                        charaId = formattedCardId, // Use the formatted card ID for sprite loading
+                        stage = characterData.stage,
+                        attribute = characterData.attribute.ordinal, // Convert enum to int
+                        baseHp = 1000, // Default values - API will provide correct values
+                        currentHp = 1000,
+                        baseBp = 1000.0f,
+                        baseAp = 1000.0f
+                    )
+                    
                     // Update UI state on main thread
                     withContext(Dispatchers.Main) {
                         activeUserCharacter = activeChar
                         activeCardId = formattedCardId
+                        activeCharacter = playerCharacter // Set the active character for battle
                     }
                     
                     println("BATTLESCREEN: Loaded active character from database:")
@@ -2069,24 +2083,29 @@ fun BattlesScreen() {
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 items(opponentsList) { opponent ->
-                                    Button(
-                                        onClick = {
+                                Button(
+                                    onClick = {
                                             activeCardId?.let { cardId ->
-                                                selectedOpponent = opponent
+                                            selectedOpponent = opponent
                                                 // Randomly select background set (0, 1, or 2)
                                                 selectedBackgroundSet = kotlin.random.Random.nextInt(3)
                                                 RetrofitHelper().getPVPWinner(context, 0, 2, cardId, 0, 0, opponent.charaId, 0) { apiResult ->
-                                                    currentView = "battle-main"
-                                                }
+                                                // Update player character HP from API response
+                                                activeCharacter = activeCharacter?.copy(
+                                                    baseHp = apiResult.playerHP,
+                                                    currentHp = apiResult.playerHP
+                                                )
+                                                currentView = "battle-main"
+                                            }
                                             } ?: run {
                                                 println("BATTLESCREEN: No active card ID found in database")
-                                            }
-                                        },
+                                        }
+                                    },
                                         modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text("Battle ${opponent.name}")
-                                    }
+                                ) {
+                                    Text("Battle ${opponent.name}")
                                 }
+                            }
                             }
 
                             backButton()
@@ -2125,24 +2144,29 @@ fun BattlesScreen() {
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 items(opponentsList) { opponent ->
-                                    Button(
-                                        onClick = {
+                                Button(
+                                    onClick = {
                                             activeCardId?.let { cardId ->
-                                                selectedOpponent = opponent
+                                            selectedOpponent = opponent
                                                 // Randomly select background set (0, 1, or 2)
                                                 selectedBackgroundSet = kotlin.random.Random.nextInt(3)
                                                 RetrofitHelper().getPVPWinner(context, 0, 2, cardId, 1, 0, opponent.charaId, 1) { apiResult ->
+                                                    // Update player character HP from API response
+                                                    activeCharacter = activeCharacter?.copy(
+                                                        baseHp = apiResult.playerHP,
+                                                        currentHp = apiResult.playerHP
+                                                    )
                                                     currentView = "battle-main"
                                                 }
                                             } ?: run {
                                                 println("BATTLESCREEN: No active card ID found in database")
-                                            }
-                                        },
+                                        }
+                                    },
                                         modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text("Battle ${opponent.name}")
-                                    }
+                                ) {
+                                    Text("Battle ${opponent.name}")
                                 }
+                            }
                             }
 
                             backButton()
@@ -2181,24 +2205,29 @@ fun BattlesScreen() {
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 items(opponentsList) { opponent ->
-                                    Button(
-                                        onClick = {
+                                Button(
+                                    onClick = {
                                             activeCardId?.let { cardId ->
-                                                selectedOpponent = opponent
+                                            selectedOpponent = opponent
                                                 // Randomly select background set (0, 1, or 2)
                                                 selectedBackgroundSet = kotlin.random.Random.nextInt(3)
                                                 RetrofitHelper().getPVPWinner(context, 0, 2, cardId, 2, 0, opponent.charaId, 2) { apiResult ->
+                                                    // Update player character HP from API response
+                                                    activeCharacter = activeCharacter?.copy(
+                                                        baseHp = apiResult.playerHP,
+                                                        currentHp = apiResult.playerHP
+                                                    )
                                                     currentView = "battle-main"
                                                 }
                                             } ?: run {
                                                 println("BATTLESCREEN: No active card ID found in database")
-                                            }
-                                        },
+                                        }
+                                    },
                                         modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text("Battle ${opponent.name}")
-                                    }
+                                ) {
+                                    Text("Battle ${opponent.name}")
                                 }
+                            }
                             }
 
                             backButton()
@@ -2237,24 +2266,29 @@ fun BattlesScreen() {
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 items(opponentsList) { opponent ->
-                                    Button(
-                                        onClick = {
+                                Button(
+                                    onClick = {
                                             activeCardId?.let { cardId ->
-                                                selectedOpponent = opponent
+                                            selectedOpponent = opponent
                                                 // Randomly select background set (0, 1, or 2)
                                                 selectedBackgroundSet = kotlin.random.Random.nextInt(3)
                                                 RetrofitHelper().getPVPWinner(context, 0, 2, cardId, 3, 0, opponent.charaId, 3) { apiResult ->
+                                                    // Update player character HP from API response
+                                                    activeCharacter = activeCharacter?.copy(
+                                                        baseHp = apiResult.playerHP,
+                                                        currentHp = apiResult.playerHP
+                                                    )
                                                     currentView = "battle-main"
                                                 }
                                             } ?: run {
                                                 println("BATTLESCREEN: No active card ID found in database")
-                                            }
-                                        },
+                                        }
+                                    },
                                         modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text("Battle ${opponent.name}")
-                                    }
+                                ) {
+                                    Text("Battle ${opponent.name}")
                                 }
+                            }
                             }
 
                             backButton()
