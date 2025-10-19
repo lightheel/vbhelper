@@ -1973,38 +1973,50 @@ fun BattlesScreen() {
 
                 "rookie" -> {
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            Text("Rookie Battle View")
+                            Text("Rookie Battle View", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
                             // Add character selection dropdown
                             characterDropdown("rookie")
 
-                            // Display buttons for each opponent
-                            opponentsList.forEach { opponent ->
-                                Button(
-                                    onClick = {
-                                        activeCharacter?.let {
-                                            selectedOpponent = opponent
-                                            // Randomly select background set (0, 1, or 2)
-                                            selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                            RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 0, 0, opponent.name, 0) { apiResult ->
-                                                currentView = "battle-main"
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.padding(vertical = 4.dp)
-                                ) {
-                                    Text("Battle ${opponent.name}")
-                                }
-                            }
-
                             // Show selected character info
                             activeCharacter?.let { character ->
-                                Text("Active Character: ${character.name}")
+                                Text("Active Character: ${character.name}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                 Text("HP: ${character.currentHp}/${character.baseHp}")
                                 Text("BP: ${character.baseBp}")
                                 Text("AP: ${character.baseAp}")
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Scrollable list of opponents
+                            Text("Select Opponent:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .padding(horizontal = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                items(opponentsList) { opponent ->
+                                    Button(
+                                        onClick = {
+                                            activeCharacter?.let {
+                                                selectedOpponent = opponent
+                                                // Randomly select background set (0, 1, or 2)
+                                                selectedBackgroundSet = kotlin.random.Random.nextInt(3)
+                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 0, 0, opponent.name, 0) { apiResult ->
+                                                    currentView = "battle-main"
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("Battle ${opponent.name}")
+                                    }
+                                }
                             }
 
                             backButton()
@@ -2013,38 +2025,50 @@ fun BattlesScreen() {
 
                 "champion" -> {
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            Text("Champion Battle View")
+                            Text("Champion Battle View", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
                             // Add character selection dropdown
                             characterDropdown("champion")
 
-                            // Display buttons for each opponent
-                            opponentsList.forEach { opponent ->
-                                Button(
-                                    onClick = {
-                                        activeCharacter?.let {
-                                            selectedOpponent = opponent
-                                            // Randomly select background set (0, 1, or 2)
-                                            selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                            RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 1, 0, opponent.name, 1) { apiResult ->
-                                                currentView = "battle-main"
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.padding(vertical = 4.dp)
-                                ) {
-                                    Text("Battle ${opponent.name}")
-                                }
-                            }
-
                             // Show selected character info
                             activeCharacter?.let { character ->
-                                Text("Active Character: ${character.name}")
+                                Text("Active Character: ${character.name}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                 Text("HP: ${character.currentHp}/${character.baseHp}")
                                 Text("BP: ${character.baseBp}")
                                 Text("AP: ${character.baseAp}")
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Scrollable list of opponents
+                            Text("Select Opponent:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .padding(horizontal = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                items(opponentsList) { opponent ->
+                                    Button(
+                                        onClick = {
+                                            activeCharacter?.let {
+                                                selectedOpponent = opponent
+                                                // Randomly select background set (0, 1, or 2)
+                                                selectedBackgroundSet = kotlin.random.Random.nextInt(3)
+                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 1, 0, opponent.name, 1) { apiResult ->
+                                                    currentView = "battle-main"
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("Battle ${opponent.name}")
+                                    }
+                                }
                             }
 
                             backButton()
@@ -2053,38 +2077,50 @@ fun BattlesScreen() {
 
                 "ultimate" -> {
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            Text("Ultimate Battle View")
+                            Text("Ultimate Battle View", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
                             // Add character selection dropdown
                             characterDropdown("ultimate")
 
-                            // Display buttons for each opponent
-                            opponentsList.forEach { opponent ->
-                                Button(
-                                    onClick = {
-                                        activeCharacter?.let {
-                                            selectedOpponent = opponent
-                                            // Randomly select background set (0, 1, or 2)
-                                            selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                            RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 2, 0, opponent.name, 2) { apiResult ->
-                                                currentView = "battle-main"
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.padding(vertical = 4.dp)
-                                ) {
-                                    Text("Battle ${opponent.name}")
-                                }
-                            }
-
                             // Show selected character info
                             activeCharacter?.let { character ->
-                                Text("Active Character: ${character.name}")
+                                Text("Active Character: ${character.name}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                 Text("HP: ${character.currentHp}/${character.baseHp}")
                                 Text("BP: ${character.baseBp}")
                                 Text("AP: ${character.baseAp}")
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Scrollable list of opponents
+                            Text("Select Opponent:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .padding(horizontal = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                items(opponentsList) { opponent ->
+                                    Button(
+                                        onClick = {
+                                            activeCharacter?.let {
+                                                selectedOpponent = opponent
+                                                // Randomly select background set (0, 1, or 2)
+                                                selectedBackgroundSet = kotlin.random.Random.nextInt(3)
+                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 2, 0, opponent.name, 2) { apiResult ->
+                                                    currentView = "battle-main"
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("Battle ${opponent.name}")
+                                    }
+                                }
                             }
 
                             backButton()
@@ -2093,38 +2129,50 @@ fun BattlesScreen() {
 
                 "mega" -> {
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            Text("Mega Battle View")
+                            Text("Mega Battle View", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
                             // Add character selection dropdown
                             characterDropdown("mega")
 
-                            // Display buttons for each opponent
-                            opponentsList.forEach { opponent ->
-                                Button(
-                                    onClick = {
-                                        activeCharacter?.let {
-                                            selectedOpponent = opponent
-                                            // Randomly select background set (0, 1, or 2)
-                                            selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                            RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 3, 0, opponent.name, 3) { apiResult ->
-                                                currentView = "battle-main"
-                                            }
-                                        }
-                                    },
-                                    modifier = Modifier.padding(vertical = 4.dp)
-                                ) {
-                                    Text("Battle ${opponent.name}")
-                                }
-                            }
-
                             // Show selected character info
                             activeCharacter?.let { character ->
-                                Text("Active Character: ${character.name}")
+                                Text("Active Character: ${character.name}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                 Text("HP: ${character.currentHp}/${character.baseHp}")
                                 Text("BP: ${character.baseBp}")
                                 Text("AP: ${character.baseAp}")
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Scrollable list of opponents
+                            Text("Select Opponent:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                                    .padding(horizontal = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                items(opponentsList) { opponent ->
+                                    Button(
+                                        onClick = {
+                                            activeCharacter?.let {
+                                                selectedOpponent = opponent
+                                                // Randomly select background set (0, 1, or 2)
+                                                selectedBackgroundSet = kotlin.random.Random.nextInt(3)
+                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.name, 3, 0, opponent.name, 3) { apiResult ->
+                                                    currentView = "battle-main"
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("Battle ${opponent.name}")
+                                    }
+                                }
                             }
 
                             backButton()
