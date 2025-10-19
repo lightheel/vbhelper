@@ -71,6 +71,10 @@ import java.io.File
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.width
+import com.github.nacabaro.vbhelper.di.VBHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun isLandscapeMode(): Boolean {
@@ -1545,6 +1549,8 @@ fun BattlesScreen() {
 
     var activeCharacter by remember { mutableStateOf<APIBattleCharacter?>(null) }
     var selectedOpponent by remember { mutableStateOf<APIBattleCharacter?>(null) }
+    var activeUserCharacter by remember { mutableStateOf<com.github.nacabaro.vbhelper.dtos.CharacterDtos.CharacterWithSprites?>(null) }
+    var activeCardId by remember { mutableStateOf<String?>(null) }
 
     var expanded by remember { mutableStateOf(false) }
     var selectedStage by remember { mutableStateOf("") }
@@ -1606,6 +1612,66 @@ fun BattlesScreen() {
             spriteFileManager.copySpriteFilesToInternalStorage()
         } else {
             println("BATTLESCREEN: Sprite files already exist in internal storage")
+        }
+    }
+    
+    // Load active character from database
+    LaunchedEffect(Unit) {
+        try {
+            val application = context.applicationContext as VBHelper
+            val database = application.container.db
+            
+            // Move database operations to background thread
+            kotlinx.coroutines.withContext(Dispatchers.IO) {
+                // First, let's check all characters to see what's in the database
+                val allCharacters = database.userCharacterDao().getAllCharacters()
+                println("BATTLESCREEN: Found ${allCharacters.size} total characters in database")
+                allCharacters.forEach { char ->
+                    println("  - Character ID: ${char.id}, CharId: ${char.charId}")
+                }
+                
+                val activeChar = database.userCharacterDao().getActiveCharacter()
+                println("BATTLESCREEN: getActiveCharacter() returned: $activeChar")
+                
+                if (activeChar != null) {
+                    // Get the character data using the charId from activeChar
+                    val characterData = database.characterDao().getCharacterInfo(activeChar.charId)
+                    println("BATTLESCREEN: CharacterData from getCharacterInfo:")
+                    println("  - cardId: ${characterData.cardId}")
+                    println("  - charId: ${characterData.charId}")
+                    println("  - stage: ${characterData.stage}")
+                    println("  - attribute: ${characterData.attribute}")
+                    
+                    // The cardId from getCharacterInfo is already the correct card ID we need!
+                    val cardId = characterData.cardId
+                    val charaIndex = characterData.charId // This is the charaIndex from the query
+                    
+                    // Format as "dim" + cardId + "_mon" + (charaIndex + 1)
+                    val formattedCardId = String.format("dim%03d_mon%02d", cardId, charaIndex + 1)
+                    
+                    // Update UI state on main thread
+                    withContext(Dispatchers.Main) {
+                        activeUserCharacter = activeChar
+                        activeCardId = formattedCardId
+                    }
+                    
+                    println("BATTLESCREEN: Loaded active character from database:")
+                    println("  - UserCharacter ID: ${activeChar.id}")
+                    println("  - CharId: ${activeChar.charId}")
+                    println("  - CharacterData cardId: ${characterData.cardId}")
+                    println("  - CharacterData charaIndex: $charaIndex")
+                    println("  - Final cardId: $cardId")
+                    println("  - Formatted as: $activeCardId")
+                } else {
+                    println("BATTLESCREEN: No active character found in database")
+                    withContext(Dispatchers.Main) {
+                        activeCardId = null
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            println("BATTLESCREEN: Error loading active character: ${e.message}")
+            e.printStackTrace()
         }
     }
 
@@ -1978,15 +2044,17 @@ fun BattlesScreen() {
                         ) {
                             Text("Rookie Battle View", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
-                            // Add character selection dropdown
-                            characterDropdown("rookie")
-
-                            // Show selected character info
-                            activeCharacter?.let { character ->
-                                Text("Active Character: ${character.name}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                Text("HP: ${character.currentHp}/${character.baseHp}")
-                                Text("BP: ${character.baseBp}")
-                                Text("AP: ${character.baseAp}")
+                            // Show active character info from database
+                            activeUserCharacter?.let { character ->
+                                Text("Active Character: ${character.id}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text("Char ID: ${character.charId}")
+                                Text("Stage: ${character.stage}")
+                                Text("Age: ${character.ageInDays} days")
+                                activeCardId?.let { cardId ->
+                                    Text("Digimon ID: $cardId", fontSize = 14.sp, color = Color.Blue, fontWeight = FontWeight.Bold)
+                                }
+                            } ?: run {
+                                Text("No active character found in database", fontSize = 16.sp, color = Color.Red)
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -2003,13 +2071,15 @@ fun BattlesScreen() {
                                 items(opponentsList) { opponent ->
                                     Button(
                                         onClick = {
-                                            activeCharacter?.let {
+                                            activeCardId?.let { cardId ->
                                                 selectedOpponent = opponent
                                                 // Randomly select background set (0, 1, or 2)
                                                 selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.charaId, 0, 0, opponent.charaId, 0) { apiResult ->
+                                                RetrofitHelper().getPVPWinner(context, 0, 2, cardId, 0, 0, opponent.charaId, 0) { apiResult ->
                                                     currentView = "battle-main"
                                                 }
+                                            } ?: run {
+                                                println("BATTLESCREEN: No active card ID found in database")
                                             }
                                         },
                                         modifier = Modifier.fillMaxWidth()
@@ -2030,15 +2100,17 @@ fun BattlesScreen() {
                         ) {
                             Text("Champion Battle View", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
-                            // Add character selection dropdown
-                            characterDropdown("champion")
-
-                            // Show selected character info
-                            activeCharacter?.let { character ->
-                                Text("Active Character: ${character.name}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                Text("HP: ${character.currentHp}/${character.baseHp}")
-                                Text("BP: ${character.baseBp}")
-                                Text("AP: ${character.baseAp}")
+                            // Show active character info from database
+                            activeUserCharacter?.let { character ->
+                                Text("Active Character: ${character.id}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text("Char ID: ${character.charId}")
+                                Text("Stage: ${character.stage}")
+                                Text("Age: ${character.ageInDays} days")
+                                activeCardId?.let { cardId ->
+                                    Text("Digimon ID: $cardId", fontSize = 14.sp, color = Color.Blue, fontWeight = FontWeight.Bold)
+                                }
+                            } ?: run {
+                                Text("No active character found in database", fontSize = 16.sp, color = Color.Red)
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -2055,13 +2127,15 @@ fun BattlesScreen() {
                                 items(opponentsList) { opponent ->
                                     Button(
                                         onClick = {
-                                            activeCharacter?.let {
+                                            activeCardId?.let { cardId ->
                                                 selectedOpponent = opponent
                                                 // Randomly select background set (0, 1, or 2)
                                                 selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.charaId, 1, 0, opponent.charaId, 1) { apiResult ->
+                                                RetrofitHelper().getPVPWinner(context, 0, 2, cardId, 1, 0, opponent.charaId, 1) { apiResult ->
                                                     currentView = "battle-main"
                                                 }
+                                            } ?: run {
+                                                println("BATTLESCREEN: No active card ID found in database")
                                             }
                                         },
                                         modifier = Modifier.fillMaxWidth()
@@ -2082,15 +2156,17 @@ fun BattlesScreen() {
                         ) {
                             Text("Ultimate Battle View", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
-                            // Add character selection dropdown
-                            characterDropdown("ultimate")
-
-                            // Show selected character info
-                            activeCharacter?.let { character ->
-                                Text("Active Character: ${character.name}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                Text("HP: ${character.currentHp}/${character.baseHp}")
-                                Text("BP: ${character.baseBp}")
-                                Text("AP: ${character.baseAp}")
+                            // Show active character info from database
+                            activeUserCharacter?.let { character ->
+                                Text("Active Character: ${character.id}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text("Char ID: ${character.charId}")
+                                Text("Stage: ${character.stage}")
+                                Text("Age: ${character.ageInDays} days")
+                                activeCardId?.let { cardId ->
+                                    Text("Digimon ID: $cardId", fontSize = 14.sp, color = Color.Blue, fontWeight = FontWeight.Bold)
+                                }
+                            } ?: run {
+                                Text("No active character found in database", fontSize = 16.sp, color = Color.Red)
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -2107,13 +2183,15 @@ fun BattlesScreen() {
                                 items(opponentsList) { opponent ->
                                     Button(
                                         onClick = {
-                                            activeCharacter?.let {
+                                            activeCardId?.let { cardId ->
                                                 selectedOpponent = opponent
                                                 // Randomly select background set (0, 1, or 2)
                                                 selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.charaId, 2, 0, opponent.charaId, 2) { apiResult ->
+                                                RetrofitHelper().getPVPWinner(context, 0, 2, cardId, 2, 0, opponent.charaId, 2) { apiResult ->
                                                     currentView = "battle-main"
                                                 }
+                                            } ?: run {
+                                                println("BATTLESCREEN: No active card ID found in database")
                                             }
                                         },
                                         modifier = Modifier.fillMaxWidth()
@@ -2134,15 +2212,17 @@ fun BattlesScreen() {
                         ) {
                             Text("Mega Battle View", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
-                            // Add character selection dropdown
-                            characterDropdown("mega")
-
-                            // Show selected character info
-                            activeCharacter?.let { character ->
-                                Text("Active Character: ${character.name}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                Text("HP: ${character.currentHp}/${character.baseHp}")
-                                Text("BP: ${character.baseBp}")
-                                Text("AP: ${character.baseAp}")
+                            // Show active character info from database
+                            activeUserCharacter?.let { character ->
+                                Text("Active Character: ${character.id}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text("Char ID: ${character.charId}")
+                                Text("Stage: ${character.stage}")
+                                Text("Age: ${character.ageInDays} days")
+                                activeCardId?.let { cardId ->
+                                    Text("Digimon ID: $cardId", fontSize = 14.sp, color = Color.Blue, fontWeight = FontWeight.Bold)
+                                }
+                            } ?: run {
+                                Text("No active character found in database", fontSize = 16.sp, color = Color.Red)
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -2159,13 +2239,15 @@ fun BattlesScreen() {
                                 items(opponentsList) { opponent ->
                                     Button(
                                         onClick = {
-                                            activeCharacter?.let {
+                                            activeCardId?.let { cardId ->
                                                 selectedOpponent = opponent
                                                 // Randomly select background set (0, 1, or 2)
                                                 selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                                RetrofitHelper().getPVPWinner(context, 0, 2, it.charaId, 3, 0, opponent.charaId, 3) { apiResult ->
+                                                RetrofitHelper().getPVPWinner(context, 0, 2, cardId, 3, 0, opponent.charaId, 3) { apiResult ->
                                                     currentView = "battle-main"
                                                 }
+                                            } ?: run {
+                                                println("BATTLESCREEN: No active card ID found in database")
                                             }
                                         },
                                         modifier = Modifier.fillMaxWidth()
