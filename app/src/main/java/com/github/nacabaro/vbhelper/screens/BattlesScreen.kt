@@ -1603,6 +1603,53 @@ fun BattlesScreen() {
 
     val context = LocalContext.current
     
+    // Determine if player can battle based on stage (derived from activeUserCharacter)
+    val canBattle = activeUserCharacter?.stage?.let { it >= 2 } ?: false
+    
+    // Get the appropriate battle type based on player's stage (derived from activeUserCharacter)
+    val playerBattleType = activeUserCharacter?.stage?.let { stage ->
+        when (stage) {
+            2 -> "rookie"    // Player stage 2 → Rookie opponents (API stage 0)
+            3 -> "champion"  // Player stage 3 → Champion opponents (API stage 1) 
+            4 -> "ultimate"  // Player stage 4 → Ultimate opponents (API stage 2)
+            5 -> "mega"      // Player stage 5 → Mega opponents (API stage 3)
+            else -> null
+        }
+    }
+    
+    // Load opponents automatically based on player's stage
+    LaunchedEffect(activeUserCharacter) {
+        val currentCharacter = activeUserCharacter
+        if (currentCharacter != null && canBattle && playerBattleType != null) {
+            println("BATTLESCREEN: Loading opponents for stage ${currentCharacter.stage}, battle type: $playerBattleType")
+            try {
+                RetrofitHelper().getOpponents(context, playerBattleType!!) { opponents ->
+                    try {
+                        // Create a new list to trigger UI recomposition
+                        opponentsList = ArrayList(opponents.opponentsList)
+                        println("BATTLESCREEN: Loaded ${opponents.opponentsList.size} opponents from API")
+                        println("BATTLESCREEN: Total opponents in list: ${opponentsList.size}")
+                    } catch (e: Exception) {
+                        Log.d(TAG, "Error processing opponents data: ${e.message}")
+                        e.printStackTrace()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.d(TAG,"Error calling getOpponents: ${e.message}")
+                e.printStackTrace()
+            }
+        } else {
+            println("BATTLESCREEN: Cannot load opponents - activeUserCharacter: $currentCharacter")
+            println("BATTLESCREEN: canBattle: $canBattle")
+            println("BATTLESCREEN: playerBattleType: $playerBattleType")
+            println("BATTLESCREEN: currentCharacter != null: ${currentCharacter != null}")
+            if (currentCharacter != null) {
+                println("BATTLESCREEN: currentCharacter.stage: ${currentCharacter.stage}")
+                println("BATTLESCREEN: currentCharacter.stage >= 2: ${currentCharacter.stage >= 2}")
+            }
+        }
+    }
+    
     // Initialize sprite files on first load
     LaunchedEffect(Unit) {
         println("BATTLESCREEN: LaunchedEffect triggered - checking sprite files...")
@@ -1672,10 +1719,13 @@ fun BattlesScreen() {
                     println("BATTLESCREEN: Loaded active character from database:")
                     println("  - UserCharacter ID: ${activeChar.id}")
                     println("  - CharId: ${activeChar.charId}")
+                    println("  - Stage: ${activeChar.stage}")
                     println("  - CharacterData cardId: ${characterData.cardId}")
                     println("  - CharacterData charaIndex: $charaIndex")
                     println("  - Final cardId: $cardId")
                     println("  - Formatted as: $activeCardId")
+                    println("  - Can battle: ${activeChar.stage >= 2}")
+                    println("  - Battle type: ${when (activeChar.stage) { 2 -> "rookie"; 3 -> "champion"; 4 -> "ultimate"; 5 -> "mega"; else -> "none" }}")
                 } else {
                     println("BATTLESCREEN: No active character found in database")
                     withContext(Dispatchers.Main) {
@@ -1689,105 +1739,6 @@ fun BattlesScreen() {
         }
     }
 
-    val rookieButton = @Composable {
-        Button(
-            onClick = {
-                try {
-                    RetrofitHelper().getOpponents(context, "rookie") { opponents ->
-                        try {
-                            opponentsList.clear()
-                            opponentsList.addAll(opponents.opponentsList)
-                            currentView = "rookie"
-                            currentStage = "rookie"
-                        } catch (e: Exception) {
-                            Log.d(TAG, "Error processing opponents data: ${e.message}")
-                            e.printStackTrace()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.d(TAG,"Error calling getOpponents: ${e.message}")
-                    e.printStackTrace()
-                }
-            }
-        ) {
-            Text("Rookie Battles")
-        }
-    }
-
-    val championButton = @Composable {
-        Button(
-            onClick = {
-                try {
-                    RetrofitHelper().getOpponents(context, "champion") { opponents ->
-                        try {
-                            opponentsList.clear()
-                            opponentsList.addAll(opponents.opponentsList)
-                            currentView = "champion"
-                            currentStage = "champion"
-                        } catch (e: Exception) {
-                            Log.d(TAG, "Error processing opponents data: ${e.message}")
-                            e.printStackTrace()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.d(TAG,"Error calling getOpponents: ${e.message}")
-                    e.printStackTrace()
-                }
-            }
-        ) {
-            Text("Champion Battles")
-        }
-    }
-
-    val ultimateButton = @Composable {
-        Button(
-            onClick = {
-                try {
-                    RetrofitHelper().getOpponents(context, "ultimate") { opponents ->
-                        try {
-                            opponentsList.clear()
-                            opponentsList.addAll(opponents.opponentsList)
-                            currentView = "ultimate"
-                            currentStage = "ultimate"
-                        } catch (e: Exception) {
-                            Log.d(TAG, "Error processing opponents data: ${e.message}")
-                            e.printStackTrace()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.d(TAG,"Error calling getOpponents: ${e.message}")
-                    e.printStackTrace()
-                }
-            }
-        ) {
-            Text("Ultimate Battles")
-        }
-    }
-
-    val megaButton = @Composable {
-        Button(
-            onClick = {
-                try {
-                    RetrofitHelper().getOpponents(context, "mega") { opponents ->
-                        try {
-                            opponentsList.clear()
-                            opponentsList.addAll(opponents.opponentsList)
-                            currentView = "mega"
-                            currentStage = "mega"
-                        } catch (e: Exception) {
-                            Log.d(TAG, "Error processing opponents data: ${e.message}")
-                            e.printStackTrace()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.d(TAG,"Error calling getOpponents: ${e.message}")
-                    e.printStackTrace()
-                }
-            }
-        ) {
-            Text("Mega Battles")
-        }
-    }
 
     val backButton = @Composable {
         Button(
@@ -2020,10 +1971,84 @@ fun BattlesScreen() {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            rookieButton()
-                            championButton()
-                            ultimateButton()
-                            megaButton()
+                            // Show active character info
+                            activeUserCharacter?.let { character ->
+                                Text("Active Character: ${character.id}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text("Stage: ${character.stage}")
+                                Text("Age: ${character.ageInDays} days")
+                                activeCardId?.let { cardId ->
+                                    Text("Digimon ID: $cardId", fontSize = 14.sp, color = Color.Blue, fontWeight = FontWeight.Bold)
+                                }
+                                
+                                Spacer(modifier = Modifier.height(16.dp))
+                                
+                                if (canBattle) {
+                                    Text("Available Opponents:", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                    Text("Debug: opponentsList.size = ${opponentsList.size}", fontSize = 12.sp, color = Color.Gray)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    
+                                    if (opponentsList.isNotEmpty()) {
+                                        println("BATTLESCREEN: UI - Showing ${opponentsList.size} opponents")
+                                        // Show scrollable list of opponents
+                                        LazyColumn(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .weight(1f)
+                                                .padding(horizontal = 16.dp),
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            items(opponentsList) { opponent ->
+                                                Button(
+                                                    onClick = {
+                                                        activeCardId?.let { cardId ->
+                                                            selectedOpponent = opponent
+                                                            // Randomly select background set (0, 1, or 2)
+                                                            selectedBackgroundSet = kotlin.random.Random.nextInt(3)
+                                                            
+                                                            // Determine the correct stage parameter for API call
+                                                            val apiStage = when (playerBattleType) {
+                                                                "rookie" -> 0
+                                                                "champion" -> 1
+                                                                "ultimate" -> 2
+                                                                "mega" -> 3
+                                                                else -> 0
+                                                            }
+                                                            
+                                                            RetrofitHelper().getPVPWinner(context, 0, 2, cardId, apiStage, 0, opponent.charaId, apiStage) { apiResult ->
+                                                                // Update player character HP from API response
+                                                                activeCharacter = activeCharacter?.copy(
+                                                                    baseHp = apiResult.playerHP,
+                                                                    currentHp = apiResult.playerHP
+                                                                )
+                                                                currentView = "battle-main"
+                                                            }
+                                                        } ?: run {
+                                                            println("BATTLESCREEN: No active card ID found in database")
+                                                        }
+                                                    },
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Text("Battle ${opponent.name}")
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        println("BATTLESCREEN: UI - No opponents in list, showing message")
+                                        Text("No opponents available for your stage", 
+                                             fontSize = 16.sp, 
+                                             color = Color(0xFFFFA500), // Orange color
+                                             textAlign = TextAlign.Center)
+                                    }
+                                } else {
+                                    Text("Your Digimon must be at least Stage 2 to battle", 
+                                         fontSize = 16.sp, 
+                                         color = Color.Red,
+                                         textAlign = TextAlign.Center)
+                                }
+                            } ?: run {
+                                Text("No active character found in database", fontSize = 16.sp, color = Color.Red)
+                            }
+                            
                             /*
                             Button(
                                 onClick = { 
@@ -2051,249 +2076,6 @@ fun BattlesScreen() {
                     }
                 }
 
-                "rookie" -> {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            Text("Rookie Battle View", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-
-                            // Show active character info from database
-                            activeUserCharacter?.let { character ->
-                                Text("Active Character: ${character.id}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                Text("Char ID: ${character.charId}")
-                                Text("Stage: ${character.stage}")
-                                Text("Age: ${character.ageInDays} days")
-                                activeCardId?.let { cardId ->
-                                    Text("Digimon ID: $cardId", fontSize = 14.sp, color = Color.Blue, fontWeight = FontWeight.Bold)
-                                }
-                            } ?: run {
-                                Text("No active character found in database", fontSize = 16.sp, color = Color.Red)
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // Scrollable list of opponents
-                            Text("Select Opponent:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f)
-                                    .padding(horizontal = 16.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                items(opponentsList) { opponent ->
-                                Button(
-                                    onClick = {
-                                            activeCardId?.let { cardId ->
-                                            selectedOpponent = opponent
-                                                // Randomly select background set (0, 1, or 2)
-                                                selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                                RetrofitHelper().getPVPWinner(context, 0, 2, cardId, 0, 0, opponent.charaId, 0) { apiResult ->
-                                                // Update player character HP from API response
-                                                activeCharacter = activeCharacter?.copy(
-                                                    baseHp = apiResult.playerHP,
-                                                    currentHp = apiResult.playerHP
-                                                )
-                                                currentView = "battle-main"
-                                            }
-                                            } ?: run {
-                                                println("BATTLESCREEN: No active card ID found in database")
-                                        }
-                                    },
-                                        modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Battle ${opponent.name}")
-                                }
-                            }
-                            }
-
-                            backButton()
-                        }
-                }
-
-                "champion" -> {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            Text("Champion Battle View", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-
-                            // Show active character info from database
-                            activeUserCharacter?.let { character ->
-                                Text("Active Character: ${character.id}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                Text("Char ID: ${character.charId}")
-                                Text("Stage: ${character.stage}")
-                                Text("Age: ${character.ageInDays} days")
-                                activeCardId?.let { cardId ->
-                                    Text("Digimon ID: $cardId", fontSize = 14.sp, color = Color.Blue, fontWeight = FontWeight.Bold)
-                                }
-                            } ?: run {
-                                Text("No active character found in database", fontSize = 16.sp, color = Color.Red)
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // Scrollable list of opponents
-                            Text("Select Opponent:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f)
-                                    .padding(horizontal = 16.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                items(opponentsList) { opponent ->
-                                Button(
-                                    onClick = {
-                                            activeCardId?.let { cardId ->
-                                            selectedOpponent = opponent
-                                                // Randomly select background set (0, 1, or 2)
-                                                selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                                RetrofitHelper().getPVPWinner(context, 0, 2, cardId, 1, 0, opponent.charaId, 1) { apiResult ->
-                                                    // Update player character HP from API response
-                                                    activeCharacter = activeCharacter?.copy(
-                                                        baseHp = apiResult.playerHP,
-                                                        currentHp = apiResult.playerHP
-                                                    )
-                                                    currentView = "battle-main"
-                                                }
-                                            } ?: run {
-                                                println("BATTLESCREEN: No active card ID found in database")
-                                        }
-                                    },
-                                        modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Battle ${opponent.name}")
-                                }
-                            }
-                            }
-
-                            backButton()
-                        }
-                }
-
-                "ultimate" -> {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            Text("Ultimate Battle View", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-
-                            // Show active character info from database
-                            activeUserCharacter?.let { character ->
-                                Text("Active Character: ${character.id}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                Text("Char ID: ${character.charId}")
-                                Text("Stage: ${character.stage}")
-                                Text("Age: ${character.ageInDays} days")
-                                activeCardId?.let { cardId ->
-                                    Text("Digimon ID: $cardId", fontSize = 14.sp, color = Color.Blue, fontWeight = FontWeight.Bold)
-                                }
-                            } ?: run {
-                                Text("No active character found in database", fontSize = 16.sp, color = Color.Red)
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // Scrollable list of opponents
-                            Text("Select Opponent:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f)
-                                    .padding(horizontal = 16.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                items(opponentsList) { opponent ->
-                                Button(
-                                    onClick = {
-                                            activeCardId?.let { cardId ->
-                                            selectedOpponent = opponent
-                                                // Randomly select background set (0, 1, or 2)
-                                                selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                                RetrofitHelper().getPVPWinner(context, 0, 2, cardId, 2, 0, opponent.charaId, 2) { apiResult ->
-                                                    // Update player character HP from API response
-                                                    activeCharacter = activeCharacter?.copy(
-                                                        baseHp = apiResult.playerHP,
-                                                        currentHp = apiResult.playerHP
-                                                    )
-                                                    currentView = "battle-main"
-                                                }
-                                            } ?: run {
-                                                println("BATTLESCREEN: No active card ID found in database")
-                                        }
-                                    },
-                                        modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Battle ${opponent.name}")
-                                }
-                            }
-                            }
-
-                            backButton()
-                        }
-                }
-
-                "mega" -> {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            Text("Mega Battle View", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-
-                            // Show active character info from database
-                            activeUserCharacter?.let { character ->
-                                Text("Active Character: ${character.id}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                Text("Char ID: ${character.charId}")
-                                Text("Stage: ${character.stage}")
-                                Text("Age: ${character.ageInDays} days")
-                                activeCardId?.let { cardId ->
-                                    Text("Digimon ID: $cardId", fontSize = 14.sp, color = Color.Blue, fontWeight = FontWeight.Bold)
-                                }
-                            } ?: run {
-                                Text("No active character found in database", fontSize = 16.sp, color = Color.Red)
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // Scrollable list of opponents
-                            Text("Select Opponent:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f)
-                                    .padding(horizontal = 16.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                items(opponentsList) { opponent ->
-                                Button(
-                                    onClick = {
-                                            activeCardId?.let { cardId ->
-                                            selectedOpponent = opponent
-                                                // Randomly select background set (0, 1, or 2)
-                                                selectedBackgroundSet = kotlin.random.Random.nextInt(3)
-                                                RetrofitHelper().getPVPWinner(context, 0, 2, cardId, 3, 0, opponent.charaId, 3) { apiResult ->
-                                                    // Update player character HP from API response
-                                                    activeCharacter = activeCharacter?.copy(
-                                                        baseHp = apiResult.playerHP,
-                                                        currentHp = apiResult.playerHP
-                                                    )
-                                                    currentView = "battle-main"
-                                                }
-                                            } ?: run {
-                                                println("BATTLESCREEN: No active card ID found in database")
-                                        }
-                                    },
-                                        modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Battle ${opponent.name}")
-                                }
-                            }
-                            }
-
-                            backButton()
-                        }
-                }
 
                 "battle-main" -> {
                     BattleScreen(
