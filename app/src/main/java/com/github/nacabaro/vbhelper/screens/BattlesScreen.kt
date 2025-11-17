@@ -34,6 +34,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -63,6 +67,8 @@ import com.github.nacabaro.vbhelper.battle.ArenaBattleSystem
 import com.github.nacabaro.vbhelper.battle.DigimonAnimationType
 import com.github.nacabaro.vbhelper.battle.AnimatedSpriteImage
 import com.github.nacabaro.vbhelper.battle.HitEffectOverlay
+import com.github.nacabaro.vbhelper.battle.BattleAuthContainer
+import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import kotlin.math.sin
@@ -1640,6 +1646,15 @@ fun BattlesScreen() {
     }
 
     var currentView by remember { mutableStateOf("main") }
+    
+    // Create BattleAuthContainer
+    val battleAuthContainer = remember { BattleAuthContainer(context) }
+    
+    // Auth state
+    var isAuthenticated by remember { mutableStateOf(false) }
+    var isCheckingAuth by remember { mutableStateOf(true) }
+    // Track processed tokens to prevent duplicate API calls
+    var processedTokens by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     var opponentsList by remember { mutableStateOf(ArrayList<APIBattleCharacter>()) }
 
@@ -1712,7 +1727,14 @@ fun BattlesScreen() {
     }
     
     // Load opponents automatically based on player's stage
-    LaunchedEffect(activeUserCharacter) {
+    // Only load if authenticated and character is ready
+    LaunchedEffect(activeUserCharacter, isAuthenticated) {
+        // Wait for authentication to complete before loading opponents
+        if (!isAuthenticated) {
+            println("BATTLESCREEN: Skipping opponent load - not authenticated yet")
+            return@LaunchedEffect
+        }
+        
         val currentCharacter = activeUserCharacter
         if (currentCharacter != null && canBattle && playerBattleType != null) {
             println("BATTLESCREEN: Loading opponents for stage ${currentCharacter.stage}, battle type: $playerBattleType")
@@ -1740,6 +1762,221 @@ fun BattlesScreen() {
             if (currentCharacter != null) {
                 println("BATTLESCREEN: currentCharacter.stage: ${currentCharacter.stage}")
                 println("BATTLESCREEN: currentCharacter.stage >= 2: ${currentCharacter.stage >= 2}")
+            }
+        }
+    }
+    
+    // Helper lambda to extract token from URI and authenticate
+    // The token can be in 'c' parameter (from localhost:8080/authenticate?c=...) or 'token' parameter
+    val handleTokenFromUri: (Uri) -> Unit = { uri ->
+        // Try 'c' parameter first (from localhost:8080/authenticate?c=...)
+        var token = uri.getQueryParameter("c")
+        // Fall back to 'token' parameter if 'c' is not found
+        if (token == null || token.isEmpty()) {
+            token = uri.getQueryParameter("token")
+        }
+        
+        if (token != null && token.isNotEmpty()) {
+            // Check if we've already processed this token
+            if (!processedTokens.contains(token)) {
+                // Mark token as being processed
+                processedTokens = processedTokens + token
+                println("BATTLESCREEN: Received token from URI: $token (URI: $uri)")
+                
+                // Exchange token with battle server
+                RetrofitHelper().authenticate(context, token) { response ->
+                    if (response.success) {
+                        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                            battleAuthContainer.authRepository.setAuthenticated(true, token)
+                        }
+                        // Update UI state on main thread
+                        kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
+                            isAuthenticated = true
+                            isCheckingAuth = false
+                            println("BATTLESCREEN: Authentication successful")
+                            android.widget.Toast.makeText(context, "Authentication successful!", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        println("BATTLESCREEN: Authentication failed: ${response.message}")
+                        // Show toast on main thread
+                        kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
+                            android.widget.Toast.makeText(context, "Authentication failed: ${response.message}", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                        // Remove token from processed set on failure so it can be retried if needed
+                        processedTokens = processedTokens - token
+                    }
+                }
+            } else {
+                println("BATTLESCREEN: Token already processed, skipping: $token")
+            }
+        } else {
+            println("BATTLESCREEN: No token found in URI: $uri (checked 'c' and 'token' parameters)")
+        }
+    }
+    
+    // Check authentication status on load
+    LaunchedEffect(Unit) {
+        try {
+            val authRepository = battleAuthContainer.authRepository
+            val localAuthState = authRepository.isAuthenticated.first()
+            val storedToken = authRepository.authToken.first()
+            println("BATTLESCREEN: Local authentication status - isAuthenticated: $localAuthState, hasToken: ${storedToken != null}")
+            
+            // Only check for token in intent if it's a fresh deep link (ACTION_VIEW intent)
+            // This prevents processing stale tokens from previous sessions
+            val activity = context as? ComponentActivity
+            val intent = activity?.intent
+            if (intent?.action == Intent.ACTION_VIEW) {
+                intent.data?.let { uri ->
+                    println("BATTLESCREEN: Found ACTION_VIEW intent with URI: $uri")
+                    if (uri.getQueryParameter("c") != null || uri.getQueryParameter("token") != null) {
+                        println("BATTLESCREEN: Token found in fresh deep link, processing...")
+                        handleTokenFromUri(uri)
+                        return@LaunchedEffect // Don't open auth URL if we're processing a token
+                    }
+                }
+            }
+            
+            // If we have a stored token, validate it with the server
+            if (localAuthState && storedToken != null && storedToken.isNotEmpty()) {
+                println("BATTLESCREEN: Validating stored token with server...")
+                RetrofitHelper().authenticate(context, storedToken) { response ->
+                    // Update UI on main thread
+                    kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
+                        if (response.success) {
+                            println("BATTLESCREEN: Token validation successful")
+                            isAuthenticated = true
+                            isCheckingAuth = false
+                        } else {
+                            println("BATTLESCREEN: Token validation failed: ${response.message}")
+                            // Clear authentication state
+                            kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                                authRepository.logout()
+                            }
+                            isAuthenticated = false
+                            isCheckingAuth = false
+                            // Open auth URL
+                            val authUrl = "http://auth.nacatech.es/begin?app=443654920&redirect_uri=vbhelper://auth?token="
+                            val authIntent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
+                            context.startActivity(authIntent)
+                            println("BATTLESCREEN: Opened auth URL after validation failure: $authUrl")
+                        }
+                    }
+                }
+            } else {
+                // No stored token or not authenticated locally
+                isAuthenticated = false
+                isCheckingAuth = false
+                // If not authenticated and no fresh token in intent, open auth URL
+                val authUrl = "http://auth.nacatech.es/begin?app=443654920&redirect_uri=vbhelper://auth?token="
+                val authIntent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
+                context.startActivity(authIntent)
+                println("BATTLESCREEN: Opened auth URL: $authUrl")
+            }
+        } catch (e: Exception) {
+            println("BATTLESCREEN: Error checking authentication status: ${e.message}")
+            isAuthenticated = false
+            isCheckingAuth = false
+        }
+    }
+    
+    // Handle deep link callback to get token
+    // Check intent data on initial load - handle both vbhelper:// and http://localhost:8080/authenticate?c=
+    // Only process if it's a fresh ACTION_VIEW intent (deep link)
+    LaunchedEffect(Unit) {
+        // Small delay to ensure activity is fully initialized
+        kotlinx.coroutines.delay(100)
+        
+        val activity = context as? ComponentActivity
+        val intent = activity?.intent
+        
+        // Only process if this is a fresh deep link (ACTION_VIEW)
+        if (intent?.action == Intent.ACTION_VIEW) {
+            val uri = intent.data
+            if (uri != null) {
+                println("BATTLESCREEN: Checking ACTION_VIEW intent data - URI: $uri, scheme: ${uri.scheme}, host: ${uri.host}, path: ${uri.path}")
+                println("BATTLESCREEN: All query parameters: ${uri.queryParameterNames}")
+                
+                // Handle vbhelper://auth?token= or vbhelper://auth?c= deep link
+                if (uri.scheme == "vbhelper" && uri.host == "auth") {
+                    println("BATTLESCREEN: Detected vbhelper://auth deep link")
+                    handleTokenFromUri(uri)
+                }
+                // Handle http://localhost:8080/authenticate?c= redirect
+                else if ((uri.scheme == "http" || uri.scheme == "https") && 
+                         (uri.host == "localhost" || uri.host == "127.0.0.1" || uri.host?.contains("8080") == true)) {
+                    println("BATTLESCREEN: Detected localhost redirect, checking for token")
+                    handleTokenFromUri(uri)
+                }
+                // Also check if there's a 'c' or 'token' parameter in any URL
+                else if (uri.getQueryParameter("c") != null || uri.getQueryParameter("token") != null) {
+                    println("BATTLESCREEN: Found token parameter (c or token) in URI, attempting to authenticate")
+                    handleTokenFromUri(uri)
+                } else {
+                    println("BATTLESCREEN: URI found but no token parameter detected")
+                }
+            } else {
+                println("BATTLESCREEN: ACTION_VIEW intent but no URI found")
+            }
+        } else {
+            println("BATTLESCREEN: Not an ACTION_VIEW intent, skipping deep link processing")
+        }
+    }
+    
+    // Check intent when screen becomes visible or when authentication state changes
+    // This handles cases where the app is already running and receives a deep link
+    DisposableEffect(Unit) {
+        val activity = context as? ComponentActivity
+        val lifecycleOwner = activity as? LifecycleOwner
+        
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && !isAuthenticated) {
+                // Check intent data when activity resumes - only if it's a fresh ACTION_VIEW intent
+                val intent = activity?.intent
+                if (intent?.action == Intent.ACTION_VIEW) {
+                    intent.data?.let { uri ->
+                        println("BATTLESCREEN: Activity resumed with ACTION_VIEW intent, checking for token - URI: $uri")
+                        if (uri.getQueryParameter("c") != null || uri.getQueryParameter("token") != null) {
+                            println("BATTLESCREEN: Found token in fresh deep link on resume")
+                            handleTokenFromUri(uri)
+                        }
+                    }
+                }
+            }
+        }
+        
+        lifecycleOwner?.lifecycle?.addObserver(observer)
+        
+        onDispose {
+            lifecycleOwner?.lifecycle?.removeObserver(observer)
+        }
+    }
+    
+    // Also check intent when authentication state changes
+    // Only process if it's a fresh ACTION_VIEW intent (deep link)
+    LaunchedEffect(isAuthenticated) {
+        if (!isAuthenticated) {
+            kotlinx.coroutines.delay(200) // Small delay to ensure intent is available
+            val activity = context as? ComponentActivity
+            val intent = activity?.intent
+            // Only process if this is a fresh deep link (ACTION_VIEW)
+            if (intent?.action == Intent.ACTION_VIEW) {
+                intent.data?.let { uri ->
+                    println("BATTLESCREEN: Re-checking ACTION_VIEW intent data - URI: $uri, scheme: ${uri.scheme}, host: ${uri.host}")
+                    // Handle vbhelper://auth?token= or vbhelper://auth?c= deep link
+                    if (uri.scheme == "vbhelper" && uri.host == "auth") {
+                        handleTokenFromUri(uri)
+                    }
+                    // Handle http://localhost:8080/authenticate?c= redirect
+                    else if ((uri.scheme == "http" || uri.scheme == "https") && 
+                             (uri.host == "localhost" || uri.host == "127.0.0.1" || uri.host?.contains("8080") == true)) {
+                        handleTokenFromUri(uri)
+                    }
+                    // Also check if there's a 'c' or 'token' parameter in any URL
+                    else if (uri.getQueryParameter("c") != null || uri.getQueryParameter("token") != null) {
+                        handleTokenFromUri(uri)
+                    }
+                }
             }
         }
     }
@@ -2061,7 +2298,38 @@ fun BattlesScreen() {
         ) {
             when (currentView) {
                 "main" -> {
-                    if (showSpriteTester) {
+                    // Show loading/authentication message if not authenticated
+                    if (isCheckingAuth || !isAuthenticated) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(32.dp)
+                        ) {
+                            if (isCheckingAuth) {
+                                Text(
+                                    text = "Checking authentication...",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            } else {
+                                Text(
+                                    text = "Please complete authentication in your browser",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                                Text(
+                                    text = "You will be redirected back to the app after logging in",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    } else if (showSpriteTester) {
                         when (spriteTesterView) {
                             "entry" -> spriteTesterEntry()
                             "testing" -> spriteTesterTesting()

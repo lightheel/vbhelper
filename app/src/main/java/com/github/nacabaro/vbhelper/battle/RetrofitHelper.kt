@@ -5,6 +5,8 @@ import retrofit2.Retrofit
 import android.widget.Toast
 import retrofit2.*
 import retrofit2.converter.gson.GsonConverterFactory
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 
 class RetrofitHelper {
 
@@ -175,5 +177,70 @@ class RetrofitHelper {
                 }
             }
         })
+    }
+
+    fun authenticate(context: Context, token: String, callback: (AuthenticateResponse) -> Unit) {
+        println("RetrofitHelper: Starting validate API call with token: $token")
+        
+        if (token.isEmpty()) {
+            println("RetrofitHelper: ERROR - Token is empty!")
+            Toast.makeText(context, "Authentication failed: Token is empty", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        try {
+            // Add logging interceptor to see the actual HTTP request
+            val loggingInterceptor = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+            val okHttpClient = OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
+                .build()
+            
+            val retrofit: Retrofit = Retrofit.Builder()
+                .baseUrl("http://192.168.0.230:8080/")
+                .client(okHttpClient)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+
+            val service: AuthService = retrofit.create<AuthService>(AuthService::class.java)
+            val request = AuthenticateRequest(userToken = token)
+            println("RetrofitHelper: Sending request to api/auth/validate with userToken: $token")
+            println("RetrofitHelper: Request object: $request")
+            println("RetrofitHelper: Request JSON will be: {\"userToken\": \"$token\"}")
+            val call: Call<AuthenticateResponse> = service.validate(request)
+
+            call.enqueue(object : Callback<AuthenticateResponse> {
+                override fun onFailure(call: Call<AuthenticateResponse>, t: Throwable) {
+                    println("RetrofitHelper: Validate API call failed: ${t.message}")
+                    t.printStackTrace()
+                    Toast.makeText(context, "Authentication failed: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onResponse(call: Call<AuthenticateResponse>, response: Response<AuthenticateResponse>) {
+                    println("RetrofitHelper: Validate API response received - Code: ${response.code()}")
+                    println("RetrofitHelper: Response body: ${response.body()}")
+
+                    if (response.isSuccessful) {
+                        val authResponse: AuthenticateResponse? = response.body()
+                        if (authResponse != null) {
+                            println("RetrofitHelper: Validation successful: ${authResponse.success}, message: ${authResponse.message}")
+                            callback(authResponse)
+                        } else {
+                            println("RetrofitHelper: Validation failed: Invalid response body")
+                            Toast.makeText(context, "Authentication failed: Invalid response", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        val errorBody = response.errorBody()?.string()
+                        println("RetrofitHelper: Validate response not successful - Code: ${response.code()}, Error: $errorBody")
+                        Toast.makeText(context, "Authentication failed: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            })
+        } catch (e: Exception) {
+            println("RetrofitHelper: Exception in validate: ${e.message}")
+            e.printStackTrace()
+            Toast.makeText(context, "Authentication failed: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 }
