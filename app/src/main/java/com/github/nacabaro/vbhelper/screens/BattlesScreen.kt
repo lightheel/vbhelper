@@ -49,6 +49,8 @@ import android.os.Build
 import android.provider.Settings
 import android.content.Intent
 import android.net.Uri
+import android.media.MediaPlayer
+import android.os.Environment
 //import androidx.compose.animation.core.animateFloatAsState
 //import androidx.compose.animation.core.tween
 import kotlinx.coroutines.delay
@@ -231,11 +233,69 @@ fun BattleScreen(
     val battleSystem = remember { ArenaBattleSystem() }
     val coroutineScope = rememberCoroutineScope()
     
+    // Background music MediaPlayer
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    
     // Initialize HP when battle starts
     LaunchedEffect(activeCharacter, opponentCharacter) {
         val playerMaxHP = activeCharacter?.baseHp?.toFloat() ?: 100f
         val opponentMaxHP = opponentCharacter?.baseHp?.toFloat() ?: 100f
         battleSystem.initializeHP(playerMaxHP, opponentMaxHP)
+    }
+    
+    // Start background music when battle starts
+    LaunchedEffect(Unit) {
+        context?.let { ctx ->
+            try {
+                // Get external storage directory
+                val externalDir = Environment.getExternalStorageDirectory()
+                val musicDir = File(externalDir, "VBHelper/extracted_audio/background_music")
+                
+                // Pick a random BGM file (bgm_001.wav to bgm_004.wav)
+                val bgmNumber = kotlin.random.Random.nextInt(1, 5) // 1 to 4
+                val bgmFileName = String.format("bgm_%03d.wav", bgmNumber)
+                val bgmFile = File(musicDir, bgmFileName)
+                
+                if (bgmFile.exists()) {
+                    println("BATTLESCREEN: Starting background music: $bgmFileName")
+                    val player = MediaPlayer().apply {
+                        setDataSource(bgmFile.absolutePath)
+                        prepare()
+                        setOnCompletionListener {
+                            // Stop after one playthrough
+                            println("BATTLESCREEN: Background music completed, stopping")
+                            it.release()
+                            mediaPlayer = null
+                        }
+                        start()
+                    }
+                    mediaPlayer = player
+                } else {
+                    println("BATTLESCREEN: Background music file not found: ${bgmFile.absolutePath}")
+                }
+            } catch (e: Exception) {
+                println("BATTLESCREEN: Error starting background music: ${e.message}")
+                e.printStackTrace()
+            }
+        }
+    }
+    
+    // Clean up MediaPlayer when battle ends or composable is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer?.let { player ->
+                try {
+                    if (player.isPlaying) {
+                        player.stop()
+                    }
+                    player.release()
+                    println("BATTLESCREEN: Background music stopped and released")
+                } catch (e: Exception) {
+                    println("BATTLESCREEN: Error stopping background music: ${e.message}")
+                }
+            }
+            mediaPlayer = null
+        }
     }
     
     // Pending damage state for API integration
@@ -2307,9 +2367,13 @@ fun BattlesScreen() {
                             }
                         }
                         
-                        // Exit button
+                        // Exit button - stop music before exiting
                         Button(
-                            onClick = { currentView = "main" },
+                            onClick = { 
+                                // Stop background music before exiting
+                                // Note: Music will also be stopped by DisposableEffect in BattleScreen
+                                currentView = "main" 
+                            },
                             modifier = Modifier.align(Alignment.TopCenter),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                         ) {
