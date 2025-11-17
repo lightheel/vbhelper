@@ -845,7 +845,7 @@ fun MiddleBattleView(
                         
                         AttackSpriteImage(
                             characterId = opponentCharacter?.charaId ?: "dim011_mon01",
-                            isLarge = true,
+                            isLarge = false,
                             modifier = Modifier
                                 .size(60.dp)
                                 .offset(
@@ -932,7 +932,7 @@ fun MiddleBattleView(
                         
                         AttackSpriteImage(
                             characterId = activeCharacter?.charaId ?: "dim011_mon01",
-                            isLarge = true,
+                            isLarge = false,
                             modifier = Modifier
                                 .size(60.dp)
                                 .offset(
@@ -1284,7 +1284,7 @@ fun PlayerBattleView(
                     if (!isTransitioning && !hidePlayerAttackSprite) {
                     AttackSpriteImage(
                         characterId = characterId,
-                        isLarge = true,
+                        isLarge = false,
                         modifier = Modifier
                             .size(60.dp)
                             .offset(
@@ -1458,7 +1458,7 @@ fun EnemyBattleView(
                     if (!isTransitioning && !hideEnemyAttackSprite) {
                     AttackSpriteImage(
                         characterId = characterId,
-                        isLarge = true,
+                        isLarge = false,
                         modifier = Modifier
                             .size(60.dp)
                             .offset(
