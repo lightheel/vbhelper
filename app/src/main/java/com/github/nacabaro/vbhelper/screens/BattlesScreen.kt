@@ -218,6 +218,7 @@ fun AnimatedDamageNumber(
 
 @Composable
 fun BattleScreen(
+    userId: Long? = null,
     stage: String,
     playerName: String,
     opponentName: String,
@@ -227,6 +228,9 @@ fun BattleScreen(
     context: android.content.Context? = null,
     selectedBackgroundSet: Int = 0
 ) {
+    // Capture userId parameter for use in lambdas - use remember to ensure it's accessible in all scopes
+    val currentUserId = remember { userId }
+    
     val battleSystem = remember { ArenaBattleSystem() }
     val coroutineScope = rememberCoroutineScope()
     
@@ -621,6 +625,7 @@ fun BattleScreen(
             0 -> {
                 // Middle screen - both Digimon
                 MiddleBattleView(
+                    userId = currentUserId,
                     battleSystem = battleSystem,
                     stage = stage,
                     playerName = playerName,
@@ -757,6 +762,7 @@ fun BattleScreen(
 
 @Composable
 fun MiddleBattleView(
+    userId: Long? = null,
     battleSystem: ArenaBattleSystem,
     stage: String,
     playerName: String,
@@ -1072,6 +1078,9 @@ fun MiddleBattleView(
                 onClick = {
                     println("Attack button clicked!")
                     
+                    // Capture userId for use in this lambda
+                    val playerUserId = userId
+                    
                     // Get crit bar progress as float (0.0f to 100.0f)
                     val critBarProgressFloat = battleSystem.critBarProgress.toFloat()
                     
@@ -1100,7 +1109,7 @@ fun MiddleBattleView(
                         RetrofitHelper().getPVPWinner(
                             ctx, 
                             1, 
-                            2, 
+                            playerUserId?.toInt() ?: 2, 
                             activeCharacter?.name ?: "Player", 
                             playerStage, 
                             opponentStage, 
@@ -1653,6 +1662,7 @@ fun BattlesScreen() {
     // Auth state
     var isAuthenticated by remember { mutableStateOf(false) }
     var isCheckingAuth by remember { mutableStateOf(true) }
+    var userId by remember { mutableStateOf<Long?>(null) }
     // Track processed tokens to prevent duplicate API calls
     var processedTokens by remember { mutableStateOf<Set<String>>(emptySet()) }
 
@@ -1777,37 +1787,40 @@ fun BattlesScreen() {
         }
         
         if (token != null && token.isNotEmpty()) {
-            // Check if we've already processed this token
+            // Check if we've already successfully processed this token
             if (!processedTokens.contains(token)) {
-                // Mark token as being processed
-                processedTokens = processedTokens + token
                 println("BATTLESCREEN: Received token from URI: $token (URI: $uri)")
                 
                 // Exchange token with battle server
                 RetrofitHelper().authenticate(context, token) { response ->
                     if (response.success) {
+                        // Only mark as processed after successful authentication
+                        processedTokens = processedTokens + token
+                        
+                        // Extract userId from response
+                        val extractedUserId = response.userInfo?.userId?.toLongOrNull()
                         kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
-                            battleAuthContainer.authRepository.setAuthenticated(true, token)
+                            battleAuthContainer.authRepository.setAuthenticated(true, token, extractedUserId)
                         }
                         // Update UI state on main thread
                         kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
                             isAuthenticated = true
                             isCheckingAuth = false
-                            println("BATTLESCREEN: Authentication successful")
+                            userId = extractedUserId
+                            println("BATTLESCREEN: Authentication successful, userId: $extractedUserId")
                             android.widget.Toast.makeText(context, "Authentication successful!", android.widget.Toast.LENGTH_SHORT).show()
                         }
                     } else {
                         println("BATTLESCREEN: Authentication failed: ${response.message}")
+                        // Don't mark as processed on failure - allow retry with a new token
                         // Show toast on main thread
                         kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
                             android.widget.Toast.makeText(context, "Authentication failed: ${response.message}", android.widget.Toast.LENGTH_SHORT).show()
                         }
-                        // Remove token from processed set on failure so it can be retried if needed
-                        processedTokens = processedTokens - token
                     }
                 }
             } else {
-                println("BATTLESCREEN: Token already processed, skipping: $token")
+                println("BATTLESCREEN: Token already successfully processed, skipping: $token")
             }
         } else {
             println("BATTLESCREEN: No token found in URI: $uri (checked 'c' and 'token' parameters)")
@@ -1820,7 +1833,13 @@ fun BattlesScreen() {
             val authRepository = battleAuthContainer.authRepository
             val localAuthState = authRepository.isAuthenticated.first()
             val storedToken = authRepository.authToken.first()
-            println("BATTLESCREEN: Local authentication status - isAuthenticated: $localAuthState, hasToken: ${storedToken != null}")
+            val storedUserId = authRepository.userId.first()
+            println("BATTLESCREEN: Local authentication status - isAuthenticated: $localAuthState, hasToken: ${storedToken != null}, userId: $storedUserId")
+            
+            // Load stored userId if available
+            if (storedUserId != null) {
+                userId = storedUserId
+            }
             
             // Only check for token in intent if it's a fresh deep link (ACTION_VIEW intent)
             // This prevents processing stale tokens from previous sessions
@@ -1844,9 +1863,17 @@ fun BattlesScreen() {
                     // Update UI on main thread
                     kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
                         if (response.success) {
-                            println("BATTLESCREEN: Token validation successful")
+                            val extractedUserId = response.userInfo?.userId?.toLongOrNull() ?: storedUserId
+                            // Update stored userId if we got a new one
+                            if (extractedUserId != null && extractedUserId != storedUserId) {
+                                kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                                    authRepository.setAuthenticated(true, storedToken, extractedUserId)
+                                }
+                            }
+                            println("BATTLESCREEN: Token validation successful, userId: $extractedUserId")
                             isAuthenticated = true
                             isCheckingAuth = false
+                            userId = extractedUserId
                         } else {
                             println("BATTLESCREEN: Token validation failed: ${response.message}")
                             // Clear authentication state
@@ -2382,7 +2409,7 @@ fun BattlesScreen() {
                                                                 else -> 0
                                                             }
                                                             
-                                                            RetrofitHelper().getPVPWinner(context, 0, 2, cardId, apiStage, 0, opponent.charaId, apiStage) { apiResult ->
+                                                            RetrofitHelper().getPVPWinner(context, 0, userId?.toInt() ?: 2, cardId, apiStage, 0, opponent.charaId, apiStage) { apiResult ->
                                                                 // Update player character HP from API response
                                                                 activeCharacter = activeCharacter?.copy(
                                                                     baseHp = apiResult.playerHP,
@@ -2447,6 +2474,7 @@ fun BattlesScreen() {
 
                 "battle-main" -> {
                     BattleScreen(
+                        userId = userId,
                         stage = currentStage,
                         playerName = activeCharacter?.name ?: "Player",
                         opponentName = selectedOpponent?.name ?: "Opponent",
@@ -2487,7 +2515,7 @@ fun BattlesScreen() {
                         RetrofitHelper().getPVPWinner(
                             context, 
                             1, 
-                            2, 
+                            userId?.toInt() ?: 2, 
                             activeCharacter?.name ?: "Player", 
                             playerStage, 
                             opponentStage, 
@@ -2501,7 +2529,7 @@ fun BattlesScreen() {
                             RetrofitHelper().getPVPWinner(
                                 context, 
                                 2, 
-                                2, 
+                                userId?.toInt() ?: 2, 
                                 activeCharacter?.name ?: "Player", 
                                 playerStage, 
                                 opponentStage, 
