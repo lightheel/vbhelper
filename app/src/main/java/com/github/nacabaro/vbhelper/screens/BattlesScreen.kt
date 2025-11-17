@@ -34,6 +34,16 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.activity.ComponentActivity
+import android.os.Build
+import android.provider.Settings
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import kotlinx.coroutines.delay
@@ -1542,6 +1552,92 @@ fun EnemyBattleView(
 @Composable
 fun BattlesScreen() {
     val TAG = "BattleScreen"
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
+    
+    // Permission state
+    var hasStoragePermission by remember { mutableStateOf(false) }
+    
+    // Check if permission is already granted
+    // For Android 11+ (API 30+), check MANAGE_EXTERNAL_STORAGE
+    // For Android 10 and below, check READ_EXTERNAL_STORAGE
+    val permissionCheck = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11+ - check for MANAGE_EXTERNAL_STORAGE
+            android.os.Environment.isExternalStorageManager()
+        } else {
+            // Android 10 and below - check for READ_EXTERNAL_STORAGE
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+    
+    // Permission launcher for READ_EXTERNAL_STORAGE (Android 10 and below)
+    val readStoragePermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        hasStoragePermission = isGranted
+        if (isGranted) {
+            println("BATTLESCREEN: READ_EXTERNAL_STORAGE permission granted")
+        } else {
+            println("BATTLESCREEN: READ_EXTERNAL_STORAGE permission denied")
+        }
+    }
+    
+    // Launcher for opening settings to grant MANAGE_EXTERNAL_STORAGE (Android 11+)
+    val manageStorageSettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        // Re-check permission after returning from settings
+        val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            android.os.Environment.isExternalStorageManager()
+        } else {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+        hasStoragePermission = hasPermission
+        if (hasPermission) {
+            println("BATTLESCREEN: MANAGE_EXTERNAL_STORAGE permission granted")
+        } else {
+            println("BATTLESCREEN: MANAGE_EXTERNAL_STORAGE permission not granted")
+        }
+    }
+    
+    // Initialize permission state
+    LaunchedEffect(Unit) {
+        hasStoragePermission = permissionCheck
+        if (!permissionCheck && activity != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                // Android 11+ - need to request MANAGE_EXTERNAL_STORAGE
+                // This requires user to go to settings
+                println("BATTLESCREEN: Android 11+ detected - opening settings for MANAGE_EXTERNAL_STORAGE")
+                try {
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                    intent.data = Uri.parse("package:${context.packageName}")
+                    manageStorageSettingsLauncher.launch(intent)
+                } catch (e: Exception) {
+                    println("BATTLESCREEN: Error opening settings: ${e.message}")
+                    // Fallback: try the general manage external storage settings
+                    try {
+                        val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                        manageStorageSettingsLauncher.launch(intent)
+                    } catch (e2: Exception) {
+                        println("BATTLESCREEN: Error opening fallback settings: ${e2.message}")
+                    }
+                }
+            } else {
+                // Android 10 and below - request READ_EXTERNAL_STORAGE
+                println("BATTLESCREEN: Requesting READ_EXTERNAL_STORAGE permission...")
+                readStoragePermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        } else if (permissionCheck) {
+            println("BATTLESCREEN: Storage permission already granted")
+        }
+    }
 
     var currentView by remember { mutableStateOf("main") }
 
@@ -1601,8 +1697,6 @@ fun BattlesScreen() {
         else -> rookieCharacters
     }
 
-    val context = LocalContext.current
-    
     // Determine if player can battle based on stage (derived from activeUserCharacter)
     val canBattle = activeUserCharacter?.stage?.let { it >= 2 } ?: false
     
@@ -1650,15 +1744,19 @@ fun BattlesScreen() {
         }
     }
     
-    // Initialize sprite files on first load
-    LaunchedEffect(Unit) {
-        println("BATTLESCREEN: LaunchedEffect triggered - checking sprite files...")
-        val spriteFileManager = SpriteFileManager(context)
-        if (!spriteFileManager.checkSpriteFilesExist()) {
-            println("BATTLESCREEN: Copying sprite files from external storage to internal storage...")
-            spriteFileManager.copySpriteFilesToInternalStorage()
+    // Initialize sprite files on first load - check that they exist in external storage
+    // Only check if permission is granted
+    LaunchedEffect(hasStoragePermission) {
+        if (hasStoragePermission) {
+            println("BATTLESCREEN: LaunchedEffect triggered - checking sprite files...")
+            val spriteFileManager = SpriteFileManager(context)
+            if (spriteFileManager.checkSpriteFilesExist()) {
+                println("BATTLESCREEN: Sprite files exist in external storage")
+            } else {
+                println("BATTLESCREEN: Sprite files not found in external storage")
+            }
         } else {
-            println("BATTLESCREEN: Sprite files already exist in internal storage")
+            println("BATTLESCREEN: Cannot check sprite files - storage permission not granted")
         }
     }
     
@@ -1672,10 +1770,12 @@ fun BattlesScreen() {
             kotlinx.coroutines.withContext(Dispatchers.IO) {
                 // First, let's check all characters to see what's in the database
                 val allCharacters = database.userCharacterDao().getAllCharacters()
+                /*
                 println("BATTLESCREEN: Found ${allCharacters.size} total characters in database")
                 allCharacters.forEach { char ->
                     println("  - Character ID: ${char.id}, CharId: ${char.charId}")
                 }
+                 */
                 
                 val activeChar = database.userCharacterDao().getActiveCharacter()
                 println("BATTLESCREEN: getActiveCharacter() returned: $activeChar")
@@ -2211,10 +2311,11 @@ fun AnimatedBattleBackground(
         println("DEBUG: Screen dimensions = ${screenWidth.value}x${screenHeight.value}dp")
     }
 
-    // Load background image from internal storage
+    // Load background image from external storage
     LaunchedEffect(Unit) {
         try {
-            val backgroundFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/BattleBg_0015_BattleBg_0012.png")
+            val externalDir = android.os.Environment.getExternalStorageDirectory()
+            val backgroundFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/BattleBg_0015_BattleBg_0012.png")
             if (backgroundFile.exists()) {
                 backgroundBitmap = BitmapFactory.decodeFile(backgroundFile.absolutePath)
                 println("Successfully loaded battle background: ${backgroundFile.absolutePath}")
@@ -2317,13 +2418,14 @@ fun MultiLayerAnimatedBattleBackground(
         println("DEBUG: Multi-layer screen dimensions = ${screenWidth.value}x${screenHeight.value}dp")
     }
 
-    // Load all three background layers from internal storage
+    // Load all three background layers from external storage
     LaunchedEffect(backgroundSetIndex) {
         try {
+            val externalDir = android.os.Environment.getExternalStorageDirectory()
             val selectedSet = backgroundSets[backgroundSetIndex]
             
             // Back layer
-            val backLayerFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/${selectedSet.backLayer}")
+            val backLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/${selectedSet.backLayer}")
             if (backLayerFile.exists()) {
                 backLayerBitmap = BitmapFactory.decodeFile(backLayerFile.absolutePath)
                 println("Successfully loaded back layer background (Set ${backgroundSetIndex + 1}): ${backLayerFile.absolutePath}")
@@ -2332,7 +2434,7 @@ fun MultiLayerAnimatedBattleBackground(
             }
             
             // Middle layer
-            val middleLayerFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/${selectedSet.middleLayer}")
+            val middleLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/${selectedSet.middleLayer}")
             if (middleLayerFile.exists()) {
                 middleLayerBitmap = BitmapFactory.decodeFile(middleLayerFile.absolutePath)
                 println("Successfully loaded middle layer background (Set ${backgroundSetIndex + 1}): ${middleLayerFile.absolutePath}")
@@ -2341,7 +2443,7 @@ fun MultiLayerAnimatedBattleBackground(
             }
             
             // Front layer
-            val frontLayerFile = File(context.filesDir, "battle_sprites/extracted_battlebgs/${selectedSet.frontLayer}")
+            val frontLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/${selectedSet.frontLayer}")
             if (frontLayerFile.exists()) {
                 frontLayerBitmap = BitmapFactory.decodeFile(frontLayerFile.absolutePath)
                 println("Successfully loaded front layer background (Set ${backgroundSetIndex + 1}): ${frontLayerFile.absolutePath}")

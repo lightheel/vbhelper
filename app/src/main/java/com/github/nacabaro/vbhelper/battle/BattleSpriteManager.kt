@@ -38,9 +38,10 @@ class BattleSpriteManager(private val context: Context) {
     private val gson = Gson()
     private val spriteCache = mutableMapOf<String, Bitmap>()
     
-    // Get the internal storage directory for sprite files
+    // Get the external storage directory for sprite files
     private fun getSpriteBaseDir(): File {
-        return File(context.filesDir, "battle_sprites/extracted_assets")
+        val externalDir = android.os.Environment.getExternalStorageDirectory()
+        return File(externalDir, "VBHelper/battle_sprites/extracted_assets")
     }
     
     fun loadSprite(spriteName: String, atlasName: String): Bitmap? {

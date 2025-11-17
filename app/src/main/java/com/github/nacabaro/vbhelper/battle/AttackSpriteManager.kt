@@ -32,9 +32,10 @@ class AttackSpriteManager(private val context: Context) {
     private val gson = Gson()
     private val characterDataCache = mutableMapOf<String, CharacterData>()
     
-    // Get the internal storage directory for attack sprites
-    private fun getAttackTexturesPath(): String {
-        return "battle_sprites/extracted_atksprites"
+    // Get the external storage directory for attack sprites
+    private fun getAttackTexturesBaseDir(): File {
+        val externalDir = android.os.Environment.getExternalStorageDirectory()
+        return File(externalDir, "VBHelper/battle_sprites/extracted_atksprites")
     }
     
     fun getAttackSprite(characterId: String, isLarge: Boolean = false): Bitmap? {
@@ -58,9 +59,8 @@ class AttackSpriteManager(private val context: Context) {
                 return null
             }
             
-            // Load the attack sprite from internal storage
-            val attackFilePath = "${getAttackTexturesPath()}/$attackFileName.png"
-            val attackFile = File(context.filesDir, attackFilePath)
+            // Load the attack sprite from external storage
+            val attackFile = File(getAttackTexturesBaseDir(), "$attackFileName.png")
             println("AttackSpriteManager: Attack file path = ${attackFile.absolutePath}")
             println("AttackSpriteManager: Attack file exists = ${attackFile.exists()}")
             
@@ -88,8 +88,9 @@ class AttackSpriteManager(private val context: Context) {
         }
         
         try {
-            // Load character data from JSON file in internal storage
-            val characterDataFile = File(context.filesDir, "battle_sprites/extracted_digimon_stats/character_data/CharacterData.json")
+            // Load character data from JSON file in external storage
+            val externalDir = android.os.Environment.getExternalStorageDirectory()
+            val characterDataFile = File(externalDir, "VBHelper/battle_sprites/extracted_digimon_stats/character_data/CharacterData.json")
             println("AttackSpriteManager: Character data file path = ${characterDataFile.absolutePath}")
             println("AttackSpriteManager: Character data file exists = ${characterDataFile.exists()}")
             

@@ -92,4 +92,11 @@ dependencies {
     implementation(libs.protobuf.javalite)
     implementation("androidx.compose.material:material")
     implementation("androidx.datastore:datastore-preferences:1.1.7")
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // HTTP request logging
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 }

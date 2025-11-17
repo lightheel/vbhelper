@@ -10,9 +10,10 @@ import java.io.File
 class HitEffectSpriteManager(private val context: Context) {
     private val spriteCache = mutableMapOf<String, Bitmap>()
     
-    // Get the internal storage directory for hit effect sprites
+    // Get the external storage directory for hit effect sprites
     private fun getHitSpritesDir(): File {
-        return File(context.filesDir, "battle_sprites/extracted_hit_sprites")
+        val externalDir = android.os.Environment.getExternalStorageDirectory()
+        return File(externalDir, "VBHelper/battle_sprites/extracted_hit_sprites")
     }
     
     /**

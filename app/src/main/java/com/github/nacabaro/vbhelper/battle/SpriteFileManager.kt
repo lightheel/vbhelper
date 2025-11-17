@@ -9,7 +9,7 @@ import java.io.FileInputStream
 class SpriteFileManager(private val context: Context) {
     
     // Get the external storage directory where files are already located
-    private fun getExternalSpriteBaseDir(): File {
+    fun getExternalSpriteBaseDir(): File {
         val externalDir = android.os.Environment.getExternalStorageDirectory()
         return File(externalDir, "VBHelper/battle_sprites")
     }
@@ -271,7 +271,7 @@ class SpriteFileManager(private val context: Context) {
     }
     
     fun checkSpriteFilesExist(): Boolean {
-        val battleSpritesDir = getInternalSpriteBaseDir()
+        val battleSpritesDir = getExternalSpriteBaseDir()
         val extractedAssetsDir = File(battleSpritesDir, "extracted_assets")
         val extractedStatsDir = File(battleSpritesDir, "extracted_digimon_stats")
         val atkspritesDir = File(battleSpritesDir, "extracted_atksprites")
@@ -283,7 +283,7 @@ class SpriteFileManager(private val context: Context) {
         val atkspritesExist = atkspritesDir.exists() && atkspritesDir.listFiles()?.isNotEmpty() == true
         val battlebgsExist = battlebgsDir.exists() && battlebgsDir.listFiles()?.isNotEmpty() == true
         
-        println("Checking sprite files exist in internal storage:")
+        println("Checking sprite files exist in external storage:")
         println("  battle_sprites exists: $battleSpritesExist")
         println("  extracted_assets exists: $assetsExist")
         println("  extracted_digimon_stats exists: $statsExist")
