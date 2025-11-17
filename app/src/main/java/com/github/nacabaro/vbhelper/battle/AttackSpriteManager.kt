@@ -43,15 +43,12 @@ class AttackSpriteManager(private val context: Context) {
         try {
             // Get character data
             val characterData = getCharacterData(characterId) ?: return null
-            println("AttackSpriteManager: Got character data: $characterData")
-            
             // Determine which attack file to use
             val attackFileName = if (isLarge) {
                 characterData.laugeFileName
             } else {
                 characterData.smalefilename
             }
-            println("AttackSpriteManager: Attack filename = $attackFileName")
             
             // Skip if no attack file
             if (attackFileName == "0") {
@@ -61,12 +58,9 @@ class AttackSpriteManager(private val context: Context) {
             
             // Load the attack sprite from external storage
             val attackFile = File(getAttackTexturesBaseDir(), "$attackFileName.png")
-            println("AttackSpriteManager: Attack file path = ${attackFile.absolutePath}")
-            println("AttackSpriteManager: Attack file exists = ${attackFile.exists()}")
             
             return if (attackFile.exists()) {
                 val bitmap = BitmapFactory.decodeFile(attackFile.absolutePath)
-                println("AttackSpriteManager: Successfully loaded bitmap = ${bitmap != null}")
                 bitmap
             } else {
                 println("AttackSpriteManager: Attack file does not exist")
@@ -80,10 +74,8 @@ class AttackSpriteManager(private val context: Context) {
     }
     
     private fun getCharacterData(characterId: String): CharacterData? {
-        println("AttackSpriteManager: Getting character data for characterId=$characterId")
         // Check cache first
         if (characterDataCache.containsKey(characterId)) {
-            println("AttackSpriteManager: Found character data in cache")
             return characterDataCache[characterId]
         }
         
@@ -91,8 +83,6 @@ class AttackSpriteManager(private val context: Context) {
             // Load character data from JSON file in external storage
             val externalDir = android.os.Environment.getExternalStorageDirectory()
             val characterDataFile = File(externalDir, "VBHelper/battle_sprites/extracted_digimon_stats/character_data/CharacterData.json")
-            println("AttackSpriteManager: Character data file path = ${characterDataFile.absolutePath}")
-            println("AttackSpriteManager: Character data file exists = ${characterDataFile.exists()}")
             
             if (!characterDataFile.exists()) {
                 println("AttackSpriteManager: Character data file does not exist, using default data")
@@ -109,7 +99,6 @@ class AttackSpriteManager(private val context: Context) {
             }
             
             val jsonContent = characterDataFile.readText()
-            println("AttackSpriteManager: JSON content length = ${jsonContent.length}")
             
             // Parse the JSON response
             val response = gson.fromJson(jsonContent, CharacterDataResponse::class.java)
@@ -136,7 +125,6 @@ class AttackSpriteManager(private val context: Context) {
                         )
                         
                         characterDataCache[characterId] = characterData
-                        println("AttackSpriteManager: Found character data: $characterData")
                         return characterData
                     }
                 }
@@ -152,7 +140,6 @@ class AttackSpriteManager(private val context: Context) {
             )
             
             characterDataCache[characterId] = characterData
-            println("AttackSpriteManager: Created default character data: $characterData")
             return characterData
             
         } catch (e: Exception) {

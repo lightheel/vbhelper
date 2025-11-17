@@ -1051,39 +1051,28 @@ fun MiddleBattleView(
                             when (apiResult.state) {
                                  1 -> {
                                      // Match is still ongoing - update HP and continue
-                                     println("Round ${apiResult.currentRound}: Player HP=${apiResult.playerHP}, Opponent HP=${apiResult.opponentHP}")
-                                     
                                                                                                          // Set pending damage based on API result
                                      if (apiResult.playerAttackDamage > 0) {
                                           // Player attack hit - enemy takes damage at end of player animation
-                                          println("Player attack hit! Enemy will take ${apiResult.playerAttackDamage} damage")
                                           onSetPendingDamage(0f, apiResult.playerAttackDamage.toFloat()) // Opponent takes damage
                                           battleSystem.setAttackHitState(true)
                                          
                                          // Also check if enemy counter-attacks and hits
                                          if (apiResult.opponentAttackDamage > 0) {
-                                             println("Enemy counter-attack hits! Player takes ${apiResult.opponentAttackDamage} damage")
                                              onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), apiResult.playerAttackDamage.toFloat()) // Both take damage
                                          }
                                       } else {
                                          // Player attack missed - enemy counter-attacks
-                                         println("Player attack missed! Enemy counter-attacks")
                                           battleSystem.setAttackHitState(false)
                                          // Set up counter-attack - determine if it hits based on API result
                                          val counterAttackHits = apiResult.opponentAttackDamage > 0
-                                         println("Setting up counter-attack: counterAttackHits=$counterAttackHits, opponentAttackDamage=${apiResult.opponentAttackDamage}")
-                                         println("Full API response: status=${apiResult.status}, state=${apiResult.state}, playerAttackHit=${apiResult.playerAttackHit}, playerAttackDamage=${apiResult.playerAttackDamage}, opponentAttackDamage=${apiResult.opponentAttackDamage}, playerHP=${apiResult.playerHP}, opponentHP=${apiResult.opponentHP}")
-                                         println("DEBUG: Using playerAttackDamage > 0 instead of playerAttackHit for hit detection")
                                          
                                          // Use opponentAttackDamage to determine counter-attack hit
                                          val finalCounterAttackHits = counterAttackHits
-                                         println("Using opponentAttackDamage > 0 for counter-attack: $finalCounterAttackHits")
                                          
                                          if (finalCounterAttackHits) {
-                                             println("Counter-attack hits! Player takes ${apiResult.opponentAttackDamage} damage")
                                              onSetPendingDamage(apiResult.opponentAttackDamage.toFloat(), 0f) // Player takes damage
                                          } else {
-                                             println("Counter-attack misses! Player dodges")
                                              onSetPendingDamage(0f, 0f) // No damage
                                          }
                                          battleSystem.setupCounterAttack(finalCounterAttackHits)
@@ -1671,13 +1660,11 @@ fun BattlesScreen() {
         
         val currentCharacter = activeUserCharacter
         if (currentCharacter != null && canBattle && playerBattleType != null) {
-            println("BATTLESCREEN: Loading opponents for stage ${currentCharacter.stage}, battle type: $playerBattleType")
             try {
                 RetrofitHelper().getOpponents(context, playerBattleType!!) { opponents ->
                     try {
                         // Create a new list to trigger UI recomposition
                         opponentsList = ArrayList(opponents.opponentsList)
-                        println("BATTLESCREEN: Loaded ${opponents.opponentsList.size} opponents from API")
                     } catch (e: Exception) {
                         Log.d(TAG, "Error processing opponents data: ${e.message}")
                         e.printStackTrace()
@@ -1714,7 +1701,6 @@ fun BattlesScreen() {
             if (!processedTokens.contains(token)) {
                 // Mark token as being processed IMMEDIATELY to prevent duplicate API calls
                 processedTokens = processedTokens + token
-                println("BATTLESCREEN: Received token from URI: $token (URI: $uri) - marking as processing")
                 
                 // Exchange token with battle server
                 RetrofitHelper().authenticate(context, token) { response ->
@@ -1770,8 +1756,6 @@ fun BattlesScreen() {
                         }
                     }
                 }
-            } else {
-                println("BATTLESCREEN: Token already processed (or currently processing), skipping: $token")
             }
         } else {
             println("BATTLESCREEN: No token found in URI: $uri (checked 'c' and 'token' parameters)")
@@ -1785,7 +1769,6 @@ fun BattlesScreen() {
             val localAuthState = authRepository.isAuthenticated.first()
             val storedToken = authRepository.authToken.first()
             val storedUserId = authRepository.userId.first()
-            println("BATTLESCREEN: Local authentication status - isAuthenticated: $localAuthState, hasToken: ${storedToken != null}, userId: $storedUserId")
             
             // Load stored userId if available
             if (storedUserId != null) {
@@ -1799,7 +1782,6 @@ fun BattlesScreen() {
                 isAuthenticated = true
                 isCheckingAuth = false
                 userId = storedUserId
-                println("BATTLESCREEN: Restored authentication state from storage (userId: $storedUserId) - isCheckingAuth set to false")
             }
             
             // Only check for token in intent if it's a fresh deep link (ACTION_VIEW intent)
@@ -1808,9 +1790,7 @@ fun BattlesScreen() {
             val intent = activity?.intent
             if (intent?.action == Intent.ACTION_VIEW) {
                 intent.data?.let { uri ->
-                    println("BATTLESCREEN: Found ACTION_VIEW intent with URI: $uri")
                     if (uri.getQueryParameter("c") != null || uri.getQueryParameter("token") != null) {
-                        println("BATTLESCREEN: Token found in fresh deep link, processing...")
                         handleTokenFromUri(uri)
                         return@LaunchedEffect // Don't open auth URL if we're processing a token
                     }
@@ -1820,7 +1800,6 @@ fun BattlesScreen() {
             // If we have a stored token, validate it with the server in the background
             if (localAuthState && storedToken != null && storedToken.isNotEmpty()) {
                 // State already set above, now validate in background
-                println("BATTLESCREEN: Validating stored token with server in background...")
                 RetrofitHelper().authenticate(context, storedToken) { response ->
                     // Update UI on main thread
                     kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
@@ -1832,7 +1811,6 @@ fun BattlesScreen() {
                                     authRepository.setAuthenticated(true, storedToken, extractedUserId)
                                 }
                             }
-                            println("BATTLESCREEN: Token validation successful, userId: $extractedUserId")
                             isAuthenticated = true
                             isCheckingAuth = false
                             userId = extractedUserId
@@ -1897,23 +1875,18 @@ fun BattlesScreen() {
         if (intent?.action == Intent.ACTION_VIEW) {
             val uri = intent.data
             if (uri != null) {
-                println("BATTLESCREEN: Checking ACTION_VIEW intent data - URI: $uri, scheme: ${uri.scheme}, host: ${uri.host}, path: ${uri.path}")
-                println("BATTLESCREEN: All query parameters: ${uri.queryParameterNames}")
                 
                 // Handle vbhelper://auth?token= or vbhelper://auth?c= deep link
                 if (uri.scheme == "vbhelper" && uri.host == "auth") {
-                    println("BATTLESCREEN: Detected vbhelper://auth deep link")
                     handleTokenFromUri(uri)
                 }
                 // Handle http://localhost:8080/authenticate?c= redirect
                 else if ((uri.scheme == "http" || uri.scheme == "https") && 
                          (uri.host == "localhost" || uri.host == "127.0.0.1" || uri.host?.contains("8080") == true)) {
-                    println("BATTLESCREEN: Detected localhost redirect, checking for token")
                     handleTokenFromUri(uri)
                 }
                 // Also check if there's a 'c' or 'token' parameter in any URL
                 else if (uri.getQueryParameter("c") != null || uri.getQueryParameter("token") != null) {
-                    println("BATTLESCREEN: Found token parameter (c or token) in URI, attempting to authenticate")
                     handleTokenFromUri(uri)
                 } else {
                     println("BATTLESCREEN: URI found but no token parameter detected")
@@ -1938,9 +1911,7 @@ fun BattlesScreen() {
                 val intent = activity?.intent
                 if (intent?.action == Intent.ACTION_VIEW) {
                     intent.data?.let { uri ->
-                        println("BATTLESCREEN: Activity resumed with ACTION_VIEW intent, checking for token - URI: $uri")
                         if (uri.getQueryParameter("c") != null || uri.getQueryParameter("token") != null) {
-                            println("BATTLESCREEN: Found token in fresh deep link on resume")
                             handleTokenFromUri(uri)
                         }
                     }
@@ -2204,7 +2175,6 @@ fun BattlesScreen() {
                                             }
                                         }
                                     } else {
-                                        println("BATTLESCREEN: UI - No opponents in list, showing message")
                                         Text("No opponents available for your stage", 
                                              fontSize = 16.sp, 
                                              color = Color(0xFFFFA500), // Orange color
@@ -2288,7 +2258,6 @@ fun BattlesScreen() {
                                 selectedOpponent?.name ?: "Opponent", 
                                 opponentStage
                             ) { cleanupResult ->
-                                println("Cleanup call completed")
                             }
                         }
                     }
@@ -2460,7 +2429,6 @@ fun MultiLayerAnimatedBattleBackground(
     LaunchedEffect(Unit) {
         screenWidth = with(density) { configuration.screenWidthDp.dp }
         screenHeight = with(density) { configuration.screenHeightDp.dp }
-        println("DEBUG: Multi-layer screen dimensions = ${screenWidth.value}x${screenHeight.value}dp")
     }
 
     // Load all three background layers from external storage
@@ -2473,7 +2441,6 @@ fun MultiLayerAnimatedBattleBackground(
             val backLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/${selectedSet.backLayer}")
             if (backLayerFile.exists()) {
                 backLayerBitmap = BitmapFactory.decodeFile(backLayerFile.absolutePath)
-                println("Successfully loaded back layer background (Set ${backgroundSetIndex + 1}): ${backLayerFile.absolutePath}")
             } else {
                 println("Back layer background file not found: ${backLayerFile.absolutePath}")
             }
@@ -2482,7 +2449,6 @@ fun MultiLayerAnimatedBattleBackground(
             val middleLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/${selectedSet.middleLayer}")
             if (middleLayerFile.exists()) {
                 middleLayerBitmap = BitmapFactory.decodeFile(middleLayerFile.absolutePath)
-                println("Successfully loaded middle layer background (Set ${backgroundSetIndex + 1}): ${middleLayerFile.absolutePath}")
             } else {
                 println("Middle layer background file not found: ${middleLayerFile.absolutePath}")
             }
@@ -2491,7 +2457,6 @@ fun MultiLayerAnimatedBattleBackground(
             val frontLayerFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/${selectedSet.frontLayer}")
             if (frontLayerFile.exists()) {
                 frontLayerBitmap = BitmapFactory.decodeFile(frontLayerFile.absolutePath)
-                println("Successfully loaded front layer background (Set ${backgroundSetIndex + 1}): ${frontLayerFile.absolutePath}")
             } else {
                 println("Front layer background file not found: ${frontLayerFile.absolutePath}")
             }

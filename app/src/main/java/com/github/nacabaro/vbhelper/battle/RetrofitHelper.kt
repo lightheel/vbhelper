@@ -205,9 +205,6 @@ class RetrofitHelper {
 
             val service: AuthService = retrofit.create<AuthService>(AuthService::class.java)
             val request = AuthenticateRequest(userToken = token)
-            println("RetrofitHelper: Sending request to api/auth/validate with userToken: $token")
-            //println("RetrofitHelper: Request object: $request")
-            //println("RetrofitHelper: Request JSON will be: {\"userToken\": \"$token\"}")
             val call: Call<AuthenticateResponse> = service.validate(request)
 
             call.enqueue(object : Callback<AuthenticateResponse> {
@@ -218,13 +215,10 @@ class RetrofitHelper {
                 }
 
                 override fun onResponse(call: Call<AuthenticateResponse>, response: Response<AuthenticateResponse>) {
-                    println("RetrofitHelper: Validate API response received - Code: ${response.code()}")
-                    println("RetrofitHelper: Response body: ${response.body()}")
 
                     if (response.isSuccessful) {
                         val authResponse: AuthenticateResponse? = response.body()
                         if (authResponse != null) {
-                            println("RetrofitHelper: Validation successful: ${authResponse.success}, message: ${authResponse.message}")
                             callback(authResponse)
                         } else {
                             println("RetrofitHelper: Validation failed: Invalid response body")

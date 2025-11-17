@@ -24,8 +24,6 @@ fun SpriteImage(
         bitmap = spriteManager.loadSpriteFrame(characterId, frameNumber)
         if (bitmap == null) {
             println("Failed to load sprite frame: $frameNumber for character: $characterId")
-        } else {
-            println("Successfully loaded sprite frame: $frameNumber for character: $characterId")
         }
     }
     

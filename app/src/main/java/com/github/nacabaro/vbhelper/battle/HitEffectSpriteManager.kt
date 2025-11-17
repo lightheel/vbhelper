@@ -44,8 +44,6 @@ class HitEffectSpriteManager(private val context: Context) {
                 return null
             }
             
-            println("Successfully loaded hit sprite: $spriteName.png (${bitmap.width}x${bitmap.height})")
-            
             // Cache the result
             spriteCache[cacheKey] = bitmap
             

@@ -63,14 +63,11 @@ fun AnimatedSpriteImage(
     // Update sprite when animation state changes
     LaunchedEffect(animationStateMachine.currentFrameNumber) {
         val frameNumber = animationStateMachine.getCurrentFrame()
-        
-        println("Loading animated sprite frame: $frameNumber for character: $characterId")
+
         bitmap = spriteManager.loadSpriteFrame(characterId, frameNumber)
         
         if (bitmap == null) {
             println("Failed to load animated sprite frame: $frameNumber for character: $characterId")
-        } else {
-            println("Successfully loaded animated sprite frame: $frameNumber for character: $characterId")
         }
     }
     

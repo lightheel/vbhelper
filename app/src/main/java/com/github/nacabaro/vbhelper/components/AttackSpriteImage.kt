@@ -30,7 +30,6 @@ fun AttackSpriteImage(
             val loadedBitmap = withContext(Dispatchers.IO) {
                 attackSpriteManager.getAttackSprite(characterId, isLarge)
             }
-            println("AttackSpriteImage: Loaded bitmap = ${loadedBitmap != null}")
             bitmap = loadedBitmap
         }
     }

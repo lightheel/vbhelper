@@ -112,7 +112,6 @@ class ArenaBattleSystem {
     val opponentAttackIsHit: Boolean get() = _opponentAttackIsHit
 
     fun startPlayerAttack() {
-        Log.d(TAG, "Starting player attack")
         _attackPhase = 1
         _attackProgress = 0f
         _isPlayerAttacking = true
@@ -121,7 +120,6 @@ class ArenaBattleSystem {
     }
 
     fun startOpponentAttack() {
-        Log.d(TAG, "Starting opponent attack")
         _attackPhase = 3
         _attackProgress = 0f
         _isPlayerAttacking = false
@@ -131,7 +129,6 @@ class ArenaBattleSystem {
     fun advanceAttackPhase() {
         _attackPhase++
         _attackProgress = 0f
-        Log.d(TAG, "Advanced to attack phase: $_attackPhase")
     }
 
     fun setAttackProgress(progress: Float) {
@@ -144,12 +141,10 @@ class ArenaBattleSystem {
 
     fun switchToView(view: Int) {
         _currentView = view
-        Log.d(TAG, "Switched to view: $view")
     }
 
     fun enableAttackButton() {
         _isAttackButtonEnabled = true
-        Log.d(TAG, "Attack button enabled")
     }
 
     fun applyDamage(isPlayer: Boolean, damage: Float) {
@@ -158,19 +153,16 @@ class ArenaBattleSystem {
         } else {
             _opponentHP = (_opponentHP - damage).coerceAtLeast(0f)
         }
-        Log.d(TAG, "Applied damage: ${if (isPlayer) "player" else "opponent"} -$damage")
     }
 
     fun updateHPFromAPI(playerHP: Float, opponentHP: Float) {
         _playerHP = playerHP
         _opponentHP = opponentHP
-        Log.d(TAG, "Updated HP from API: Player=$playerHP, Opponent=$opponentHP")
     }
 
     fun initializeHP(playerMaxHP: Float, opponentMaxHP: Float) {
         _playerHP = playerMaxHP
         _opponentHP = opponentMaxHP
-        Log.d(TAG, "Initialized HP: Player=$playerMaxHP, Opponent=$opponentMaxHP")
     }
 
     fun completeAttackAnimation(playerDamage: Float = 0f, opponentDamage: Float = 0f) {
@@ -180,7 +172,6 @@ class ArenaBattleSystem {
         if (opponentDamage > 0f) {
             applyDamage(false, opponentDamage)
         }
-        Log.d(TAG, "Completed attack animation with damage: Player=$playerDamage, Opponent=$opponentDamage")
     }
 
     fun resetAttackState() {
@@ -209,7 +200,6 @@ class ArenaBattleSystem {
         _shouldCounterAttack = false
         _counterAttackIsHit = false
         _opponentAttackIsHit = false
-        Log.d(TAG, "Reset attack state")
     }
 
     fun checkBattleOver(): Boolean {
@@ -218,7 +208,6 @@ class ArenaBattleSystem {
 
     fun endBattle() {
         _isBattleOver = true
-        Log.d(TAG, "Battle ended")
     }
 
     fun updateCritBarProgress(progress: Int) {
@@ -231,7 +220,6 @@ class ArenaBattleSystem {
         _isDodging = true
         _dodgeProgress = 0f
         _dodgeDirection = 1f // Start moving up
-        Log.d(TAG, "Started dodge animation")
     }
 
     fun setDodgeProgress(progress: Float) {
@@ -245,14 +233,12 @@ class ArenaBattleSystem {
     fun endDodge() {
         _isDodging = false
         _dodgeProgress = 0f
-        Log.d(TAG, "Ended dodge animation")
     }
 
     // Hit animation methods
     fun startHit() {
         _isHit = true
         _hitProgress = 0f
-        Log.d(TAG, "Started hit animation")
     }
 
     fun setHitProgress(progress: Float) {
@@ -262,7 +248,6 @@ class ArenaBattleSystem {
     fun endHit() {
         _isHit = false
         _hitProgress = 0f
-        Log.d(TAG, "Ended hit animation")
     }
 
     // Player-specific dodge methods
@@ -270,13 +255,11 @@ class ArenaBattleSystem {
         _isPlayerDodging = true
         _playerDodgeProgress = 0f
         _playerDodgeDirection = 1f
-        Log.d(TAG, "Started player dodge animation")
     }
 
     fun endPlayerDodge() {
         _isPlayerDodging = false
         _playerDodgeProgress = 0f
-        Log.d(TAG, "Ended player dodge animation")
     }
 
     fun setPlayerDodgeProgress(progress: Float) {
@@ -292,13 +275,11 @@ class ArenaBattleSystem {
         _isOpponentDodging = true
         _opponentDodgeProgress = 0f
         _opponentDodgeDirection = 1f
-        Log.d(TAG, "Started opponent dodge animation")
     }
 
     fun endOpponentDodge() {
         _isOpponentDodging = false
         _opponentDodgeProgress = 0f
-        Log.d(TAG, "Ended opponent dodge animation")
     }
 
     fun setOpponentDodgeProgress(progress: Float) {
@@ -313,67 +294,55 @@ class ArenaBattleSystem {
     fun startPlayerHit() {
         _isPlayerHit = true
         _hitProgress = 0f
-        Log.d(TAG, "Started player hit animation")
     }
 
     fun startPlayerHitDelayed() {
         _isPlayerHitDelayed = true
-        Log.d(TAG, "Started delayed player hit animation")
     }
 
     fun endPlayerHit() {
         _isPlayerHit = false
         _hitProgress = 0f
-        Log.d(TAG, "Ended player hit animation")
     }
 
     fun endPlayerHitDelayed() {
         _isPlayerHitDelayed = false
-        Log.d(TAG, "Ended delayed player hit animation")
     }
 
     // Opponent-specific hit methods
     fun startOpponentHit() {
         _isOpponentHit = true
         _hitProgress = 0f
-        Log.d(TAG, "Started opponent hit animation")
     }
 
     fun startOpponentHitDelayed() {
         _isOpponentHitDelayed = true
-        Log.d(TAG, "Started delayed opponent hit animation")
     }
 
     fun endOpponentHit() {
         _isOpponentHit = false
         _hitProgress = 0f
-        Log.d(TAG, "Ended opponent hit animation")
     }
 
     fun endOpponentHitDelayed() {
         _isOpponentHitDelayed = false
-        Log.d(TAG, "Ended delayed opponent hit animation")
     }
 
     // Delayed shake methods
     fun startPlayerShakeDelayed() {
         _isPlayerShakeDelayed = true
-        Log.d(TAG, "Started delayed player shake animation")
     }
 
     fun endPlayerShakeDelayed() {
         _isPlayerShakeDelayed = false
-        Log.d(TAG, "Ended delayed player shake animation")
     }
 
     fun startOpponentShakeDelayed() {
         _isOpponentShakeDelayed = true
-        Log.d(TAG, "Started delayed opponent shake animation")
     }
 
     fun endOpponentShakeDelayed() {
         _isOpponentShakeDelayed = false
-        Log.d(TAG, "Ended delayed opponent shake animation")
     }
 
     // Combined method to handle attack result
@@ -386,7 +355,6 @@ class ArenaBattleSystem {
             // Player attack missed - opponent dodges
             startOpponentDodge()
         }
-        Log.d(TAG, "Handled player attack result: ${if (isHit) "HIT" else "DODGE"}")
     }
 
     // Method to handle opponent attack result
@@ -399,14 +367,12 @@ class ArenaBattleSystem {
             // Opponent attack missed - player dodges
             startPlayerDodge()
         }
-        Log.d(TAG, "Handled opponent attack result: ${if (isHit) "HIT" else "DODGE"}")
     }
 
     // Counter-attack methods
     fun setupCounterAttack(isHit: Boolean) {
         _shouldCounterAttack = true
         _counterAttackIsHit = isHit
-        Log.d(TAG, "Setup counter-attack: ${if (isHit) "HIT" else "DODGE"}, isHit=$isHit")
     }
 
     fun startCounterAttack() {
@@ -415,6 +381,5 @@ class ArenaBattleSystem {
         _isPlayerAttacking = false
         _currentView = 1
         _opponentAttackIsHit = _counterAttackIsHit
-        Log.d(TAG, "Started counter-attack with opponentAttackIsHit=$_opponentAttackIsHit, counterAttackIsHit=$_counterAttackIsHit")
     }
 } 

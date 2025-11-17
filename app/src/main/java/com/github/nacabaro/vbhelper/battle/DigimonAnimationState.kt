@@ -79,11 +79,13 @@ class DigimonAnimationStateMachine(
         DigimonAnimationType.ATTACK to 650L,
         DigimonAnimationType.FLEE to 150L
     )
-    
+
+    /*
     init {
         println("Initialized DigimonAnimationStateMachine for character: $characterId with frame offset: $initialFrameOffset, timing offset: $timingOffset")
         println("Available animation types: ${animationTypeToFrames.keys}")
     }
+    */
     
     suspend fun playAnimation(animationType: DigimonAnimationType) {
         if (currentAnimation == animationType && isPlaying) {
@@ -95,8 +97,6 @@ class DigimonAnimationStateMachine(
         
         val frameNumbers = animationTypeToFrames[animationType] ?: listOf(1)
         val duration = animationDurations[animationType] ?: 100L
-        
-        println("Playing animation: $animationType with frames: $frameNumbers")
         
         // For non-looping animations like ATTACK, play once and return to IDLE
         if (animationType == DigimonAnimationType.ATTACK) {
@@ -129,8 +129,6 @@ class DigimonAnimationStateMachine(
         
         // Combine frames for cycling idle animation
         val combinedFrames = (idleFrames + idle2Frames).distinct()
-        
-        println("Playing idle animation with frames: $combinedFrames, starting at offset: $initialFrameOffset, timing offset: $timingOffset")
         
         val duration = animationDurations[DigimonAnimationType.IDLE] ?: 500L
         

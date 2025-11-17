@@ -53,8 +53,6 @@ class IndividualSpriteManager(private val context: Context) {
                 return null
             }
             
-            println("Successfully loaded sprite frame: $spriteFileName (${bitmap.width}x${bitmap.height})")
-            
             // Cache the result
             spriteCache[cacheKey] = bitmap
             
