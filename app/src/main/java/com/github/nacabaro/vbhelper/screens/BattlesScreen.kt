@@ -20,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.scale
@@ -1584,7 +1585,8 @@ fun BattlesScreen() {
     var isCheckingAuth by remember { mutableStateOf(true) }
     var userId by remember { mutableStateOf<Long?>(null) }
     // Track processed tokens to prevent duplicate API calls
-    var processedTokens by remember { mutableStateOf<Set<String>>(emptySet()) }
+    // Use rememberSaveable to persist across configuration changes (screen rotation)
+    var processedTokens by rememberSaveable { mutableStateOf<Set<String>>(emptySet()) }
 
     var opponentsList by remember { mutableStateOf(ArrayList<APIBattleCharacter>()) }
 
@@ -1790,6 +1792,16 @@ fun BattlesScreen() {
                 userId = storedUserId
             }
             
+            // If we have a stored token, set authenticated state optimistically FIRST (before checking deep links)
+            // This must happen immediately to prevent UI from showing "Checking authentication"
+            if (localAuthState && storedToken != null && storedToken.isNotEmpty()) {
+                // Set authenticated state immediately to prevent redirect on rotation and show UI
+                isAuthenticated = true
+                isCheckingAuth = false
+                userId = storedUserId
+                println("BATTLESCREEN: Restored authentication state from storage (userId: $storedUserId) - isCheckingAuth set to false")
+            }
+            
             // Only check for token in intent if it's a fresh deep link (ACTION_VIEW intent)
             // This prevents processing stale tokens from previous sessions
             val activity = context as? ComponentActivity
@@ -1805,9 +1817,10 @@ fun BattlesScreen() {
                 }
             }
             
-            // If we have a stored token, validate it with the server
+            // If we have a stored token, validate it with the server in the background
             if (localAuthState && storedToken != null && storedToken.isNotEmpty()) {
-                println("BATTLESCREEN: Validating stored token with server...")
+                // State already set above, now validate in background
+                println("BATTLESCREEN: Validating stored token with server in background...")
                 RetrofitHelper().authenticate(context, storedToken) { response ->
                     // Update UI on main thread
                     kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
@@ -1825,17 +1838,31 @@ fun BattlesScreen() {
                             userId = extractedUserId
                         } else {
                             println("BATTLESCREEN: Token validation failed: ${response.message}")
-                            // Clear authentication state
-                            kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
-                                authRepository.logout()
+                            // Check if it's a critical error that requires re-authentication
+                            // (e.g., "Invalid user nonce" means token was already used)
+                            val isCriticalError = response.message?.contains("Invalid user nonce") == true || 
+                                                  response.message?.contains("nonce") == true ||
+                                                  response.message?.contains("invalid") == true ||
+                                                  response.message?.contains("expired") == true
+                            
+                            if (isCriticalError) {
+                                // Critical error - token is invalid, need to re-authenticate
+                                println("BATTLESCREEN: Critical authentication error, clearing state and redirecting")
+                                kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                                    authRepository.logout()
+                                }
+                                isAuthenticated = false
+                                isCheckingAuth = false
+                                // Open auth URL
+                                val authUrl = "http://auth.nacatech.es/begin?app=443654920&redirect_uri=vbhelper://auth?token="
+                                val authIntent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
+                                context.startActivity(authIntent)
+                                println("BATTLESCREEN: Opened auth URL after critical validation failure: $authUrl")
+                            } else {
+                                // Non-critical error (e.g., network issue) - keep authenticated state
+                                // This prevents redirect on rotation if validation fails due to network
+                                println("BATTLESCREEN: Non-critical validation error, keeping authenticated state")
                             }
-                            isAuthenticated = false
-                            isCheckingAuth = false
-                            // Open auth URL
-                            val authUrl = "http://auth.nacatech.es/begin?app=443654920&redirect_uri=vbhelper://auth?token="
-                            val authIntent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
-                            context.startActivity(authIntent)
-                            println("BATTLESCREEN: Opened auth URL after validation failure: $authUrl")
                         }
                     }
                 }
@@ -2067,7 +2094,7 @@ fun BattlesScreen() {
             // Only show TopBanner when not in battle mode
             if (currentView != "battle-main" && currentView != "battle-results") {
             TopBanner(
-                text = "Online battles"
+                text = "Online Battles"
             )
             }
         }
