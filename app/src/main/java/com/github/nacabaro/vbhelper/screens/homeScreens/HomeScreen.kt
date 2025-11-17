@@ -1,6 +1,5 @@
 package com.github.nacabaro.vbhelper.screens.homeScreens
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,6 +55,7 @@ fun HomeScreen(
     var adventureMissionsFinished by rememberSaveable { mutableStateOf(false) }
     var betaWarning by rememberSaveable { mutableStateOf(true) }
     var collectedItem by remember { mutableStateOf<ItemDtos.PurchasedItem?>(null) }
+    var collectedCurrency by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(storageRepository, activeMon, collectedItem) {
         withContext(Dispatchers.IO) {
@@ -92,7 +92,6 @@ fun HomeScreen(
         }
     ) { contentPadding ->
         if (activeMon.value == null || (beData.value == null && vbData.value == null) || transformationHistory.value == null) {
-            Log.d("TetTet", "Something is null")
             Column (
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -103,7 +102,6 @@ fun HomeScreen(
                 Text(text = "Nothing to see here")
             }
         } else {
-            Log.d("TetTet", "Something is not null")
             if (activeMon.value!!.isBemCard) {
                 BEBEmHomeScreen(
                     activeMon = activeMon.value!!,
@@ -126,8 +124,9 @@ fun HomeScreen(
                     contentPadding = contentPadding,
                     specialMissions = vbSpecialMissions.value,
                     homeScreenController = homeScreenController,
-                    onClickCollect = { item ->
+                    onClickCollect = { item, currency ->
                         collectedItem = item
+                        collectedCurrency = currency
                     }
                 )
             }
@@ -137,8 +136,10 @@ fun HomeScreen(
     if (collectedItem != null) {
         ObtainedItemDialog(
             obtainedItem = collectedItem!!,
+            obtainedCurrency = collectedCurrency!!,
             onClickDismiss = {
                 collectedItem = null
+                collectedCurrency = null
             }
         )
     }

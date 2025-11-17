@@ -16,6 +16,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -23,7 +28,9 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import com.github.nacabaro.vbhelper.source.DexRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.utils.getImageBitmap
 
@@ -31,14 +38,25 @@ import com.github.nacabaro.vbhelper.utils.getImageBitmap
 @Composable
 fun DexCharaDetailsDialog(
     currentChara: CharacterDtos.CardCharaProgress,
-    possibleTransformations: List<CharacterDtos.EvolutionRequirementsWithSpritesAndObtained>,
     obscure: Boolean,
     onClickClose: () -> Unit
 ) {
     val nameMultiplier = 3
     val charaMultiplier = 4
 
-    val currentCharaPossibleTransformations = possibleTransformations.filter { it.fromCharaId == currentChara.id }
+    val application = LocalContext.current.applicationContext as VBHelper
+    val database = application.container.db
+    val dexRepository = DexRepository(database)
+
+    var showFusions by remember { mutableStateOf(false) }
+
+    val currentCharaPossibleTransformations by dexRepository
+        .getCharacterPossibleTransformations(currentChara.id)
+        .collectAsState(emptyList())
+
+    val currentCharaPossibleFusions by dexRepository
+        .getCharacterPossibleFusions(currentChara.id)
+        .collectAsState(emptyList())
 
     val romanNumeralsStage = when (currentChara.stage) {
         1 -> "II"
@@ -204,12 +222,40 @@ fun DexCharaDetailsDialog(
                     }
                 }
 
-                Button(
-                    onClick = onClickClose
-                ) {
-                    Text("Close")
+                Row {
+                    if (currentCharaPossibleFusions.isNotEmpty()) {
+                        Button(
+                            onClick = {
+                                showFusions = true
+                            }
+                        ) {
+                            Text("Fusions")
+                        }
+                    }
+
+                    Spacer(
+                        modifier = Modifier
+                            .padding(4.dp)
+                    )
+
+                    Button(
+                        onClick = onClickClose
+                    ) {
+                        Text("Close")
+                    }
                 }
             }
         }
+    }
+
+    if (showFusions) {
+        DexCharaFusionsDialog(
+            currentChara = currentChara,
+            currentCharaPossibleFusions = currentCharaPossibleFusions,
+            onClickDismiss = {
+                showFusions = false
+            },
+            obscure = obscure
+        )
     }
 }

@@ -14,6 +14,7 @@ import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.utils.DeviceType
+import kotlinx.coroutines.flow.first
 import java.util.Date
 
 class ToNfcConverter(
@@ -38,14 +39,10 @@ class ToNfcConverter(
             .characterDao()
             .getCharacterInfo(userCharacter.charId)
 
-        val currentCardStage = database
-            .cardProgressDao()
-            .getCardProgress(characterInfo.cardId)
-
         return if (userCharacter.characterType == DeviceType.BEDevice)
-            nfcToBENfc(characterId, characterInfo, currentCardStage, userCharacter)
+            nfcToBENfc(characterId, characterInfo, userCharacter)
         else
-            nfcToVBNfc(characterId, characterInfo, currentCardStage, userCharacter)
+            nfcToVBNfc(characterId, characterInfo, userCharacter)
     }
 
 
@@ -53,7 +50,6 @@ class ToNfcConverter(
     private suspend fun nfcToVBNfc(
         characterId: Long,
         characterInfo: CharacterDtos.CardCharacterInfo,
-        currentCardStage: Int,
         userCharacter: UserCharacter
     ): VBNfcCharacter {
         val vbData = database
@@ -70,7 +66,7 @@ class ToNfcConverter(
             stage = characterInfo.stage.toByte(),
             attribute = characterInfo.attribute,
             ageInDays = userCharacter.ageInDays.toByte(),
-            nextAdventureMissionStage = currentCardStage.toByte(),
+            nextAdventureMissionStage = characterInfo.currentStage.toByte(),
             mood = userCharacter.mood.toByte(),
             vitalPoints = userCharacter.vitalPoints.toUShort(),
             transformationCountdownInMinutes = userCharacter.transformationCountdown.toUShort(),
@@ -101,6 +97,7 @@ class ToNfcConverter(
         val cardData = database
             .cardDao()
             .getCardByCharacterId(userCharacter.id)
+            .first()
 
         val appReserved = Array<UShort>(3) {
             0u
@@ -173,7 +170,6 @@ class ToNfcConverter(
     private suspend fun nfcToBENfc(
         characterId: Long,
         characterInfo: CharacterDtos.CardCharacterInfo,
-        currentCardStage: Int,
         userCharacter: UserCharacter
     ): BENfcCharacter {
         val beData = database
@@ -188,7 +184,7 @@ class ToNfcConverter(
             stage = characterInfo.stage.toByte(),
             attribute = characterInfo.attribute,
             ageInDays = userCharacter.ageInDays.toByte(),
-            nextAdventureMissionStage = currentCardStage.toByte(),
+            nextAdventureMissionStage = characterInfo.currentStage.toByte(),
             mood = userCharacter.mood.toByte(),
             vitalPoints = userCharacter.vitalPoints.toUShort(),
             itemEffectMentalStateValue = beData.itemEffectMentalStateValue.toByte(),

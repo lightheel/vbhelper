@@ -5,6 +5,7 @@ import androidx.lifecycle.lifecycleScope
 import com.github.cfogrady.vbnfc.vb.SpecialMission
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Instant
 import kotlin.math.roundToInt
@@ -22,6 +23,7 @@ class HomeScreenControllerImpl(
             val adventureCharacters = database
                 .adventureDao()
                 .getAdventureCharacters()
+                .first()
 
             val finishedAdventureCharacters = adventureCharacters.filter { character ->
                 character.finishesAdventure <= currentTime
@@ -31,7 +33,7 @@ class HomeScreenControllerImpl(
         }
     }
 
-    override fun clearSpecialMission(missionId: Long, missionCompletion: SpecialMission.Status, onCleared: (ItemDtos.PurchasedItem?) -> Unit) {
+    override fun clearSpecialMission(missionId: Long, missionCompletion: SpecialMission.Status, onCleared: (ItemDtos.PurchasedItem?, Int?) -> Unit) {
         componentActivity.lifecycleScope.launch {
             database
                 .specialMissionDao()
@@ -41,6 +43,7 @@ class HomeScreenControllerImpl(
                 val randomItem = database
                     .itemDao()
                     .getAllItems()
+                    .first()
                     .random()
 
                 val randomItemAmount = (Random.nextFloat() * 5).roundToInt()
@@ -62,9 +65,13 @@ class HomeScreenControllerImpl(
                     itemType = randomItem.itemType
                 )
 
-                onCleared(purchasedItem)
+                val randomAmount = (2..6).random() * 1000
+                val currentCurrency = application.container.currencyRepository.currencyValue.first()
+                application.container.currencyRepository.setCurrencyValue(currentCurrency + randomAmount)
+
+                onCleared(purchasedItem, randomAmount)
             } else {
-                onCleared(null)
+                onCleared(null, null)
             }
 
         }

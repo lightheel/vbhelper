@@ -9,12 +9,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,7 +28,6 @@ import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.time.Instant
 
 @Composable
@@ -37,15 +35,16 @@ fun AdventureScreen(
     navController: NavController,
     storageScreenController: AdventureScreenControllerImpl
 ) {
-    val coroutineScope = rememberCoroutineScope()
     val application = LocalContext.current.applicationContext as VBHelper
     val database = application.container.db
     val storageRepository = StorageRepository(database)
-    val characterList = remember {
-        mutableStateOf<List<CharacterDtos.AdventureCharacterWithSprites>>(emptyList())
-    }
+    val characterList by storageRepository.getAdventureCharacters().collectAsState(emptyList())
+
     var obtainedItem by remember {
         mutableStateOf<ItemDtos.PurchasedItem?>(null)
+    }
+    var obtainedCurrency by remember {
+        mutableStateOf(0)
     }
 
     val currentTime by produceState(initialValue = Instant.now().epochSecond) {
@@ -59,13 +58,6 @@ fun AdventureScreen(
         mutableStateOf<CharacterDtos.AdventureCharacterWithSprites?>(null)
     }
 
-    LaunchedEffect(storageRepository) {
-        coroutineScope.launch {
-            characterList.value = storageRepository
-                .getAdventureCharacters()
-        }
-    }
-
     Scaffold(
         topBar = {
             TopBanner(
@@ -76,7 +68,7 @@ fun AdventureScreen(
             )
         }
     ) { contentPadding ->
-        if (characterList.value.isEmpty()) {
+        if (characterList.isEmpty()) {
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -91,7 +83,7 @@ fun AdventureScreen(
                 modifier = Modifier
                     .padding(top = contentPadding.calculateTopPadding())
             ) {
-                items(characterList.value) {
+                items(characterList) {
                     AdventureEntry(
                         icon = BitmapData(
                             bitmap = it.spriteIdle,
@@ -102,8 +94,9 @@ fun AdventureScreen(
                         onClick = {
                             if (it.finishesAdventure < currentTime) {
                                 storageScreenController
-                                    .getItemFromAdventure(it.id) { adventureResult ->
+                                    .getItemFromAdventure(it.id) { adventureResult, generatedCurrency ->
                                         obtainedItem = adventureResult
+                                        obtainedCurrency = generatedCurrency
                                     }
                             } else {
                                 cancelAdventureDialog = it
@@ -118,6 +111,7 @@ fun AdventureScreen(
     if (obtainedItem != null) {
         ObtainedItemDialog(
             obtainedItem = obtainedItem!!,
+            obtainedCurrency = obtainedCurrency,
             onClickDismiss = {
                 obtainedItem = null
             }

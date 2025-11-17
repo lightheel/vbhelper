@@ -1,13 +1,11 @@
 package com.github.nacabaro.vbhelper.screens.scanScreen.converters
 
-import android.util.Log
 import androidx.activity.ComponentActivity
 import com.github.cfogrady.vbnfc.be.BENfcCharacter
 import com.github.cfogrady.vbnfc.data.NfcCharacter
 import com.github.cfogrady.vbnfc.vb.VBNfcCharacter
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.domain.card.Card
-import com.github.nacabaro.vbhelper.domain.card.CardProgress
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
 import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
@@ -152,15 +150,13 @@ class FromNfcConverter (
         nfcCharacter: NfcCharacter,
         cardData: Card
     ) {
-        val currentCardProgress = CardProgress(
-            cardId = cardData.id,
-            currentStage = nfcCharacter.nextAdventureMissionStage.toInt(),
-            unlocked = nfcCharacter.nextAdventureMissionStage.toInt() > cardData.stageCount
-        )
-
         database
             .cardProgressDao()
-            .updateDimProgress(currentCardProgress)
+            .updateCardProgress(
+                currentStage = nfcCharacter.nextAdventureMissionStage.toInt(),
+                cardId = cardData.id,
+                unlocked = nfcCharacter.nextAdventureMissionStage.toInt() > cardData.stageCount,
+            )
     }
 
 
@@ -252,10 +248,11 @@ class FromNfcConverter (
     ) {
         val vitalsHistoryWatch = nfcCharacter.vitalHistory
         val vitalsHistory = vitalsHistoryWatch.map { historyElement ->
-            Log.d("VitalsHistory", "${historyElement.year.toInt()} ${historyElement.month.toInt()} ${historyElement.day.toInt()}")
+            val year = if (historyElement.year.toInt() !in 2021 .. 2035) 0 else historyElement.year.toInt()
+
             VitalsHistory(
                 charId = characterId,
-                year = historyElement.year.toInt(),
+                year = year,
                 month = historyElement.month.toInt(),
                 day = historyElement.day.toInt(),
                 vitalPoints = historyElement.vitalsGained.toInt()

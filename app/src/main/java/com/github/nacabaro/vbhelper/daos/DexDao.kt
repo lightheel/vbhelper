@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import com.github.nacabaro.vbhelper.dtos.CardDtos
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DexDao {
@@ -11,7 +12,7 @@ interface DexDao {
         """
         INSERT OR IGNORE INTO Dex(id, discoveredOn)
         VALUES (
-            (SELECT id FROM CharacterData WHERE charaIndex = :charIndex AND cardId = :cardId), 
+            (SELECT id FROM CardCharacter WHERE charaIndex = :charIndex AND cardId = :cardId), 
             :discoveredOn
         )
     """
@@ -34,13 +35,13 @@ interface DexDao {
             c.baseAp as baseAp,
             c.stage as stage,
             c.attribute as attribute
-        FROM CharacterData c
+        FROM CardCharacter c
         JOIN Sprite s ON c.spriteId = s.id
         LEFT JOIN dex d ON c.id = d.id
         WHERE c.cardId = :cardId
     """
     )
-    suspend fun getSingleCardProgress(cardId: Long): List<CharacterDtos.CardCharaProgress>
+    fun getSingleCardProgress(cardId: Long): Flow<List<CharacterDtos.CardCharaProgress>>
 
     @Query(
         """
@@ -50,10 +51,10 @@ interface DexDao {
             c.logo as cardLogo,
             c.logoWidth as logoWidth,
             c.logoHeight as logoHeight, 
-            (SELECT COUNT(*) FROM CharacterData cc WHERE cc.cardId = c.id) AS totalCharacters,
-            (SELECT COUNT(*) FROM Dex d JOIN CharacterData cc ON d.id = cc.id WHERE cc.cardId = c.id AND d.discoveredOn IS NOT NULL) AS obtainedCharacters
+            (SELECT COUNT(*) FROM CardCharacter cc WHERE cc.cardId = c.id) AS totalCharacters,
+            (SELECT COUNT(*) FROM Dex d JOIN CardCharacter cc ON d.id = cc.id WHERE cc.cardId = c.id AND d.discoveredOn IS NOT NULL) AS obtainedCharacters
         FROM Card c
     """
     )
-    suspend fun getCardsWithProgress(): List<CardDtos.CardProgress>
+    fun getCardsWithProgress(): Flow<List<CardDtos.CardProgress>>
 }

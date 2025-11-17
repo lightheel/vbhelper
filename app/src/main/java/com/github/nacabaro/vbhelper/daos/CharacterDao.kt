@@ -3,17 +3,18 @@ package com.github.nacabaro.vbhelper.daos
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import com.github.nacabaro.vbhelper.domain.card.CharacterData
+import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 import com.github.nacabaro.vbhelper.domain.characters.Sprite
 import com.github.nacabaro.vbhelper.dtos.CharacterDtos
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CharacterDao {
     @Insert
-    suspend fun insertCharacter(vararg characterData: CharacterData)
+    suspend fun insertCharacter(vararg characterData: CardCharacter)
 
-    @Query("SELECT * FROM CharacterData WHERE charaIndex = :monIndex AND cardId = :dimId LIMIT 1")
-    fun getCharacterByMonIndex(monIndex: Int, dimId: Long): CharacterData
+    @Query("SELECT * FROM CardCharacter WHERE charaIndex = :monIndex AND cardId = :dimId LIMIT 1")
+    fun getCharacterByMonIndex(monIndex: Int, dimId: Long): CardCharacter
 
     @Insert
     suspend fun insertSprite(vararg sprite: Sprite)
@@ -24,10 +25,12 @@ interface CharacterDao {
             d.cardId as cardId,
             c.charaIndex as charId,
             c.stage as stage,
-            c.attribute as attribute
-        FROM CharacterData c
+            c.attribute as attribute,
+            cp.currentStage as currentStage
+        FROM CardCharacter c
         JOIN UserCharacter uc ON c.id = uc.charId
         JOIN Card d ON c.cardId = d.id
+        JOIN CardProgress cp ON d.id = cp.cardId
         WHERE c.id = :charId
     """
     )
@@ -37,14 +40,14 @@ interface CharacterDao {
         """
         INSERT INTO PossibleTransformations (charaId, requiredVitals, requiredTrophies, requiredBattles, requiredWinRate, changeTimerHours, requiredAdventureLevelCompleted, toCharaId)
         SELECT
-            (SELECT id FROM CharacterData WHERE charaIndex = :fromChraraIndex AND cardId = :cardId),
+            (SELECT id FROM CardCharacter WHERE charaIndex = :fromChraraIndex AND cardId = :cardId),
             :requiredVitals,
             :requiredTrophies,
             :requiredBattles,
             :requiredWinRate,
             :changeTimerHours,
             :requiredAdventureLevelCompleted,
-            (SELECT id FROM CharacterData WHERE charaIndex = :toChraraIndex AND cardId = :cardId)
+            (SELECT id FROM CardCharacter WHERE charaIndex = :toChraraIndex AND cardId = :cardId)
     """
     )
     suspend fun insertPossibleTransformation(
@@ -76,12 +79,12 @@ interface CharacterDao {
             pt.requiredAdventureLevelCompleted as requiredAdventureLevelCompleted
         FROM
             PossibleTransformations pt
-        JOIN CharacterData c on pt.toCharaId = c.id
+        JOIN CardCharacter c on pt.toCharaId = c.id
         JOIN Sprite s ON s.id = c.spriteId
         LEFT JOIN Dex d ON d.id = pt.toCharaId
         WHERE
-            c.cardId = :cardId
+            pt.charaId = :characterId
     """
     )
-    suspend fun getEvolutionRequirementsForCard(cardId: Long): List<CharacterDtos.EvolutionRequirementsWithSpritesAndObtained>
+    fun getEvolutionRequirementsForCard(characterId: Long): Flow<List<CharacterDtos.EvolutionRequirementsWithSpritesAndObtained>>
 }

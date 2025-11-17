@@ -31,14 +31,16 @@ object CharacterDtos {
         val nameSpriteWidth: Int,
         val nameSpriteHeight: Int,
         val isBemCard: Boolean,
-        val isInAdventure: Boolean
+        val isInAdventure: Boolean,
+        val active: Boolean
     )
 
     data class CardCharacterInfo(
-        val cardId: Int,
+        val cardId: Long,
         val charId: Int,
         val stage: Int,
-        val attribute: NfcCharacter.Attribute
+        val attribute: NfcCharacter.Attribute,
+        val currentStage: Int
     )
 
     data class TransformationHistory(
@@ -112,5 +114,15 @@ object CharacterDtos {
         val requiredWinRate: Int,
         val changeTimerHours: Int,
         val requiredAdventureLevelCompleted: Int
+    )
+
+    data class FusionsWithSpritesAndObtained(
+        val charaId: Long,
+        val fromCharaId: Long,
+        val spriteIdle: ByteArray,
+        val spriteWidth: Int,
+        val spriteHeight: Int,
+        val discoveredOn: Long?,
+        val fusionAttribute: NfcCharacter.Attribute
     )
 }
