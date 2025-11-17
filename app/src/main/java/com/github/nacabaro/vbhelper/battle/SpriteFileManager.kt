@@ -282,13 +282,15 @@ class SpriteFileManager(private val context: Context) {
         val statsExist = extractedStatsDir.exists() && extractedStatsDir.listFiles()?.isNotEmpty() == true
         val atkspritesExist = atkspritesDir.exists() && atkspritesDir.listFiles()?.isNotEmpty() == true
         val battlebgsExist = battlebgsDir.exists() && battlebgsDir.listFiles()?.isNotEmpty() == true
-        
+
+        /*
         println("Checking sprite files exist in external storage:")
         println("  battle_sprites exists: $battleSpritesExist")
         println("  extracted_assets exists: $assetsExist")
         println("  extracted_digimon_stats exists: $statsExist")
         println("  extracted_atksprites exists: $atkspritesExist")
         println("  extracted_battlebgs exists: $battlebgsExist")
+        */
         
         return battleSpritesExist && assetsExist && statsExist && atkspritesExist && battlebgsExist
     }

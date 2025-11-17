@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Row
+//import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -27,10 +27,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.DropdownMenuItem
+//import androidx.compose.material3.ExposedDropdownMenuBox
+//import androidx.compose.material3.ExposedDropdownMenuDefaults
+//import androidx.compose.material3.OutlinedTextField
+//import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
@@ -48,8 +48,8 @@ import android.os.Build
 import android.provider.Settings
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+//import androidx.compose.animation.core.animateFloatAsState
+//import androidx.compose.animation.core.tween
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
@@ -71,10 +71,10 @@ import com.github.nacabaro.vbhelper.battle.BattleAuthContainer
 import kotlinx.coroutines.flow.first
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import kotlin.math.sin
-import kotlin.math.PI
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateIntAsState
+//import kotlin.math.sin
+//import kotlin.math.PI
+//import androidx.compose.animation.core.animateDpAsState
+//import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Shadow
@@ -82,14 +82,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.BitmapFactory
-import android.os.Environment
+//import android.os.Environment
 import java.io.File
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.width
 import com.github.nacabaro.vbhelper.di.VBHelper
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+//import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -160,9 +160,7 @@ fun AnimatedDamageNumber(
     modifier: Modifier = Modifier
 ) {
     if (!isVisible) return
-    
-    println("DEBUG: AnimatedDamageNumber called with damage=$damage, isVisible=$isVisible")
-    
+
     var animationProgress by remember { mutableStateOf(0f) }
     var scale by remember { mutableStateOf(1f) }
     var alpha by remember { mutableStateOf(1f) }
@@ -170,7 +168,6 @@ fun AnimatedDamageNumber(
     
     LaunchedEffect(isVisible) {
         if (isVisible) {
-            println("DEBUG: Starting damage number animation for damage=$damage")
             // Start animation
             animationProgress = 0f
             scale = 0.5f
@@ -192,7 +189,6 @@ fun AnimatedDamageNumber(
                 yOffset -= 1.dp
                 delay(16)
             }
-            println("DEBUG: Damage number animation completed for damage=$damage")
         }
     }
     
@@ -267,11 +263,10 @@ fun BattleScreen(
             showOpponentHitEffect = false
             hidePlayerAttackSprite = false
             hideEnemyAttackSprite = false
-                                        battleSystem.endPlayerHitDelayed()
-                            battleSystem.endOpponentHitDelayed()
-                            battleSystem.endPlayerShakeDelayed()
-                            battleSystem.endOpponentShakeDelayed()
-                            println("DEBUG: Reset hit effect states, attack sprite visibility, and delayed hit states")
+            battleSystem.endPlayerHitDelayed()
+            battleSystem.endOpponentHitDelayed()
+            battleSystem.endPlayerShakeDelayed()
+            battleSystem.endOpponentShakeDelayed()
         }
     }
     
@@ -290,20 +285,16 @@ fun BattleScreen(
         when (battleSystem.attackPhase) {
             1 -> {
                 // Phase 1: Both attacks from middle screen
-                println("Starting Phase 1: Both attacks from middle screen")
                 var progress = 0f
                 while (progress < 1f) {
                     progress += 0.016f // 60 FPS
                     battleSystem.setAttackProgress(progress)
                     delay(16) // 60 FPS
                 }
-                println("Phase 1 completed, advancing to Phase 2")
                 battleSystem.advanceAttackPhase()
             }
             2 -> {
                 // Phase 2: Player attack on enemy screen
-                println("Starting Phase 2: Player attack on enemy screen")
-                println("DEBUG: Phase 2 - showPlayerHitEffect=$showPlayerHitEffect, showOpponentHitEffect=$showOpponentHitEffect")
                 battleSystem.switchToView(2) // Enemy screen
                 var progress = 0f
                 while (progress < 1f) {
@@ -314,10 +305,8 @@ fun BattleScreen(
                     if (progress >= 0.50f && !battleSystem.isOpponentHit && !battleSystem.isOpponentDodging) {
                         if (battleSystem.attackIsHit) {
                             // Player attack hits enemy
-                            println("Player attack hits enemy at progress $progress")
                             battleSystem.startOpponentHit()
                             // Show hit effect and damage effect
-                            println("DEBUG: Setting showOpponentHitEffect = true (player attack hits enemy)")
                             showOpponentHitEffect = true
                             // Delay hiding the attack sprite to match hit effect timing
                             coroutineScope.launch {
@@ -329,31 +318,26 @@ fun BattleScreen(
                                 coroutineScope.launch {
                                     delay(400) // Match the hit effect delay
                                     showOpponentDamageNumber = true
-                                    println("DEBUG: Showing opponent damage number after delay")
                                 }
                             }
                             // Delay SLEEP animation to match hit effect timing
                             coroutineScope.launch {
                                 delay(400) // Match the hit effect delay
                                 battleSystem.startOpponentHitDelayed()
-                                println("DEBUG: Starting delayed opponent hit animation")
                             }
                             // Delay shake animation to match hit effect timing
                             coroutineScope.launch {
                                 delay(400) // Match the hit effect delay
                                 battleSystem.startOpponentShakeDelayed()
-                                println("DEBUG: Starting delayed opponent shake animation")
                             }
                         } else {
                             // Player attack misses, enemy dodges
-                            println("Player attack misses, enemy dodges at progress $progress")
                             battleSystem.startOpponentDodge()
                         }
                     }
                     
                     delay(16) // 60 FPS
                 }
-                println("Phase 2 completed, applying damage and starting Phase 3")
                  battleSystem.completeAttackAnimation(opponentDamage = pendingOpponentDamage)
                 
                 // Hide damage number and reset pending damage after animation
@@ -361,24 +345,19 @@ fun BattleScreen(
                     delay(800) // Wait for damage number animation (scale up + hold + fade out)
                     showOpponentDamageNumber = false
                  pendingOpponentDamage = 0f
-                    println("DEBUG: Hiding opponent damage number and resetting pending damage")
                 }
                 
                 delay(100)
                 
                 // Check if there should be a counter-attack
                 if (battleSystem.shouldCounterAttack) {
-                    println("Starting counter-attack from Phase 2")
                     battleSystem.startCounterAttack()
                 } else {
-                    println("No counter-attack, advancing to Phase 3")
                     battleSystem.advanceAttackPhase()
                 }
             }
             3 -> {
                 // Phase 3: Enemy attack on player screen
-                println("Starting Phase 3: Enemy attack on player screen")
-                println("DEBUG: Phase 3 - showPlayerHitEffect=$showPlayerHitEffect, showOpponentHitEffect=$showOpponentHitEffect")
                 battleSystem.switchToView(1) // Player screen
                 var progress = 0f
                 while (progress < 1f) {
@@ -387,14 +366,10 @@ fun BattleScreen(
                     
                     // Trigger animation when attack reaches the player (around 50% progress for player dodge)
                     if (progress >= 0.50f && !battleSystem.isPlayerHit && !battleSystem.isPlayerDodging) {
-                        println("Phase 3: Checking player animation at progress $progress, opponentAttackIsHit=${battleSystem.opponentAttackIsHit}")
-                        println("Phase 3: Player animation decision - opponentAttackIsHit=${battleSystem.opponentAttackIsHit}, will ${if (battleSystem.opponentAttackIsHit) "HIT" else "DODGE"}")
                         if (battleSystem.opponentAttackIsHit) {
                             // Enemy attack hits player
-                            println("Enemy attack hits player at progress $progress")
                             battleSystem.startPlayerHit()
                             // Show hit effect and damage effect
-                            println("DEBUG: Setting showPlayerHitEffect = true (enemy attack hits player)")
                             showPlayerHitEffect = true
                             // Delay hiding the attack sprite to match hit effect timing
                             coroutineScope.launch {
@@ -406,32 +381,26 @@ fun BattleScreen(
                                 coroutineScope.launch {
                                     delay(400) // Match the hit effect delay
                                     showPlayerDamageNumber = true
-                                    println("DEBUG: Showing player damage number after delay")
                                 }
                             }
                             // Delay SLEEP animation to match hit effect timing
                             coroutineScope.launch {
                                 delay(400) // Match the hit effect delay
                                 battleSystem.startPlayerHitDelayed()
-                                println("DEBUG: Starting delayed player hit animation")
                             }
                             // Delay shake animation to match hit effect timing
                             coroutineScope.launch {
                                 delay(400) // Match the hit effect delay
                                 battleSystem.startPlayerShakeDelayed()
-                                println("DEBUG: Starting delayed player shake animation")
                             }
                         } else {
                             // Enemy attack misses, player dodges
-                            println("Enemy attack misses, player dodges at progress $progress")
                             battleSystem.startPlayerDodge()
                         }
                     }
                     
                     delay(16) // 60 FPS
                 }
-                println("Phase 3 completed, applying damage and resetting")
-                println("DEBUG: pendingPlayerDamage = $pendingPlayerDamage")
                  battleSystem.completeAttackAnimation(playerDamage = pendingPlayerDamage)
                 
                 // Hide damage number and reset pending damage after animation
@@ -439,7 +408,6 @@ fun BattleScreen(
                     delay(800) // Wait for damage number animation (scale up + hold + fade out)
                     showPlayerDamageNumber = false
                  pendingPlayerDamage = 0f
-                    println("DEBUG: Hiding player damage number and resetting pending damage")
                 }
                 
                  battleSystem.resetAttackState()
@@ -457,7 +425,6 @@ fun BattleScreen(
     // Player dodge animation
     LaunchedEffect(battleSystem.isPlayerDodging) {
         if (battleSystem.isPlayerDodging) {
-            println("Starting player dodge animation")
             var dodgeProgress = 0f
             var dodgeDirection = 1f // Start moving up
             
@@ -483,14 +450,12 @@ fun BattleScreen(
             }
             
             battleSystem.endPlayerDodge()
-            println("Player dodge animation completed")
         }
     }
 
     // Opponent dodge animation
     LaunchedEffect(battleSystem.isOpponentDodging) {
         if (battleSystem.isOpponentDodging) {
-            println("Starting opponent dodge animation")
             var dodgeProgress = 0f
             var dodgeDirection = 1f // Start moving up
             
@@ -516,14 +481,12 @@ fun BattleScreen(
             }
             
             battleSystem.endOpponentDodge()
-            println("Opponent dodge animation completed")
         }
     }
 
     // Player hit animation
     LaunchedEffect(battleSystem.isPlayerHit) {
         if (battleSystem.isPlayerHit) {
-            println("Starting player hit animation")
             var hitProgress = 0f
             
             // Quick hit effect
@@ -536,14 +499,12 @@ fun BattleScreen(
             delay(100) // Brief pause
             
             battleSystem.endPlayerHit()
-            println("Player hit animation completed")
         }
     }
 
     // Player delayed shake animation
     LaunchedEffect(battleSystem.isPlayerShakeDelayed) {
         if (battleSystem.isPlayerShakeDelayed) {
-            println("Starting delayed player shake animation")
             var hitProgress = 0f
             
             // Quick hit effect
@@ -556,14 +517,12 @@ fun BattleScreen(
             delay(100) // Brief pause
             
             battleSystem.endPlayerShakeDelayed()
-            println("Delayed player shake animation completed")
         }
     }
 
     // Opponent hit animation
     LaunchedEffect(battleSystem.isOpponentHit) {
         if (battleSystem.isOpponentHit) {
-            println("Starting opponent hit animation")
             var hitProgress = 0f
             
             // Quick hit effect
@@ -576,14 +535,12 @@ fun BattleScreen(
             delay(100) // Brief pause
             
             battleSystem.endOpponentHit()
-            println("Opponent hit animation completed")
         }
     }
 
     // Opponent delayed shake animation
     LaunchedEffect(battleSystem.isOpponentShakeDelayed) {
         if (battleSystem.isOpponentShakeDelayed) {
-            println("Starting delayed opponent shake animation")
             var hitProgress = 0f
             
             // Quick hit effect
@@ -596,14 +553,12 @@ fun BattleScreen(
             delay(100) // Brief pause
             
             battleSystem.endOpponentShakeDelayed()
-            println("Delayed opponent shake animation completed")
         }
     }
 
     // Damage number handling - store pending damage but don't show immediately
     LaunchedEffect(pendingPlayerDamage) {
         if (pendingPlayerDamage > 0) {
-            println("DEBUG: LaunchedEffect triggered for pendingPlayerDamage = $pendingPlayerDamage")
             playerDamageValue = pendingPlayerDamage.toInt()
             // Don't show immediately - wait for attack animation to reach the Digimon
         }
@@ -611,7 +566,6 @@ fun BattleScreen(
 
     LaunchedEffect(pendingOpponentDamage) {
         if (pendingOpponentDamage > 0) {
-            println("DEBUG: LaunchedEffect triggered for pendingOpponentDamage = $pendingOpponentDamage")
             opponentDamageValue = pendingOpponentDamage.toInt()
             // Don't show immediately - wait for attack animation to reach the Digimon
         }
@@ -692,7 +646,6 @@ fun BattleScreen(
             }
             1 -> {
                 // Player screen - show player damage (when opponent attacks player)
-                println("DEBUG: Player screen damage overlay - playerDamageValue=$playerDamageValue, showPlayerDamageNumber=$showPlayerDamageNumber")
                 AnimatedDamageNumber(
                     damage = playerDamageValue,
                     isVisible = showPlayerDamageNumber,
@@ -708,31 +661,15 @@ fun BattleScreen(
                     modifier = Modifier.fillMaxSize(),
                     isPlayerScreen = true,
                     onAnimationComplete = {
-                        println("DEBUG: Player hit effect animation completed, setting showPlayerHitEffect = false")
                         showPlayerHitEffect = false
                         hidePlayerAttackSprite = false // Show attack sprite again
-                        println("DEBUG: Player hit effect animation completed")
                     }
                 )
                 
 
-                
-                // Debug text overlay
-                /*
-                Text(
-                    text = "View: ${battleSystem.currentView}, Player Damage: $playerDamageValue, Show: $showPlayerDamageNumber",
-                    color = Color.Red,
-                    fontSize = 12.sp,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .offset(y = 200.dp)
-                        .background(Color.White.copy(alpha = 0.8f))
-                )
-                */
             }
             2 -> {
                 // Enemy screen - show opponent damage (when player attacks opponent)
-                println("DEBUG: Enemy screen damage overlay - opponentDamageValue=$opponentDamageValue, showOpponentDamageNumber=$showOpponentDamageNumber")
                 AnimatedDamageNumber(
                     damage = opponentDamageValue,
                     isVisible = showOpponentDamageNumber,
@@ -747,10 +684,8 @@ fun BattleScreen(
                     modifier = Modifier.fillMaxSize(),
                     isPlayerScreen = false,
                     onAnimationComplete = {
-                        println("DEBUG: Enemy hit effect animation completed, setting showOpponentHitEffect = false")
                         showOpponentHitEffect = false
                         hideEnemyAttackSprite = false // Show attack sprite again
-                        println("DEBUG: Enemy hit effect animation completed")
                     }
                 )
                 
@@ -835,14 +770,6 @@ fun MiddleBattleView(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Player HP display numbers
-            /*
-            Text(
-                text = "HP: ${battleSystem.playerHP.toInt()}/${activeCharacter?.baseHp ?: 100}",
-                fontSize = 14.sp,
-                color = Color.Black
-            )
-            */
         }
 
         // Middle section: Both Digimon with horizontal line separator
@@ -1076,7 +1003,6 @@ fun MiddleBattleView(
             // Attack button
             Button(
                 onClick = {
-                    println("Attack button clicked!")
                     
                     // Capture userId for use in this lambda
                     val playerUserId = userId
@@ -1365,8 +1291,6 @@ fun PlayerBattleView(
                     previousAttackPhase = battleSystem.attackPhase
                 }
                 
-                    println("PlayerBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
-                
                     if (!isTransitioning && !hidePlayerAttackSprite) {
                     AttackSpriteImage(
                         characterId = characterId,
@@ -1541,8 +1465,6 @@ fun EnemyBattleView(
                     previousAttackPhase = battleSystem.attackPhase
                 }
                 
-                    println("EnemyBattleView - Attack sprite - Phase: ${battleSystem.attackPhase}, Progress: $attackAnimationProgress, X Offset: $xOffset, CurrentView: ${battleSystem.currentView}")
-                
                     if (!isTransitioning && !hideEnemyAttackSprite) {
                     AttackSpriteImage(
                         characterId = characterId,
@@ -1595,7 +1517,6 @@ fun BattlesScreen() {
     ) { isGranted: Boolean ->
         hasStoragePermission = isGranted
         if (isGranted) {
-            println("BATTLESCREEN: READ_EXTERNAL_STORAGE permission granted")
         } else {
             println("BATTLESCREEN: READ_EXTERNAL_STORAGE permission denied")
         }
@@ -1616,7 +1537,6 @@ fun BattlesScreen() {
         }
         hasStoragePermission = hasPermission
         if (hasPermission) {
-            println("BATTLESCREEN: MANAGE_EXTERNAL_STORAGE permission granted")
         } else {
             println("BATTLESCREEN: MANAGE_EXTERNAL_STORAGE permission not granted")
         }
@@ -1650,7 +1570,7 @@ fun BattlesScreen() {
                 readStoragePermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
             }
         } else if (permissionCheck) {
-            println("BATTLESCREEN: Storage permission already granted")
+            //println("BATTLESCREEN: Storage permission already granted")
         }
     }
 
@@ -1681,13 +1601,16 @@ fun BattlesScreen() {
     var selectedBackgroundSet by remember { mutableStateOf(0) }
     
     // Sprite animation tester state
+    /*
     var showSpriteTester by remember { mutableStateOf(false) }
     var spriteTesterView by remember { mutableStateOf("entry") } // "entry" or "testing"
     var dimId by remember { mutableStateOf("") }
     var monId by remember { mutableStateOf("") }
     var currentTestAnimation by remember { mutableStateOf(DigimonAnimationType.IDLE) }
     var testCharacterId by remember { mutableStateOf("") }
+     */
 
+    /*
     // Create hardcoded character lists for each stage
     val rookieCharacters = listOf(
         APIBattleCharacter("AGUMON", "degimon_name_Dim012_003", "dim012_mon03", 0, 1, 1800, 1800, 2400.0f, 700.0f),
@@ -1712,7 +1635,6 @@ fun BattlesScreen() {
         APIBattleCharacter("SLAYERDRAMON","degimon_name_dim129_mon15","dim129_mon15",3,1,4800, 4800, 6300.0f,1950.0f),
         APIBattleCharacter("BREAKDRAMON","degimon_name_dim129_mon17","dim129_mon17",3,2,6000, 6000, 4000.0f,1980.0f)
     )
-
     // Get the appropriate character list based on current stage
     val characterList = when (currentStage.lowercase()) {
         "rookie" -> rookieCharacters
@@ -1721,9 +1643,7 @@ fun BattlesScreen() {
         "mega" -> megaCharacters
         else -> rookieCharacters
     }
-
-    // Determine if player can battle based on stage (derived from activeUserCharacter)
-    val canBattle = activeUserCharacter?.stage?.let { it >= 2 } ?: false
+    */
     
     // Get the appropriate battle type based on player's stage (derived from activeUserCharacter)
     val playerBattleType = activeUserCharacter?.stage?.let { stage ->
@@ -1735,13 +1655,15 @@ fun BattlesScreen() {
             else -> null
         }
     }
+
+    // Determine if player can battle based on stage (derived from activeUserCharacter)
+    val canBattle = activeUserCharacter?.stage?.let { it >= 2 } ?: false
     
     // Load opponents automatically based on player's stage
     // Only load if authenticated and character is ready
     LaunchedEffect(activeUserCharacter, isAuthenticated) {
         // Wait for authentication to complete before loading opponents
         if (!isAuthenticated) {
-            println("BATTLESCREEN: Skipping opponent load - not authenticated yet")
             return@LaunchedEffect
         }
         
@@ -1754,7 +1676,6 @@ fun BattlesScreen() {
                         // Create a new list to trigger UI recomposition
                         opponentsList = ArrayList(opponents.opponentsList)
                         println("BATTLESCREEN: Loaded ${opponents.opponentsList.size} opponents from API")
-                        println("BATTLESCREEN: Total opponents in list: ${opponentsList.size}")
                     } catch (e: Exception) {
                         Log.d(TAG, "Error processing opponents data: ${e.message}")
                         e.printStackTrace()
@@ -1787,16 +1708,16 @@ fun BattlesScreen() {
         }
         
         if (token != null && token.isNotEmpty()) {
-            // Check if we've already successfully processed this token
+            // Check if we've already processed this token (either successfully or currently processing)
             if (!processedTokens.contains(token)) {
-                println("BATTLESCREEN: Received token from URI: $token (URI: $uri)")
+                // Mark token as being processed IMMEDIATELY to prevent duplicate API calls
+                processedTokens = processedTokens + token
+                println("BATTLESCREEN: Received token from URI: $token (URI: $uri) - marking as processing")
                 
                 // Exchange token with battle server
                 RetrofitHelper().authenticate(context, token) { response ->
                     if (response.success) {
-                        // Only mark as processed after successful authentication
-                        processedTokens = processedTokens + token
-                        
+                        // Token already marked as processed before API call, just extract userId
                         // Extract userId from response
                         val extractedUserId = response.userInfo?.userId?.toLongOrNull()
                         kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
@@ -1812,7 +1733,35 @@ fun BattlesScreen() {
                         }
                     } else {
                         println("BATTLESCREEN: Authentication failed: ${response.message}")
-                        // Don't mark as processed on failure - allow retry with a new token
+                        // If it's an "Invalid user nonce" error, the token was already used - keep it marked to prevent retries
+                        if (response.message?.contains("Invalid user nonce") == true || response.message?.contains("nonce") == true) {
+                            println("BATTLESCREEN: Token was already used (Invalid user nonce), keeping it marked to prevent retries")
+                            // Token already marked as processed, just handle the error
+                            // Clear authentication state and open login page
+                            kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                                battleAuthContainer.authRepository.logout()
+                            }
+                            kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
+                                isAuthenticated = false
+                                isCheckingAuth = false
+                                // Small delay to ensure state is updated
+                                kotlinx.coroutines.delay(100)
+                                // Open auth URL to get a fresh token
+                                val authUrl = "http://auth.nacatech.es/begin?app=443654920&redirect_uri=vbhelper://auth?token="
+                                val authIntent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
+                                try {
+                                    context.startActivity(authIntent)
+                                    println("BATTLESCREEN: Opened auth URL after token expiration: $authUrl")
+                                } catch (e: Exception) {
+                                    println("BATTLESCREEN: Failed to open auth URL: ${e.message}")
+                                    e.printStackTrace()
+                                }
+                            }
+                        } else {
+                            // For other errors, remove from processed set to allow retry with a new token
+                            println("BATTLESCREEN: Authentication failed, removing token from processed set to allow retry")
+                            processedTokens = processedTokens - token
+                        }
                         // Show toast on main thread
                         kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
                             android.widget.Toast.makeText(context, "Authentication failed: ${response.message}", android.widget.Toast.LENGTH_SHORT).show()
@@ -1820,7 +1769,7 @@ fun BattlesScreen() {
                     }
                 }
             } else {
-                println("BATTLESCREEN: Token already successfully processed, skipping: $token")
+                println("BATTLESCREEN: Token already processed (or currently processing), skipping: $token")
             }
         } else {
             println("BATTLESCREEN: No token found in URI: $uri (checked 'c' and 'token' parameters)")
@@ -2012,10 +1961,8 @@ fun BattlesScreen() {
     // Only check if permission is granted
     LaunchedEffect(hasStoragePermission) {
         if (hasStoragePermission) {
-            println("BATTLESCREEN: LaunchedEffect triggered - checking sprite files...")
             val spriteFileManager = SpriteFileManager(context)
             if (spriteFileManager.checkSpriteFilesExist()) {
-                println("BATTLESCREEN: Sprite files exist in external storage")
             } else {
                 println("BATTLESCREEN: Sprite files not found in external storage")
             }
@@ -2042,16 +1989,18 @@ fun BattlesScreen() {
                  */
                 
                 val activeChar = database.userCharacterDao().getActiveCharacter()
-                println("BATTLESCREEN: getActiveCharacter() returned: $activeChar")
+                //println("BATTLESCREEN: getActiveCharacter() returned: $activeChar")
                 
                 if (activeChar != null) {
                     // Get the character data using the charId from activeChar
                     val characterData = database.characterDao().getCharacterInfo(activeChar.charId)
+                    /*
                     println("BATTLESCREEN: CharacterData from getCharacterInfo:")
                     println("  - cardId: ${characterData.cardId}")
                     println("  - charId: ${characterData.charId}")
                     println("  - stage: ${characterData.stage}")
                     println("  - attribute: ${characterData.attribute}")
+                    */
                     
                     // The cardId from getCharacterInfo is already the correct card ID we need!
                     val cardId = characterData.cardId
@@ -2079,7 +2028,8 @@ fun BattlesScreen() {
                         activeCardId = formattedCardId
                         activeCharacter = playerCharacter // Set the active character for battle
                     }
-                    
+
+                    /*
                     println("BATTLESCREEN: Loaded active character from database:")
                     println("  - UserCharacter ID: ${activeChar.id}")
                     println("  - CharId: ${activeChar.charId}")
@@ -2090,6 +2040,7 @@ fun BattlesScreen() {
                     println("  - Formatted as: $activeCardId")
                     println("  - Can battle: ${activeChar.stage >= 2}")
                     println("  - Battle type: ${when (activeChar.stage) { 2 -> "rookie"; 3 -> "champion"; 4 -> "ultimate"; 5 -> "mega"; else -> "none" }}")
+                     */
                 } else {
                     println("BATTLESCREEN: No active character found in database")
                     withContext(Dispatchers.Main) {
@@ -2103,206 +2054,11 @@ fun BattlesScreen() {
         }
     }
 
-
     val backButton = @Composable {
         Button(
             onClick = { currentView = "main" }
         ) {
             Text("Back")
-        }
-    }
-
-    val characterDropdown = @Composable { currentStage: String ->
-        // Get the appropriate character list based on the passed currentStage parameter
-        val characterListForStage = when (currentStage.lowercase()) {
-            "rookie" -> rookieCharacters
-            "champion" -> championCharacters
-            "ultimate" -> ultimateCharacters
-            "mega" -> megaCharacters
-            else -> rookieCharacters
-        }
-        
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
-        ) {
-            OutlinedTextField(
-                value = selectedStage.ifEmpty { "Select Character" },
-                onValueChange = {},
-                readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor()
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                characterListForStage.forEach { character ->
-                    DropdownMenuItem(
-                        text = { Text(character.name) },
-                        onClick = {
-                            selectedStage = character.name
-                            activeCharacter = character
-                            expanded = false
-                            println("Selected character: ${character.name}")
-                        }
-                    )
-                }
-            }
-        }
-    }
-    
-    val spriteTesterEntry = @Composable {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text("Sprite Animation Tester", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // DIM ID input
-            OutlinedTextField(
-                value = dimId,
-                onValueChange = { dimId = it },
-                label = { Text("DIM ID (e.g., 012)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Mon ID input
-            OutlinedTextField(
-                value = monId,
-                onValueChange = { monId = it },
-                label = { Text("Mon ID (e.g., 03)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Load sprite button
-            Button(
-                onClick = {
-                    if (dimId.isNotEmpty() && monId.isNotEmpty()) {
-                        testCharacterId = "dim${dimId}_mon${monId}"
-                        println("Testing sprite for: $testCharacterId")
-                        spriteTesterView = "testing"
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Load Sprite")
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Button(
-                onClick = { showSpriteTester = false },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Back to Main")
-            }
-        }
-    }
-    
-    val spriteTesterTesting = @Composable {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text("Sprite Animation Testing", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Text("Character: $testCharacterId", fontSize = 14.sp, color = Color.Gray)
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Display sprite
-            AnimatedSpriteImage(
-                characterId = testCharacterId,
-                animationType = currentTestAnimation,
-                modifier = Modifier.size(120.dp),
-                contentScale = ContentScale.Fit,
-                reloadMappings = false,
-                animationOffset = 0L // No offset for sprite tester
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Animation buttons in a grid
-            Text("Animation Buttons:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            val animationTypes = listOf(
-                DigimonAnimationType.IDLE to "IDLE",
-                DigimonAnimationType.IDLE2 to "IDLE2",
-                DigimonAnimationType.WALK to "WALK",
-                DigimonAnimationType.WALK2 to "WALK2",
-                DigimonAnimationType.RUN to "RUN",
-                DigimonAnimationType.RUN2 to "RUN2",
-                DigimonAnimationType.WORKOUT to "WORKOUT",
-                DigimonAnimationType.WORKOUT2 to "WORKOUT2",
-                DigimonAnimationType.HAPPY to "HAPPY",
-                DigimonAnimationType.SLEEP to "SLEEP",
-                DigimonAnimationType.ATTACK to "ATTACK",
-                DigimonAnimationType.FLEE to "FLEE"
-            )
-            
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                // Create rows of 3 buttons each
-                animationTypes.chunked(3).forEach { row ->
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        row.forEach { (animationType, label) ->
-                            Button(
-                                onClick = { 
-                                    currentTestAnimation = animationType
-                                    println("Switched to animation: $label")
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (currentTestAnimation == animationType) Color.Blue else Color.Gray
-                                ),
-                                modifier = Modifier.weight(1f),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 4.dp, horizontal = 2.dp)
-                            ) {
-                                Text(label, fontSize = 10.sp)
-                            }
-                        }
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Navigation buttons
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Button(
-                    onClick = { spriteTesterView = "entry" },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Back to Entry")
-                }
-                
-                Button(
-                    onClick = { 
-                        showSpriteTester = false
-                        spriteTesterView = "entry"
-                        testCharacterId = ""
-                        dimId = ""
-                        monId = ""
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Back to Main")
-                }
-            }
         }
     }
 
@@ -2356,21 +2112,15 @@ fun BattlesScreen() {
                                 )
                             }
                         }
-                    } else if (showSpriteTester) {
-                        when (spriteTesterView) {
-                            "entry" -> spriteTesterEntry()
-                            "testing" -> spriteTesterTesting()
-                            else -> spriteTesterEntry()
-                        }
-                    } else {
+                    }
+                    else {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             // Show active character info
                             activeUserCharacter?.let { character ->
-                                Text("Active Character: ${character.id}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text("Active Digimon:")
                                 Text("Stage: ${character.stage}")
-                                Text("Age: ${character.ageInDays} days")
                                 activeCardId?.let { cardId ->
                                     Text("Digimon ID: $cardId", fontSize = 14.sp, color = Color.Blue, fontWeight = FontWeight.Bold)
                                 }
@@ -2379,11 +2129,10 @@ fun BattlesScreen() {
                                 
                                 if (canBattle) {
                                     Text("Available Opponents:", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                    Text("Debug: opponentsList.size = ${opponentsList.size}", fontSize = 12.sp, color = Color.Gray)
+                                    //Text("Debug: opponentsList.size = ${opponentsList.size}", fontSize = 12.sp, color = Color.Gray)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     
                                     if (opponentsList.isNotEmpty()) {
-                                        println("BATTLESCREEN: UI - Showing ${opponentsList.size} opponents")
                                         // Show scrollable list of opponents
                                         LazyColumn(
                                             modifier = Modifier
@@ -2443,30 +2192,6 @@ fun BattlesScreen() {
                             } ?: run {
                                 Text("No active character found in database", fontSize = 16.sp, color = Color.Red)
                             }
-                            
-                            /*
-                            Button(
-                                onClick = { 
-                                    showSpriteTester = true
-                                    spriteTesterView = "entry"
-                                    testCharacterId = ""
-                                    dimId = ""
-                                    monId = ""
-                                    currentTestAnimation = DigimonAnimationType.IDLE
-                                }
-                            ) {
-                                Text("Sprite Animation Tester")
-                            }
-                            Button(
-                                onClick = {
-                                    val spriteFileManager = SpriteFileManager(context)
-                                    spriteFileManager.clearSpriteFiles()
-                                    println("Sprite files cleared!")
-                                }
-                            ) {
-                                Text("Clear Sprite Files")
-                            }
-                             */
                         }
                     }
                 }
@@ -2614,8 +2339,6 @@ fun AnimatedBattleBackground(
             val backgroundFile = File(externalDir, "VBHelper/battle_sprites/extracted_battlebgs/BattleBg_0015_BattleBg_0012.png")
             if (backgroundFile.exists()) {
                 backgroundBitmap = BitmapFactory.decodeFile(backgroundFile.absolutePath)
-                println("Successfully loaded battle background: ${backgroundFile.absolutePath}")
-                println("DEBUG: Image dimensions = ${backgroundBitmap?.width}x${backgroundBitmap?.height} pixels")
             } else {
                 println("Battle background file not found: ${backgroundFile.absolutePath}")
             }
@@ -2634,7 +2357,6 @@ fun AnimatedBattleBackground(
                 // Create perfect loop by resetting when one full screen width has moved
                 if (xOffset <= -screenWidth.value) {
                     xOffset = 0f
-                    println("DEBUG: Background loop reset at xOffset = ${xOffset}")
                 }
             }
         }

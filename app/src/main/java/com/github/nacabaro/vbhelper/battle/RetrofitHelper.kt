@@ -11,23 +11,23 @@ import okhttp3.logging.HttpLoggingInterceptor
 class RetrofitHelper {
 
     fun getOpponents(context: Context, stage: String, callback: (OpponentsDataModel) -> Unit) {
-        println("RetrofitHelper: Starting API call for stage: $stage")
+        //println("RetrofitHelper: Starting API call for stage: $stage")
 
         try {
             // Create a Retrofit instance with the base URL and
             // a GsonConverterFactory for parsing the response.
             val retrofit: Retrofit = Retrofit.Builder().baseUrl("http://192.168.0.230:8080/").addConverterFactory(
                 GsonConverterFactory.create()).build()
-            println("RetrofitHelper: Retrofit instance created")
+            //println("RetrofitHelper: Retrofit instance created")
 
             // Create an ApiService instance from the Retrofit instance.
             val service: OpponentService = retrofit.create<OpponentService>(OpponentService::class.java)
-            println("RetrofitHelper: Service created")
+            //println("RetrofitHelper: Service created")
 
             // Call the getopponents() method of the ApiService
             // to make an API request.
             val call: Call<OpponentsDataModel> = service.getopponents(stage)
-            println("RetrofitHelper: API call created, enqueueing...")
+            //println("RetrofitHelper: API call created, enqueueing...")
 
             // Use the enqueue() method of the Call object to
             // make an asynchronous API request.
@@ -43,7 +43,7 @@ class RetrofitHelper {
                     println("RetrofitHelper: Response body: ${response.body()}")
 
                     if(response.isSuccessful){
-                        println("RetrofitHelper: Response successful, calling callback")
+                        //println("RetrofitHelper: Response successful, calling callback")
                         val opponentsList: OpponentsDataModel = response.body() as OpponentsDataModel
                         callback(opponentsList)
                     } else {
@@ -180,7 +180,7 @@ class RetrofitHelper {
     }
 
     fun authenticate(context: Context, token: String, callback: (AuthenticateResponse) -> Unit) {
-        println("RetrofitHelper: Starting validate API call with token: $token")
+        //println("RetrofitHelper: Starting validate API call with token: $token")
         
         if (token.isEmpty()) {
             println("RetrofitHelper: ERROR - Token is empty!")
@@ -206,8 +206,8 @@ class RetrofitHelper {
             val service: AuthService = retrofit.create<AuthService>(AuthService::class.java)
             val request = AuthenticateRequest(userToken = token)
             println("RetrofitHelper: Sending request to api/auth/validate with userToken: $token")
-            println("RetrofitHelper: Request object: $request")
-            println("RetrofitHelper: Request JSON will be: {\"userToken\": \"$token\"}")
+            //println("RetrofitHelper: Request object: $request")
+            //println("RetrofitHelper: Request JSON will be: {\"userToken\": \"$token\"}")
             val call: Call<AuthenticateResponse> = service.validate(request)
 
             call.enqueue(object : Callback<AuthenticateResponse> {
