@@ -1797,16 +1797,28 @@ fun BattlesScreen() {
                 }
             }
             
-            // If we have a stored token, validate it with the server in the background
-            if (localAuthState && storedToken != null && storedToken.isNotEmpty()) {
-                // State already set above, now validate in background
+            // If we have a stored token and userId, assume session is still active
+            // The single-use token can't be re-validated, but the server maintains a session after initial validation
+            // We'll only re-authenticate if API calls fail with authentication errors
+            if (localAuthState && storedToken != null && storedToken.isNotEmpty() && storedUserId != null) {
+                // Session appears to be active - user is already authenticated
+                // No need to re-validate the single-use token, just restore the session
+                println("BATTLESCREEN: Restoring active session (userId: $storedUserId)")
+                isAuthenticated = true
+                isCheckingAuth = false
+                userId = storedUserId
+                // Session is restored, no need to validate token again
+            } else if (localAuthState && storedToken != null && storedToken.isNotEmpty()) {
+                // We have a token but no userId - try to validate once to get userId
+                // This should only happen on first login or if userId was lost
+                println("BATTLESCREEN: Have token but no userId, validating once to get userId...")
                 RetrofitHelper().authenticate(context, storedToken) { response ->
                     // Update UI on main thread
                     kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
                         if (response.success) {
-                            val extractedUserId = response.userInfo?.userId?.toLongOrNull() ?: storedUserId
-                            // Update stored userId if we got a new one
-                            if (extractedUserId != null && extractedUserId != storedUserId) {
+                            val extractedUserId = response.userInfo?.userId?.toLongOrNull()
+                            // Update stored userId
+                            if (extractedUserId != null) {
                                 kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
                                     authRepository.setAuthenticated(true, storedToken, extractedUserId)
                                 }
@@ -1814,10 +1826,10 @@ fun BattlesScreen() {
                             isAuthenticated = true
                             isCheckingAuth = false
                             userId = extractedUserId
+                            println("BATTLESCREEN: Got userId from validation: $extractedUserId")
                         } else {
                             println("BATTLESCREEN: Token validation failed: ${response.message}")
                             // Check if it's a critical error that requires re-authentication
-                            // (e.g., "Invalid user nonce" means token was already used)
                             val isCriticalError = response.message?.contains("Invalid user nonce") == true || 
                                                   response.message?.contains("nonce") == true ||
                                                   response.message?.contains("invalid") == true ||
@@ -1838,8 +1850,9 @@ fun BattlesScreen() {
                                 println("BATTLESCREEN: Opened auth URL after critical validation failure: $authUrl")
                             } else {
                                 // Non-critical error (e.g., network issue) - keep authenticated state
-                                // This prevents redirect on rotation if validation fails due to network
                                 println("BATTLESCREEN: Non-critical validation error, keeping authenticated state")
+                                isAuthenticated = true
+                                isCheckingAuth = false
                             }
                         }
                     }

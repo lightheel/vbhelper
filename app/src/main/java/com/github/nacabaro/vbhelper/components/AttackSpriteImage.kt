@@ -24,7 +24,7 @@ fun AttackSpriteImage(
     val context = LocalContext.current
     
     LaunchedEffect(characterId, isLarge) {
-        println("AttackSpriteImage: Loading attack sprite for characterId=$characterId, isLarge=$isLarge")
+        //println("AttackSpriteImage: Loading attack sprite for characterId=$characterId, isLarge=$isLarge")
         coroutineScope.launch {
             val attackSpriteManager = AttackSpriteManager(context)
             val loadedBitmap = withContext(Dispatchers.IO) {
