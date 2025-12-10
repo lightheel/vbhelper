@@ -1,3 +1,97 @@
 <resources>
     <string name="app_name">VBHelper</string>
+    <string name="beta_warning_message_main">
+        This application is currently in alpha and it is not complete. Do not use it to store important characters for you, as any future updates might delete all your characters. Sorry for the inconvenience!
+    </string>
+
+    <string name="beta_warning_message_compatibility">
+        The application should now work with the original VB and the VH.
+    </string>
+
+    <string name="beta_warning_message_thanks">
+        Thank you for your understanding and patience. Sincerely, the dev team.
+    </string>
+
+    <string name="beta_warning_button_dismiss">
+        Dismiss
+    </string>
+
+    <string name="nav_scan">Scan</string>
+    <string name="nav_battle">Battle</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_dex">Dex</string>
+    <string name="nav_card_adventure">Card adventure</string>
+    <string name="nav_storage">Storage</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_viewer">Viewer</string>
+    <string name="nav_card">Card</string>
+    <string name="nav_items">Items</string>
+    <string name="nav_my_items">My items</string>
+    <string name="nav_items_store">Items store</string>
+    <string name="nav_apply_item">Apply item</string>
+    <string name="nav_adventure">Adventure</string>
+    <string name="nav_credits">Credits</string>
+
+    <string name="adventure_title">Adventure</string>
+    <string name="adventure_empty_state">Nothing to see here</string>
+
+    <string name="home_title">VB Helper</string>
+    <string name="home_adventure_mission_finished">
+        One of your characters has finished their adventure mission!
+    </string>
+
+    <string name="scan_secrets_not_initialized">
+        Secrets is not yet initialized. Try again.
+    </string>
+    <string name="scan_secrets_not_imported">
+        Secrets not yet imported. Go to Settings and Import APK.
+    </string>
+
+    <string name="scan_title">Scan a Vital Bracelet</string>
+    <string name="scan_vb_to_app">Vital Bracelet to App</string>
+    <string name="scan_app_to_vb">App to Vital Bracelet</string>
+
+    <string name="scan_no_nfc_on_device">No NFC on device!</string>
+    <string name="scan_tag_not_vb">Tag detected is not VB</string>
+    <string name="scan_missing_secrets">
+        Missing Secrets. Go to settings and import Vital Arena APK.
+    </string>
+    <string name="scan_sent_character_success">Sent character successfully!</string>
+    <string name="scan_error_generic">Whoops</string>
+    <string name="scan_sent_dim_success">Sent DIM successfully!</string>
+    <string name="scan_nfc_must_be_enabled">NFC must be enabled</string>
+
+
+    <string name="settings_title">Settings</string>
+
+    <string name="settings_section_nfc">NFC Communication</string>
+    <string name="settings_section_dim_bem">DiM/BEm management</string>
+    <string name="settings_section_about">About and credits</string>
+    <string name="settings_section_data">Data management</string>
+
+    <string name="settings_import_apk_title">Import APK</string>
+    <string name="settings_import_apk_desc">
+        Import Secrets From Vital Arena 2.1.0 APK
+    </string>
+
+    <string name="settings_import_card_title">Import card</string>
+    <string name="settings_import_card_desc">
+        Import DiM/BEm card file
+    </string>
+
+    <string name="settings_credits_title">Credits</string>
+    <string name="settings_credits_desc">Credits</string>
+
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_desc">About</string>
+
+    <string name="settings_export_data_title">Export data</string>
+    <string name="settings_export_data_desc">
+        Export application database
+    </string>
+
+    <string name="settings_import_data_title">Import data</string>
+    <string name="settings_import_data_desc">
+        Import application database
+    </string>
 </resources>

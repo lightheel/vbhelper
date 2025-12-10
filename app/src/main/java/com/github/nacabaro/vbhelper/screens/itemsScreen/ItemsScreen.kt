@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun ItemsScreen(
@@ -37,7 +38,7 @@ fun ItemsScreen(
                 ) {
                     items.forEachIndexed { index, item ->
                         Tab(
-                            text = { Text(item.label) },
+                            text = { Text(text = stringResource(item.label)) },
                             selected = selectedTabItem == index,
                             onClick = { selectedTabItem = index }
                         )

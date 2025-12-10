@@ -1,0 +1,92 @@
+<resources>
+    <string name="app_name">VBHelper</string>
+    <string name="beta_warning_message_main">
+        Este aplicativo ainda está em versão alfa e não está completo. Não o use para armazenar personagens importantes para você, pois futuras atualizações podem apagar todos os seus personagens. Desculpe pelo transtorno!
+    </string>
+    <string name="beta_warning_message_compatibility">
+        O aplicativo agora deve funcionar com o VB original e com o VH.
+    </string>
+    <string name="beta_warning_message_thanks">
+        Obrigado pela compreensão e pela paciência. Atenciosamente, a equipe de desenvolvimento.
+    </string>
+    <string name="beta_warning_button_dismiss">Fechar</string>
+
+
+    <string name="nav_scan">Escanear</string>
+    <string name="nav_battle">Batalhas</string>
+    <string name="nav_home">Início</string>
+    <string name="nav_dex">Dex</string>
+    <string name="nav_card_adventure">Aventura do card</string>
+    <string name="nav_storage">Armazenamento</string>
+    <string name="nav_settings">Configurações</string>
+    <string name="nav_viewer">Visualizador</string>
+    <string name="nav_card">Card</string>
+    <string name="nav_items">Itens</string>
+    <string name="nav_my_items">Meus itens</string>
+    <string name="nav_items_store">Loja de itens</string>
+    <string name="nav_apply_item">Aplicar item</string>
+    <string name="nav_adventure">Aventura</string>
+    <string name="nav_credits">Créditos</string>
+
+    <string name="adventure_title">Aventura</string>
+    <string name="adventure_empty_state">Nada para ver aqui</string>
+
+    <string name="home_title">VB Helper</string>
+    <string name="home_adventure_mission_finished">
+        Um dos seus personagens terminou a missão de aventura!
+    </string>
+
+    <string name="scan_secrets_not_initialized">
+        Os segredos ainda não foram inicializados. Tente novamente.
+    </string>
+    <string name="scan_secrets_not_imported">
+        Os segredos ainda não foram importados. Vá em Configurações e importe o APK.
+    </string>
+
+    <string name="scan_title">Escanear um Vital Bracelet</string>
+    <string name="scan_vb_to_app">Vital Bracelet para o app</string>
+    <string name="scan_app_to_vb">App para o Vital Bracelet</string>
+
+    <string name="scan_no_nfc_on_device">O dispositivo não possui NFC!</string>
+    <string name="scan_tag_not_vb">A tag detectada não é do Vital Bracelet.</string>
+    <string name="scan_missing_secrets">
+        Segredos ausentes. Vá em Configurações e importe o APK do Vital Arena.
+    </string>
+    <string name="scan_sent_character_success">Personagem enviado com sucesso!</string>
+    <string name="scan_error_generic">Ops!</string>
+    <string name="scan_sent_dim_success">DIM enviado com sucesso!</string>
+    <string name="scan_nfc_must_be_enabled">O NFC precisa estar ativado.</string>
+
+    <string name="settings_title">Configurações</string>
+
+    <string name="settings_section_nfc">Comunicação NFC</string>
+    <string name="settings_section_dim_bem">Gerenciamento de DiM/BEm</string>
+    <string name="settings_section_about">Sobre e créditos</string>
+    <string name="settings_section_data">Gerenciamento de dados</string>
+
+    <string name="settings_import_apk_title">Importar APK</string>
+    <string name="settings_import_apk_desc">
+        Importar segredos do APK do Vital Arena 2.1.0
+    </string>
+
+    <string name="settings_import_card_title">Importar card</string>
+    <string name="settings_import_card_desc">
+        Importar arquivo de card DiM/BEm
+    </string>
+
+    <string name="settings_credits_title">Créditos</string>
+    <string name="settings_credits_desc">Créditos</string>
+
+    <string name="settings_about_title">Sobre</string>
+    <string name="settings_about_desc">Sobre</string>
+
+    <string name="settings_export_data_title">Exportar dados</string>
+    <string name="settings_export_data_desc">
+        Exportar banco de dados do aplicativo
+    </string>
+
+    <string name="settings_import_data_title">Importar dados</string>
+    <string name="settings_import_data_desc">
+        Importar banco de dados do aplicativo
+    </string>
+</resources>

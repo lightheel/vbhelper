@@ -16,12 +16,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
+import com.github.nacabaro.vbhelper.R
+
 
 @Composable
 fun SettingsScreen(
@@ -30,10 +33,10 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
 
-    Scaffold (
+    Scaffold(
         topBar = {
             TopBanner(
-                text = "Settings",
+                text = stringResource(R.string.settings_title),
                 onBackClick = {
                     navController.popBackStack()
                 }
@@ -42,34 +45,57 @@ fun SettingsScreen(
         modifier = Modifier
             .fillMaxSize()
     ) { contentPadding ->
-        Column (
+        Column(
             modifier = Modifier
                 .padding(top = contentPadding.calculateTopPadding())
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            SettingsSection("NFC Communication")
-            SettingsEntry(title = "Import APK", description = "Import Secrets From Vital Arena 2.1.0 APK") {
+            SettingsSection(title = stringResource(R.string.settings_section_nfc))
+            SettingsEntry(
+                title = stringResource(R.string.settings_import_apk_title),
+                description = stringResource(R.string.settings_import_apk_desc)
+            ) {
                 settingsScreenController.onClickImportApk()
             }
-            SettingsSection("DiM/BEm management")
-            SettingsEntry(title = "Import card", description = "Import DiM/BEm card file") {
+
+            SettingsSection(title = stringResource(R.string.settings_section_dim_bem))
+            SettingsEntry(
+                title = stringResource(R.string.settings_import_card_title),
+                description = stringResource(R.string.settings_import_card_desc)
+            ) {
                 settingsScreenController.onClickImportCard()
             }
-            SettingsSection("About and credits")
-            SettingsEntry(title = "Credits", description = "Credits") {
+
+            SettingsSection(title = stringResource(R.string.settings_section_about))
+            SettingsEntry(
+                title = stringResource(R.string.settings_credits_title),
+                description = stringResource(R.string.settings_credits_desc)
+            ) {
                 navController.navigate(NavigationItems.Credits.route)
             }
-            SettingsEntry(title = "About", description = "About") {
+            SettingsEntry(
+                title = stringResource(R.string.settings_about_title),
+                description = stringResource(R.string.settings_about_desc)
+            ) {
                 val browserIntent = Intent(
-                    Intent.ACTION_VIEW, Uri.parse("https://github.com/nacabaro/vbhelper/"))
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://github.com/nacabaro/vbhelper/")
+                )
                 context.startActivity(browserIntent)
             }
-            SettingsSection("Data management")
-            SettingsEntry(title = "Export data", description = "Export application database") {
+
+            SettingsSection(title = stringResource(R.string.settings_section_data))
+            SettingsEntry(
+                title = stringResource(R.string.settings_export_data_title),
+                description = stringResource(R.string.settings_export_data_desc)
+            ) {
                 settingsScreenController.onClickOpenDirectory()
             }
-            SettingsEntry(title = "Import data", description = "Import application database") {
+            SettingsEntry(
+                title = stringResource(R.string.settings_import_data_title),
+                description = stringResource(R.string.settings_import_data_desc)
+            ) {
                 settingsScreenController.onClickImportDatabase()
             }
         }
@@ -101,9 +127,9 @@ fun SettingsEntry(
 fun SettingsSection(
     title: String
 ) {
-    Box (
+    Box(
         modifier = Modifier
-            .padding(start = 16.dp)
+            .padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
     ) {
         Text(
             text = title,
