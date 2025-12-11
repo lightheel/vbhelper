@@ -89,4 +89,132 @@
     <string name="settings_import_data_desc">
         Importar banco de dados do aplicativo
     </string>
+
+    <string name="credits_title">Créditos</string>
+    <string name="credits_section_reverse_engineering">Engenharia reversa</string>
+    <string name="credits_section_app_development">Desenvolvimento do aplicativo</string>
+
+    <string name="credits_cyanic_description">
+        Reverteu o firmware e nos ajudou durante o desenvolvimento.
+    </string>
+    <string name="credits_cfogrady_description">
+        Desenvolveu vb-lib-nfc e parte deste aplicativo.
+    </string>
+    <string name="credits_nacabaro_description">
+        Desenvolveu este aplicativo.
+    </string>
+    <string name="credits_lightheel_description">
+        Está desenvolvendo a parte de batalhas deste aplicativo, incluindo o servidor. Ainda em desenvolvimento.
+    </string>
+    <string name="credits_shvstrz_description">
+        Responsável pelo design do ícone do aplicativo em SVG.
+    </string>
+
+    <string name="action_place_near_reader">Aproxime o seu Vital Bracelet do leitor...</string>
+    <string name="action_cancel">Cancelar</string>
+
+    <string name="read_character_title">Ler personagem</string>
+    <string name="read_character_prepare_device">Prepare seu dispositivo!</string>
+    <string name="read_character_go_to_connect">Vá em conectar e, quando estiver pronto, pressione confirmar!</string>
+    <string name="read_character_confirm">Confirmar</string>
+
+    <string name="reading_character_title">Lendo personagem</string>
+
+    <string name="write_card_title">Escrevendo detalhes do cartão</string>
+    <string name="write_card_icon_description">Ícone do cartão</string>
+    <string name="write_card_device_ready">Prepare o seu dispositivo!</string>
+    <string name="write_card_required_card">Você vai precisar do cartão %1$s!</string>
+    <string name="write_card_confirm">Confirmar</string>
+
+    <string name="write_character_title">Escrevendo personagem</string>
+    <string name="write_character_icon_description">Ícone do personagem</string>
+    <string name="write_character_success">
+        Cartão instalado com sucesso!!
+    </string>
+    <string name="write_character_wait_ready">
+        Aguarde até que seu dispositivo esteja pronto e então toque em Confirmar
+    </string>
+    <string name="write_character_confirm">Confirmar</string>
+
+    <string name="sending_card_title">Enviando cartão</string>
+    <string name="writing_character_action_title">Escrevendo personagem</string>
+
+    <string name="items_title">Itens</string>
+    <string name="items_no_items">Nenhum item</string>
+
+    <string name="items_store_credits">%1$d créditos</string>
+    <string name="items_not_enough_credits">Créditos insuficientes</string>
+    <string name="items_purchase_success">Compra realizada com sucesso!</string>
+
+    <string name="obtained_item_you_have">Você obteve %1$d deste item</string>
+    <string name="obtained_item_you_also_got_credits">Você também recebeu %1$d créditos</string>
+    <string name="obtained_item_dismiss">Fechar</string>
+
+    <string name="choose_character_title">Escolher personagem</string>
+    <string name="choose_character_item_applied">Item aplicado!</string>
+
+    <string name="item_dialog_costs_credits">Custa %1$d créditos</string>
+    <string name="item_dialog_you_have_quantity">Você tem %1$d deste item</string>
+    <string name="item_dialog_use">Usar item</string>
+    <string name="item_dialog_purchase">Comprar</string>
+    <string name="item_dialog_cancel">Cancelar</string>
+
+    <string name="battles_online_title">Batalhas online</string>
+    <string name="battles_coming_soon">Em breve</string>
+
+    <string name="cards_my_cards_title">Meus cards</string>
+
+    <string name="card_view_discovered_characters">Personagens descobertos</string>
+
+    <string name="dex_chara_icon_description">Ícone do personagem</string>
+    <string name="dex_chara_name_icon_description">Nome do personagem</string>
+    <string name="dex_chara_stats">HP: %1$d, BP: %2$d, AP: %3$d</string>
+    <string name="dex_chara_stage_attribute">Stg: %1$s, Atr: %2$s</string>
+    <string name="dex_chara_unknown_name">\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?</string>
+    <string name="dex_chara_stage_attribute_unknown">Stg: -, Atr: -</string>
+    <string name="dex_chara_stats_unknown">HP: -, BP: -, AP: -</string>
+    <string name="dex_chara_requirements">
+        Tr: %1$d; Bt: %2$d; Vr: %3$d; Wr: %4$d%%; Ct: %5$dh
+    </string>
+    <string name="dex_chara_adventure_level">AdvLvl %1$d</string>
+    <string name="dex_chara_fusions_button">Fusões</string>
+    <string name="dex_chara_close_button">Fechar</string>
+
+    <string name="card_adventure_missions_title">Missões de aventura</string>
+
+    <string name="card_entry_characters_obtained">%1$d de %2$d personagens obtidos</string>
+    <string name="card_entry_edit">Editar card</string>
+    <string name="card_entry_delete">Excluir card</string>
+
+    <string name="storage_my_characters_title">Meus personagens</string>
+    <string name="storage_nothing_to_see_here">Nada para ver aqui</string>
+    <string name="storage_in_adventure_toast">Este personagem está em uma aventura</string>
+
+    <string name="storage_character_image_description">Imagem do personagem</string>
+    <string name="storage_send_to_watch">Enviar para o relógio</string>
+    <string name="storage_set_active">Definir como ativo</string>
+    <string name="storage_send_on_adventure">Enviar para aventura</string>
+    <string name="storage_delete_character">Excluir personagem</string>
+    <string name="storage_close">Fechar</string>
+
+    <string name="home_vbdim_vitals">Vitais</string>
+    <string name="home_vbdim_trophies">Troféus</string>
+    <string name="home_vbdim_mood">Humor</string>
+    <string name="home_vbdim_next_timer">Próximo timer</string>
+    <string name="home_vbdim_total_battle_win">% vitórias totais</string>
+    <string name="home_vbdim_current_phase_win">% vitórias fase atual</string>
+    <string name="home_vbdim_special_missions">Missões especiais</string>
+
+    <string name="special_mission_none">Nenhuma missão selecionada</string>
+    <string name="special_mission_steps">Ande %1$d passos</string>
+    <string name="special_mission_battles">Lute %1$d vezes</string>
+    <string name="special_mission_wins">Vença %1$d batalhas</string>
+    <string name="special_mission_vitals">Ganhe %1$d vitals</string>
+    <string name="special_mission_steps_progress">Andou %1$d passos</string>
+    <string name="special_mission_battles_progress">Lutou %1$d vezes</string>
+    <string name="special_mission_wins_progress">Venceu %1$d batalhas</string>
+    <string name="special_mission_vitals_progress">Ganhou %1$d vitals</string>
+    <string name="special_mission_icon_content_description">Ícone de missão especial</string>
+
+
 </resources>

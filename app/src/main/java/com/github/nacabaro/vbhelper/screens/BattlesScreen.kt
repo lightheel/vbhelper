@@ -10,13 +10,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.github.nacabaro.vbhelper.components.TopBanner
+import androidx.compose.ui.res.stringResource
+import com.github.nacabaro.vbhelper.R
+
 
 @Composable
 fun BattlesScreen() {
     Scaffold (
         topBar = {
             TopBanner(
-                text = "Online battles"
+                text = stringResource(R.string.battles_online_title)
             )
         }
     ) { contentPadding ->
@@ -27,7 +30,7 @@ fun BattlesScreen() {
                 .padding(top = contentPadding.calculateTopPadding())
                 .fillMaxSize()
         ) {
-            Text("Coming soon")
+            Text(stringResource(R.string.battles_coming_soon))
         }
     }
 }

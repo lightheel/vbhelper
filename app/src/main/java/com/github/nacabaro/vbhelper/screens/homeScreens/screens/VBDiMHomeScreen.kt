@@ -25,6 +25,8 @@ import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.screens.homeScreens.HomeScreenControllerImpl
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import java.util.Locale
+import androidx.compose.ui.res.stringResource
+
 
 @Composable
 fun VBDiMHomeScreen(
@@ -65,7 +67,7 @@ fun VBDiMHomeScreen(
                 ItemDisplay(
                     icon = R.drawable.baseline_vitals_24,
                     textValue = activeMon.vitalPoints.toString(),
-                    definition = "Vitals",
+                    definition = stringResource(R.string.home_vbdim_vitals),
                     modifier = Modifier
                         .weight(0.5f)
                         .aspectRatio(1f)
@@ -74,7 +76,7 @@ fun VBDiMHomeScreen(
                 ItemDisplay(
                     icon = R.drawable.baseline_trophy_24,
                     textValue = activeMon.trophies.toString(),
-                    definition = "Trophies",
+                    definition = stringResource(R.string.home_vbdim_trophies),
                     modifier = Modifier
                         .weight(0.5f)
                         .aspectRatio(1f)
@@ -89,7 +91,7 @@ fun VBDiMHomeScreen(
             ItemDisplay(
                 icon = R.drawable.baseline_mood_24,
                 textValue = activeMon.mood.toString(),
-                definition = "Mood",
+                definition = stringResource(R.string.home_vbdim_mood),
                 modifier = Modifier
                     .weight(1f)
                     .aspectRatio(1f)
@@ -102,7 +104,7 @@ fun VBDiMHomeScreen(
                     0 -> "${activeMon.transformationCountdown} m"
                     else -> "$transformationCountdownInHours h"
                 },
-                definition = "Next timer",
+                definition = stringResource(R.string.home_vbdim_next_timer),
                 modifier = Modifier
                     .weight(1f)
                     .aspectRatio(1f)
@@ -122,7 +124,7 @@ fun VBDiMHomeScreen(
                         ) + " %" // Specify locale
                     }
                 },
-                definition = "Total battle win %",
+                definition = stringResource(R.string.home_vbdim_total_battle_win),
                 modifier = Modifier
                     .weight(1f)
                     .aspectRatio(1f)
@@ -142,7 +144,7 @@ fun VBDiMHomeScreen(
                         ) + " %" // Specify locale
                     }
                 },
-                definition = "Current phase win %",
+                definition = stringResource(R.string.home_vbdim_current_phase_win),
                 modifier = Modifier
                     .weight(1f)
                     .aspectRatio(1f)
@@ -165,7 +167,7 @@ fun VBDiMHomeScreen(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Special missions",
+                text = stringResource(R.string.home_vbdim_special_missions),
                 fontSize = 24.sp
                 )
         }

@@ -18,6 +18,8 @@ import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import androidx.compose.ui.res.stringResource
+import com.github.nacabaro.vbhelper.R
+
 
 @Composable
 fun ItemsScreen(
@@ -31,7 +33,7 @@ fun ItemsScreen(
     Scaffold(
         topBar = {
             Column {
-                TopBanner("Items")
+                TopBanner(text = stringResource(R.string.items_title))
                 TabRow(
                     selectedTabIndex = selectedTabItem,
                     modifier = Modifier

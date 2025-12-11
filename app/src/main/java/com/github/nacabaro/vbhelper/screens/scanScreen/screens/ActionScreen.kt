@@ -10,8 +10,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.nacabaro.vbhelper.components.TopBanner
+import com.github.nacabaro.vbhelper.R
 
 @Composable
 fun ActionScreen(
@@ -33,12 +35,12 @@ fun ActionScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            Text("Place your Vital Bracelet near the reader...")
+            Text(stringResource(R.string.action_place_near_reader))
             Button(
                 onClick = onClickCancel,
                 modifier = Modifier.padding(16.dp)
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     }

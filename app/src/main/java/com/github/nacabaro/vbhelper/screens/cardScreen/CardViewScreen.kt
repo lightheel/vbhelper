@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.components.CharacterEntry
@@ -19,6 +20,8 @@ import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.screens.cardScreen.dialogs.DexCharaDetailsDialog
 import com.github.nacabaro.vbhelper.source.DexRepository
+import com.github.nacabaro.vbhelper.R
+
 
 @Composable
 fun CardViewScreen(
@@ -35,7 +38,7 @@ fun CardViewScreen(
     Scaffold (
         topBar = {
             TopBanner(
-                text = "Discovered characters",
+                text = stringResource(R.string.card_view_discovered_characters),
                 onBackClick = {
                     navController.popBackStack()
                 },

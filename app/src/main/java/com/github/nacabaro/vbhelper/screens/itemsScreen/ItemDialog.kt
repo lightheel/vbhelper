@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -26,6 +27,8 @@ import com.github.nacabaro.vbhelper.R
 import com.github.nacabaro.vbhelper.domain.items.ItemType
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.ui.theme.VBHelperTheme
+
+
 
 @Composable
 fun ItemDialog(
@@ -95,7 +98,10 @@ fun ItemDialog(
                         textAlign = TextAlign.Center,
                         fontSize = MaterialTheme.typography.bodySmall.fontSize,
                         fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
-                        text = "Costs ${item.price} credits",
+                        text = stringResource(
+                            R.string.item_dialog_costs_credits,
+                            item.price
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                     )
@@ -104,7 +110,10 @@ fun ItemDialog(
                     textAlign = TextAlign.Center,
                     fontSize = MaterialTheme.typography.bodySmall.fontSize,
                     fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
-                    text = "You have ${item.quantity} of this item",
+                    text = stringResource(
+                        R.string.item_dialog_you_have_quantity,
+                        item.quantity
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                 )
@@ -118,7 +127,7 @@ fun ItemDialog(
                         Button(
                             onClick = onClickUse
                         ) {
-                            Text("Use item")
+                            Text(stringResource(R.string.item_dialog_use))
                         }
                     }
 
@@ -126,7 +135,7 @@ fun ItemDialog(
                         Button(
                             onClick = onClickPurchase
                         ) {
-                            Text("Purchase")
+                            Text(stringResource(R.string.item_dialog_purchase))
                         }
                     }
 
@@ -134,7 +143,7 @@ fun ItemDialog(
                     Button(
                         onClick = onClickCancel
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.item_dialog_cancel))
                     }
                 }
             }
