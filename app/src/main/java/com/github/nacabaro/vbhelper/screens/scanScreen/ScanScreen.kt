@@ -25,6 +25,7 @@ import com.github.nacabaro.vbhelper.source.proto.Secrets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
+import com.github.nacabaro.vbhelper.R
 
 const val SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER = "SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER"
 
@@ -93,9 +94,9 @@ fun ScanScreen(
                 else -> {
                     {
                         if(secrets == null) {
-                            Toast.makeText(context, "Secrets is not yet initialized. Try again.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.scan_secrets_not_initialized), Toast.LENGTH_SHORT).show()
                         } else if(secrets?.isMissingSecrets() == true) {
-                            Toast.makeText(context, "Secrets not yet imported. Go to Settings and Import APK", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.scan_secrets_not_imported), Toast.LENGTH_SHORT).show()
                         } else {
                             readingScreen = true // kicks off nfc adapter in DisposableEffect
                         }
@@ -107,9 +108,9 @@ fun ScanScreen(
                 else -> {
                     {
                         if(secrets == null) {
-                            Toast.makeText(context, "Secrets is not yet initialized. Try again.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context,   context.getString(R.string.scan_secrets_not_initialized), Toast.LENGTH_SHORT).show()
                         } else if(secrets?.isMissingSecrets() == true) {
-                            Toast.makeText(context, "Secrets not yet imported. Go to Settings and Import APK", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.scan_secrets_not_imported), Toast.LENGTH_SHORT).show()
                         } else {
                             writingScreen = true // kicks off nfc adapter in DisposableEffect
                         }

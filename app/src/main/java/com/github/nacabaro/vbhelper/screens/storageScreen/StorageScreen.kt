@@ -34,6 +34,8 @@ import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.screens.adventureScreen.AdventureScreenControllerImpl
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
+import androidx.compose.ui.res.stringResource
+import com.github.nacabaro.vbhelper.R
 
 
 @Composable
@@ -51,7 +53,7 @@ fun StorageScreen(
     Scaffold (
         topBar = {
             TopBanner(
-                text = "My characters",
+                text = stringResource(R.string.storage_my_characters_title),
                 onAdventureClick = {
                     navController.navigate(NavigationItems.Adventure.route)
                 }
@@ -67,7 +69,7 @@ fun StorageScreen(
                     .fillMaxSize()
             ) {
                 Text(
-                    text = "Nothing to see here",
+                    text = stringResource(R.string.storage_nothing_to_see_here),
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                 )
@@ -92,7 +94,7 @@ fun StorageScreen(
                             } else {
                                 Toast.makeText(
                                     application,
-                                    "This character is in an adventure",
+                                    application.getString(R.string.storage_in_adventure_toast),
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 navController.navigate(

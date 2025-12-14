@@ -33,7 +33,8 @@ import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.source.DexRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.utils.getImageBitmap
-
+import androidx.compose.ui.res.stringResource
+import com.github.nacabaro.vbhelper.R
 
 @Composable
 fun DexCharaDetailsDialog(
@@ -119,7 +120,7 @@ fun DexCharaDetailsDialog(
                     ) {
                         Image(
                             bitmap = charaImageBitmapData.imageBitmap,
-                            contentDescription = "Icon",
+                            contentDescription = stringResource(R.string.dex_chara_icon_description),
                             modifier = Modifier
                                 .size(charaImageBitmapData.dpWidth)
                                 .padding(8.dp),
@@ -138,7 +139,7 @@ fun DexCharaDetailsDialog(
                         Column {
                             Image(
                                 bitmap = nameImageBitmapData.imageBitmap,
-                                contentDescription = "Icon",
+                                contentDescription = stringResource(R.string.dex_chara_name_icon_description),
                                 modifier = Modifier
                                     .width(nameImageBitmapData.dpWidth)
                                     .height(nameImageBitmapData.dpHeight),
@@ -147,17 +148,28 @@ fun DexCharaDetailsDialog(
                             Spacer(modifier = Modifier.padding(4.dp))
                             if (currentChara.baseHp != 65535) {
                                 Text(
-                                    text = "HP: ${currentChara.baseHp}, BP: ${currentChara.baseBp}, AP: ${currentChara.baseAp}"
+                                    text = stringResource(
+                                        R.string.dex_chara_stats,
+                                        currentChara.baseHp,
+                                        currentChara.baseBp,
+                                        currentChara.baseAp
+                                    )
                                 )
-                                Text(text = "Stg: ${romanNumeralsStage}, Atr: ${currentChara.attribute.toString().substring(0, 2)}")
+                                Text(
+                                    text = stringResource(
+                                        R.string.dex_chara_stage_attribute,
+                                        romanNumeralsStage,
+                                        currentChara.attribute.toString().substring(0, 2)
+                                    )
+                                )
                             }
                         }
                     } else {
                         Column {
-                            Text(text = "????????????????")
+                            Text(stringResource(R.string.dex_chara_unknown_name))
                             Spacer(modifier = Modifier.padding(4.dp))
-                            Text(text = "Stg: -, Atr: -")
-                            Text(text = "HP: -, BP: -, AP: -")
+                            Text(stringResource(R.string.dex_chara_stage_attribute_unknown))
+                            Text(stringResource(R.string.dex_chara_stats_unknown))
                         }
                     }
                 }
@@ -198,7 +210,7 @@ fun DexCharaDetailsDialog(
                                 ) {
                                     Image(
                                         bitmap = selectedCharaImageBitmap.imageBitmap,
-                                        contentDescription = "Icon",
+                                        contentDescription = stringResource(R.string.dex_chara_icon_description),
                                         modifier = Modifier
                                             .size(selectedCharaImageBitmap.dpWidth)
                                             .padding(8.dp),
@@ -214,8 +226,22 @@ fun DexCharaDetailsDialog(
                                         .padding(16.dp)
                                 )
                                 Column {
-                                    Text("Tr: ${it.requiredTrophies}; Bt: ${it.requiredBattles}; Vr: ${it.requiredVitals}; Wr: ${it.requiredWinRate}%; Ct: ${it.changeTimerHours}h")
-                                    Text("AdvLvl ${it.requiredAdventureLevelCompleted + 1}")
+                                    Text(
+                                        text = stringResource(
+                                            R.string.dex_chara_requirements,
+                                            it.requiredTrophies,
+                                            it.requiredBattles,
+                                            it.requiredVitals,
+                                            it.requiredWinRate,
+                                            it.changeTimerHours
+                                        )
+                                    )
+                                    Text(
+                                        text = stringResource(
+                                            R.string.dex_chara_adventure_level,
+                                            it.requiredAdventureLevelCompleted + 1
+                                        )
+                                    )
                                 }
                             }
                         }
@@ -229,7 +255,7 @@ fun DexCharaDetailsDialog(
                                 showFusions = true
                             }
                         ) {
-                            Text("Fusions")
+                            Text(stringResource(R.string.dex_chara_fusions_button))
                         }
                     }
 
@@ -241,7 +267,7 @@ fun DexCharaDetailsDialog(
                     Button(
                         onClick = onClickClose
                     ) {
-                        Text("Close")
+                        Text(stringResource(R.string.dex_chara_close_button))
                     }
                 }
             }

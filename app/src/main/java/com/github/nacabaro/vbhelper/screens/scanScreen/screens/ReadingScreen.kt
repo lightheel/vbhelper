@@ -7,11 +7,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import com.github.nacabaro.vbhelper.ActivityLifecycleListener
 import com.github.nacabaro.vbhelper.domain.card.Card
 import com.github.nacabaro.vbhelper.screens.cardScreen.ChooseCard
 import com.github.nacabaro.vbhelper.screens.scanScreen.SCAN_SCREEN_ACTIVITY_LIFECYCLE_LISTENER
 import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenController
+import com.github.nacabaro.vbhelper.R
+
 
 @Composable
 fun ReadingScreen(
@@ -92,7 +95,7 @@ fun ReadingScreen(
     }
 
     if (readingScreen) {
-        ActionScreen("Reading character") {
+        ActionScreen(topBannerText = stringResource(R.string.reading_character_title),) {
             readingScreen = false
             scanScreenController.cancelRead()
             onCancel()

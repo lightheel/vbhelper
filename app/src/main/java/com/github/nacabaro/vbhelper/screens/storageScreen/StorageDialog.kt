@@ -33,6 +33,9 @@ import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.utils.getBitmap
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.github.nacabaro.vbhelper.R
+
 
 @Composable
 fun StorageDialog(
@@ -94,7 +97,7 @@ fun StorageDialog(
                         val dpSize = (characterSprite.value!!.width * 4 / density).dp
                         Image(
                             bitmap = imageBitmap,
-                            contentDescription = "Character image",
+                            contentDescription = stringResource(R.string.storage_character_image_description),
                             filterQuality = FilterQuality.None,
                             modifier = Modifier
                                 .size(dpSize)
@@ -104,7 +107,7 @@ fun StorageDialog(
                         val nameDpSize = (characterName.value!!.width * 4 / density).dp
                         Image(
                             bitmap = nameImageBitmap,
-                            contentDescription = "Character image",
+                            contentDescription = stringResource(R.string.storage_character_image_description),
                             filterQuality = FilterQuality.None,
                             modifier = Modifier
                                 .size(nameDpSize)
@@ -121,7 +124,7 @@ fun StorageDialog(
                         modifier = Modifier
                             .weight(1f)
                     ) {
-                        Text(text = "Send to watch")
+                        Text(text = stringResource(R.string.storage_send_to_watch))
                     }
                     Spacer(
                         modifier = Modifier
@@ -130,7 +133,7 @@ fun StorageDialog(
                     Button(
                         onClick = onClickSetActive,
                     ) {
-                        Text(text = "Set active")
+                        Text(text = stringResource(R.string.storage_set_active))
                     }
                 }
                 Button(
@@ -140,21 +143,21 @@ fun StorageDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                 ) {
-                    Text(text = "Send on adventure")
+                    Text(text = stringResource(R.string.storage_send_on_adventure))
                 }
                 Button(
                     modifier = Modifier
                         .fillMaxWidth(),
                     onClick = onClickDelete
                 ) {
-                    Text(text = "Delete character")
+                    Text(text = stringResource(R.string.storage_delete_character))
                 }
                 Button(
                     modifier = Modifier
                         .fillMaxWidth(),
                     onClick = onDismissRequest
                 ) {
-                    Text(text = "Close")
+                    Text(text = stringResource(R.string.storage_close))
                 }
             }
         }

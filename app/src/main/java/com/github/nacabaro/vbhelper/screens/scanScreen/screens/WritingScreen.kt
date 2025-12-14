@@ -17,6 +17,8 @@ import com.github.nacabaro.vbhelper.screens.scanScreen.ScanScreenController
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.res.stringResource
+import com.github.nacabaro.vbhelper.R
 
 @Composable
 fun WritingScreen(
@@ -97,7 +99,7 @@ fun WritingScreen(
         )
     } else if (!isDoneSendingCard) {
         writing = true
-        ActionScreen("Sending card") {
+        ActionScreen( topBannerText = stringResource(R.string.sending_card_title)) {
             scanScreenController.cancelRead()
             onCancel()
         }
@@ -115,7 +117,7 @@ fun WritingScreen(
         )
     } else if (!isDoneWritingCharacter) {
         writing = true
-        ActionScreen("Writing character") {
+        ActionScreen(topBannerText = stringResource(R.string.writing_character_action_title)) {
             isDoneSendingCard = false
             scanScreenController.cancelRead()
             onCancel()

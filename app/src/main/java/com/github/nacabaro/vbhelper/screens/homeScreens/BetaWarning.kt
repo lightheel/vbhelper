@@ -8,8 +8,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.github.nacabaro.vbhelper.R
 
 @Composable
 fun BetaWarning(
@@ -19,26 +21,26 @@ fun BetaWarning(
         onDismissRequest = onDismissRequest
     ) {
         Card {
-            Column (
+            Column(
                 modifier = Modifier
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "This application is currently in alpha and it is not complete. Do not use to store important characters for you, as any future updates might delete all your characters. Sorry for the inconvenience!"
+                    text = stringResource(R.string.beta_warning_message_main)
                 )
                 Spacer(modifier = Modifier.padding(8.dp))
                 Text(
-                    text = "Application should work now with the original VB and the VH."
+                    text = stringResource(R.string.beta_warning_message_compatibility)
                 )
                 Spacer(modifier = Modifier.padding(8.dp))
                 Text(
-                    text = "Thank you for your understanding and patience. Sincerely, the dev team."
+                    text = stringResource(R.string.beta_warning_message_thanks)
                 )
                 Spacer(modifier = Modifier.padding(8.dp))
                 Button(
                     onClick = onDismissRequest
                 ) {
-                    Text(text = "Dismiss")
+                    Text(text = stringResource(R.string.beta_warning_button_dismiss))
                 }
             }
         }

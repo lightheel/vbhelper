@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
@@ -31,6 +32,7 @@ import com.github.nacabaro.vbhelper.domain.card.Card
 import com.github.nacabaro.vbhelper.source.ScanRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.utils.getImageBitmap
+import com.github.nacabaro.vbhelper.R
 
 @Composable
 fun WriteCardScreen(
@@ -55,7 +57,7 @@ fun WriteCardScreen(
     Scaffold(
         topBar = {
             TopBanner(
-                text = "Writing card details",
+                text = stringResource(R.string.write_card_title),
                 onBackClick = onClickCancel
             )
         }
@@ -101,7 +103,9 @@ fun WriteCardScreen(
                         ) {
                             Image(
                                 bitmap = charaImageBitmapData.imageBitmap,
-                                contentDescription = "Icon",
+                                contentDescription =  stringResource(
+                                    R.string.write_card_icon_description
+                                ),
                                 modifier = Modifier
                                     .size(charaImageBitmapData.dpWidth)
                                     .padding(8.dp),
@@ -115,8 +119,14 @@ fun WriteCardScreen(
                     )
 
                     Column {
-                        Text("Get your device Ready!")
-                        Text("You will need ${cardDetails.name} card!")
+                        Text(stringResource(R.string.write_card_device_ready))
+                        Text(
+                            stringResource(
+                                R.string.write_card_required_card,
+                                cardDetails.name
+                            )
+                        )
+
                     }
                 }
 
@@ -125,7 +135,7 @@ fun WriteCardScreen(
             Button(
                 onClick = onClickConfirm,
             ) {
-                Text("Confirm")
+                Text(stringResource(R.string.write_card_confirm))
             }
         }
     }

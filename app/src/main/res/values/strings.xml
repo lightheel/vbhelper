@@ -1,3 +1,226 @@
 <resources>
     <string name="app_name">VBHelper</string>
+    <string name="beta_warning_message_main">
+        This application is currently in alpha and it is not complete. Do not use it to store important characters for you, as any future updates might delete all your characters. Sorry for the inconvenience!
+    </string>
+
+    <string name="beta_warning_message_compatibility">
+        The application should now work with the original VB and the VH.
+    </string>
+
+    <string name="beta_warning_message_thanks">
+        Thank you for your understanding and patience. Sincerely, the dev team.
+    </string>
+
+    <string name="beta_warning_button_dismiss">
+        Dismiss
+    </string>
+
+    <string name="nav_scan">Scan</string>
+    <string name="nav_battle">Battle</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_dex">Dex</string>
+    <string name="nav_card_adventure">Card adventure</string>
+    <string name="nav_storage">Storage</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_viewer">Viewer</string>
+    <string name="nav_card">Card</string>
+    <string name="nav_items">Items</string>
+    <string name="nav_my_items">My items</string>
+    <string name="nav_items_store">Items store</string>
+    <string name="nav_apply_item">Apply item</string>
+    <string name="nav_adventure">Adventure</string>
+    <string name="nav_credits">Credits</string>
+
+    <string name="adventure_title">Adventure</string>
+    <string name="adventure_empty_state">Nothing to see here</string>
+
+    <string name="home_title">VB Helper</string>
+    <string name="home_adventure_mission_finished">
+        One of your characters has finished their adventure mission!
+    </string>
+
+    <string name="scan_secrets_not_initialized">
+        Secrets is not yet initialized. Try again.
+    </string>
+    <string name="scan_secrets_not_imported">
+        Secrets not yet imported. Go to Settings and Import APK.
+    </string>
+
+    <string name="scan_title">Scan a Vital Bracelet</string>
+    <string name="scan_vb_to_app">Vital Bracelet to App</string>
+    <string name="scan_app_to_vb">App to Vital Bracelet</string>
+
+    <string name="scan_no_nfc_on_device">No NFC on device!</string>
+    <string name="scan_tag_not_vb">Tag detected is not VB</string>
+    <string name="scan_missing_secrets">
+        Missing Secrets. Go to settings and import Vital Arena APK.
+    </string>
+    <string name="scan_sent_character_success">Sent character successfully!</string>
+    <string name="scan_error_generic">Whoops</string>
+    <string name="scan_sent_dim_success">Sent DIM successfully!</string>
+    <string name="scan_nfc_must_be_enabled">NFC must be enabled</string>
+
+
+    <string name="settings_title">Settings</string>
+
+    <string name="settings_section_nfc">NFC Communication</string>
+    <string name="settings_section_dim_bem">DiM/BEm management</string>
+    <string name="settings_section_about">About and credits</string>
+    <string name="settings_section_data">Data management</string>
+
+    <string name="settings_import_apk_title">Import APK</string>
+    <string name="settings_import_apk_desc">
+        Import Secrets From Vital Arena 2.1.0 APK
+    </string>
+
+    <string name="settings_import_card_title">Import card</string>
+    <string name="settings_import_card_desc">
+        Import DiM/BEm card file
+    </string>
+
+    <string name="settings_credits_title">Credits</string>
+    <string name="settings_credits_desc">Credits</string>
+
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_desc">About</string>
+
+    <string name="settings_export_data_title">Export data</string>
+    <string name="settings_export_data_desc">
+        Export application database
+    </string>
+
+    <string name="settings_import_data_title">Import data</string>
+    <string name="settings_import_data_desc">
+        Import application database
+    </string>
+
+    <string name="credits_title">Credits</string>
+    <string name="credits_section_reverse_engineering">Reverse engineering</string>
+    <string name="credits_section_app_development">Application development</string>
+
+    <string name="credits_cyanic_description">
+        Reversed the firmware and helped us during development.
+    </string>
+    <string name="credits_cfogrady_description">
+        Developed vb-lib-nfc and part of this application.
+    </string>
+    <string name="credits_nacabaro_description">
+        Developed this application.
+    </string>
+    <string name="credits_lightheel_description">
+        Developing the battling part for this application, including server. Still in the works.
+    </string>
+    <string name="credits_shvstrz_description">
+        Designing the app icon in SVG.
+    </string>
+
+    <string name="action_place_near_reader">Place your Vital Bracelet near the reader...</string>
+    <string name="action_cancel">Cancel</string>
+
+    <string name="read_character_title">Read character</string>
+    <string name="read_character_prepare_device">Prepare your device!</string>
+    <string name="read_character_go_to_connect">Go to connect and when ready press confirm!</string>
+    <string name="read_character_confirm">Confirm</string>
+
+    <string name="reading_character_title">Reading character</string>
+
+    <string name="write_card_title">Writing card details</string>
+    <string name="write_card_icon_description">Card icon</string>
+    <string name="write_card_device_ready">Get your device ready!</string>
+    <string name="write_card_required_card">You will need %1$s card!</string>
+    <string name="write_card_confirm">Confirm</string>
+
+
+    <string name="write_character_title">Writing character</string>
+    <string name="write_character_icon_description">Character icon</string>
+    <string name="write_character_success">
+        Card installed successfully!!
+    </string>
+    <string name="write_character_wait_ready">
+        Wait until your device is ready, then tap Confirm
+    </string>
+    <string name="write_character_confirm">Confirm</string>
+
+    <string name="sending_card_title">Sending card</string>
+    <string name="writing_character_action_title">Writing character</string>
+
+    <string name="items_title">Items</string>
+    <string name="items_no_items">No items</string>
+
+    <string name="items_store_credits">%1$d credits</string>
+    <string name="items_not_enough_credits">Not enough credits</string>
+    <string name="items_purchase_success">Purchase successful!</string>
+
+    <string name="obtained_item_you_have">You have obtained %1$d of this item</string>
+    <string name="obtained_item_you_also_got_credits">You also got %1$d credits</string>
+    <string name="obtained_item_dismiss">Dismiss</string>
+
+    <string name="choose_character_title">Choose character</string>
+    <string name="choose_character_item_applied">Item applied!</string>
+
+    <string name="item_dialog_costs_credits">Costs %1$d credits</string>
+    <string name="item_dialog_you_have_quantity">You have %1$d of this item</string>
+    <string name="item_dialog_use">Use item</string>
+    <string name="item_dialog_purchase">Purchase</string>
+    <string name="item_dialog_cancel">Cancel</string>
+
+    <string name="battles_online_title">Online battles</string>
+    <string name="battles_coming_soon">Coming soon</string>
+
+    <string name="cards_my_cards_title">My cards</string>
+
+    <string name="card_view_discovered_characters">Discovered characters</string>
+
+
+    <string name="dex_chara_icon_description">Character icon</string>
+    <string name="dex_chara_name_icon_description">Character name</string>
+    <string name="dex_chara_stats">HP: %1$d, BP: %2$d, AP: %3$d</string>
+    <string name="dex_chara_stage_attribute">Stg: %1$s, Atr: %2$s</string>
+    <string name="dex_chara_unknown_name">\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?\?</string>
+    <string name="dex_chara_stage_attribute_unknown">Stg: -, Atr: -</string>
+    <string name="dex_chara_stats_unknown">HP: -, BP: -, AP: -</string>
+    <string name="dex_chara_requirements">
+        Tr: %1$d; Bt: %2$d; Vr: %3$d; Wr: %4$d%%; Ct: %5$dh
+    </string>
+    <string name="dex_chara_adventure_level">AdvLvl %1$d</string>
+    <string name="dex_chara_fusions_button">Fusions</string>
+    <string name="dex_chara_close_button">Close</string>
+
+    <string name="card_adventure_missions_title">Adventure missions</string>
+
+    <string name="card_entry_characters_obtained">%1$d of %2$d characters obtained</string>
+    <string name="card_entry_edit">Edit card</string>
+    <string name="card_entry_delete">Delete card</string>
+
+    <string name="storage_my_characters_title">My characters</string>
+    <string name="storage_nothing_to_see_here">Nothing to see here</string>
+    <string name="storage_in_adventure_toast">This character is in an adventure</string>
+
+    <string name="storage_character_image_description">Character image</string>
+    <string name="storage_send_to_watch">Send to watch</string>
+    <string name="storage_set_active">Set active</string>
+    <string name="storage_send_on_adventure">Send on adventure</string>
+    <string name="storage_delete_character">Delete character</string>
+    <string name="storage_close">Close</string>
+
+    <string name="home_vbdim_vitals">Vitals</string>
+    <string name="home_vbdim_trophies">Trophies</string>
+    <string name="home_vbdim_mood">Mood</string>
+    <string name="home_vbdim_next_timer">Next timer</string>
+    <string name="home_vbdim_total_battle_win">Total battle win %</string>
+    <string name="home_vbdim_current_phase_win">Current phase win %</string>
+    <string name="home_vbdim_special_missions">Special missions</string>
+
+    <string name="special_mission_none">No mission selected</string>
+    <string name="special_mission_steps">Walk %1$d steps</string>
+    <string name="special_mission_battles">Battle %1$d times</string>
+    <string name="special_mission_wins">Win %1$d battles</string>
+    <string name="special_mission_vitals">Earn %1$d vitals</string>
+    <string name="special_mission_steps_progress">Walked %1$d steps</string>
+    <string name="special_mission_battles_progress">Battled %1$d times</string>
+    <string name="special_mission_wins_progress">Won %1$d battles</string>
+    <string name="special_mission_vitals_progress">Earned %1$d vitals</string>
+    <string name="special_mission_icon_content_description">Special mission icon</string>
+
 </resources>

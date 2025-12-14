@@ -24,6 +24,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.utils.getBitmap
+import androidx.compose.ui.res.stringResource
+import com.github.nacabaro.vbhelper.R
+
 
 @Composable
 fun CardEntry(
@@ -75,7 +78,11 @@ fun CardEntry(
                     modifier = Modifier
                 )
                 Text(
-                    text = "$obtainedCharacters of $totalCharacters characters obtained",
+                    text = stringResource(
+                        R.string.card_entry_characters_obtained,
+                        obtainedCharacters,
+                        totalCharacters
+                    ),
                     fontFamily = MaterialTheme.typography.labelSmall.fontFamily,
                     fontSize = MaterialTheme.typography.labelSmall.fontSize,
                     modifier = Modifier
@@ -91,7 +98,7 @@ fun CardEntry(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit"
+                            contentDescription = stringResource(R.string.card_entry_edit)
                         )
                     }
                     IconButton(
@@ -99,7 +106,7 @@ fun CardEntry(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete"
+                            contentDescription = stringResource(R.string.card_entry_delete)
                         )
                     }
                 }

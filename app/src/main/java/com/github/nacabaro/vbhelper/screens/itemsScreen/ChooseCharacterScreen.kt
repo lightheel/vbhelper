@@ -15,6 +15,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.CharacterEntry
 import com.github.nacabaro.vbhelper.components.TopBanner
@@ -26,7 +27,7 @@ import com.github.nacabaro.vbhelper.source.StorageRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-
+import com.github.nacabaro.vbhelper.R
 
 @Composable
 fun ChooseCharacterScreen(
@@ -69,7 +70,7 @@ fun ChooseCharacterScreen(
             itemsScreenController.applyItem(itemId, selectedCharacter!!) {
                 Toast.makeText(
                     application.applicationContext,
-                    "Item applied!",
+                    application.getString(R.string.choose_character_item_applied),
                     Toast.LENGTH_SHORT
                 ).show()
                 navController.popBackStack()
@@ -80,7 +81,7 @@ fun ChooseCharacterScreen(
     Scaffold(
         topBar = {
             TopBanner(
-                text = "Choose character",
+                text = stringResource(R.string.choose_character_title),
                 onBackClick = {
                     navController.popBackStack()
                 }

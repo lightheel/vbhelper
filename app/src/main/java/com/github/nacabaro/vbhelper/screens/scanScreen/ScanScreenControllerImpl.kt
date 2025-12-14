@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.github.nacabaro.vbhelper.R
 
 class ScanScreenControllerImpl(
     override val secretsFlow: Flow<Secrets>,
@@ -38,7 +39,7 @@ class ScanScreenControllerImpl(
     init {
         val maybeNfcAdapter = NfcAdapter.getDefaultAdapter(componentActivity)
         if (maybeNfcAdapter == null) {
-            Toast.makeText(componentActivity, "No NFC on device!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(componentActivity,  componentActivity.getString(R.string.scan_no_nfc_on_device), Toast.LENGTH_SHORT).show()
         }
         nfcAdapter = maybeNfcAdapter
         checkSecrets()
@@ -94,7 +95,7 @@ class ScanScreenControllerImpl(
             val nfcData = NfcA.get(tag)
             if (nfcData == null) {
                 componentActivity.runOnUiThread {
-                    Toast.makeText(componentActivity, "Tag detected is not VB", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_tag_not_vb), Toast.LENGTH_SHORT).show()
                 }
             }
             nfcData.connect()
@@ -112,7 +113,7 @@ class ScanScreenControllerImpl(
         componentActivity.lifecycleScope.launch(Dispatchers.IO) {
             if(secretsFlow.stateIn(componentActivity.lifecycleScope).value.isMissingSecrets()) {
                 componentActivity.runOnUiThread {
-                    Toast.makeText(componentActivity, "Missing Secrets. Go to settings and import Vital Arena APK", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(componentActivity, componentActivity.getString(R.string.scan_missing_secrets), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -135,10 +136,10 @@ class ScanScreenControllerImpl(
                     tagCommunicator.sendCharacter(castNfcCharacter)
                 }
                 onComplete.invoke()
-                "Sent character successfully!"
+                componentActivity.getString(R.string.scan_sent_character_success)
             } catch (e: Throwable) {
                 Log.e("TAG", e.stackTraceToString())
-                "Whoops"
+                componentActivity.getString(R.string.scan_error_generic)
             }
         }
     }
@@ -151,13 +152,13 @@ class ScanScreenControllerImpl(
         handleTag(secrets) { tagCommunicator ->
             tagCommunicator.prepareDIMForCharacter(nfcCharacter.dimId)
             onComplete.invoke()
-            "Sent DIM successfully!"
+            componentActivity.getString(R.string.scan_sent_dim_success)
         }
     }
 
     // EXTRACTED DIRECTLY FROM EXAMPLE APP
     private fun showWirelessSettings() {
-        Toast.makeText(componentActivity, "NFC must be enabled", Toast.LENGTH_SHORT).show()
+        Toast.makeText(componentActivity,  componentActivity.getString(R.string.scan_nfc_must_be_enabled), Toast.LENGTH_SHORT).show()
         componentActivity.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
     }
 

@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
@@ -32,6 +33,8 @@ import com.github.nacabaro.vbhelper.domain.card.Card
 import com.github.nacabaro.vbhelper.source.ScanRepository
 import com.github.nacabaro.vbhelper.utils.BitmapData
 import com.github.nacabaro.vbhelper.utils.getImageBitmap
+import com.github.nacabaro.vbhelper.R
+
 
 @Composable
 fun WriteCharacterScreen(
@@ -56,7 +59,7 @@ fun WriteCharacterScreen(
     Scaffold(
         topBar = {
             TopBanner(
-                text = "Writing character",
+                text = stringResource(R.string.write_character_title),
                 onBackClick = onClickCancel
             )
         }
@@ -102,7 +105,7 @@ fun WriteCharacterScreen(
                         ) {
                             Image(
                                 bitmap = charaImageBitmapData.imageBitmap,
-                                contentDescription = "Icon",
+                                contentDescription = stringResource(R.string.write_character_icon_description),
                                 modifier = Modifier
                                     .size(charaImageBitmapData.dpWidth)
                                     .padding(8.dp),
@@ -116,8 +119,8 @@ fun WriteCharacterScreen(
                     )
 
                     Column {
-                        Text("Card installed successfully!!")
-                        Text("Wait until your device is ready, then tap 'Confirm'")
+                        Text(stringResource(R.string.write_character_success))
+                        Text(stringResource(R.string.write_character_wait_ready))
                     }
                 }
 
@@ -128,7 +131,7 @@ fun WriteCharacterScreen(
             Button(
                 onClick = onClickConfirm,
             ) {
-                Text("Confirm")
+                Text(stringResource(R.string.write_character_confirm))
             }
         }
     }
