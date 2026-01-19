@@ -24,6 +24,8 @@ import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.screens.cardScreen.dialogs.CardDeleteDialog
 import com.github.nacabaro.vbhelper.screens.cardScreen.dialogs.CardRenameDialog
 import com.github.nacabaro.vbhelper.source.DexRepository
+import androidx.compose.ui.res.stringResource
+import com.github.nacabaro.vbhelper.R
 
 @Composable
 fun CardsScreen(
@@ -43,7 +45,7 @@ fun CardsScreen(
     Scaffold (
         topBar = {
             TopBanner(
-                text = "My cards",
+                text = stringResource(R.string.cards_my_cards_title),
                 onModifyClick = {
                     modifyCards = !modifyCards
                 }

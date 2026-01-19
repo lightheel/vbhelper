@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
@@ -26,8 +26,8 @@ fun BottomNavigationBar(navController: NavController) {
 
         items.forEach { item ->
             NavigationBarItem (
-                icon = { Icon(painter = painterResource(item.icon), contentDescription = item.label) },
-                label = { Text(item.label) },
+                icon = { Icon(painter = painterResource(item.icon), contentDescription = stringResource(item.label)) },
+                label = { Text(text = stringResource(item.label)) },
                 selected = currentRoute == item.route,
                 onClick = {
                     navController.navigate(item.route) {

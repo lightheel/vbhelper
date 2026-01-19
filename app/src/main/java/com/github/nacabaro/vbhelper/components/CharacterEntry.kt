@@ -36,6 +36,8 @@ import com.github.cfogrady.vbnfc.vb.SpecialMission
 import com.github.nacabaro.vbhelper.R
 import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.utils.getObscuredBitmap
+import androidx.compose.ui.res.stringResource
+
 
 @Composable
 fun CharacterEntry(
@@ -134,11 +136,23 @@ fun SpecialMissionsEntry(
     onClickCard: () -> Unit = {  },
 ) {
     val textValue = when (specialMission.missionType) {
-        SpecialMission.Type.NONE -> "No mission selected"
-        SpecialMission.Type.STEPS -> "Walk ${specialMission.goal} steps"
-        SpecialMission.Type.BATTLES -> "Battle ${specialMission.goal} times"
-        SpecialMission.Type.WINS -> "Win ${specialMission.goal} battles"
-        SpecialMission.Type.VITALS -> "Earn ${specialMission.goal} vitals"
+        SpecialMission.Type.NONE -> stringResource(R.string.special_mission_none)
+        SpecialMission.Type.STEPS -> stringResource(
+            R.string.special_mission_steps,
+            specialMission.goal
+        )
+        SpecialMission.Type.BATTLES -> stringResource(
+            R.string.special_mission_battles,
+            specialMission.goal
+        )
+        SpecialMission.Type.WINS -> stringResource(
+            R.string.special_mission_wins,
+            specialMission.goal
+        )
+        SpecialMission.Type.VITALS -> stringResource(
+            R.string.special_mission_vitals,
+            specialMission.goal
+        )
     }
 
     val progress = if (specialMission.status == SpecialMission.Status.COMPLETED) {
@@ -149,10 +163,22 @@ fun SpecialMissionsEntry(
 
     val completion = when (specialMission.missionType) {
         SpecialMission.Type.NONE -> ""
-        SpecialMission.Type.STEPS -> "Walked $progress steps"
-        SpecialMission.Type.BATTLES -> "Battled $progress times"
-        SpecialMission.Type.WINS -> "Won $progress battles"
-        SpecialMission.Type.VITALS -> "Earned $progress vitals"
+        SpecialMission.Type.STEPS -> stringResource(
+            R.string.special_mission_steps_progress,
+            progress
+        )
+        SpecialMission.Type.BATTLES -> stringResource(
+            R.string.special_mission_battles_progress,
+            progress
+        )
+        SpecialMission.Type.WINS -> stringResource(
+            R.string.special_mission_wins_progress,
+            progress
+        )
+        SpecialMission.Type.VITALS -> stringResource(
+            R.string.special_mission_vitals_progress,
+            progress
+        )
     }
 
     val icon = when (specialMission.missionType) {
@@ -193,7 +219,7 @@ fun SpecialMissionsEntry(
         ) {
             Icon(
                 painter = painterResource(icon),
-                contentDescription = "Vitals",
+                contentDescription = stringResource(R.string.special_mission_icon_content_description),
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(16.dp)

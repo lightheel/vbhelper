@@ -11,6 +11,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
+import androidx.compose.ui.res.stringResource
+import com.github.nacabaro.vbhelper.R
+
 
 @Composable
 fun CardAdventureScreen(
@@ -28,7 +31,7 @@ fun CardAdventureScreen(
     Scaffold (
         topBar = {
             TopBanner(
-                text = "Adventure missions",
+                text = stringResource(R.string.card_adventure_missions_title),
                 onBackClick = {
                     navController.popBackStack()
                 }

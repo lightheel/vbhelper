@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.database.AppDatabase
@@ -30,6 +31,7 @@ import com.github.nacabaro.vbhelper.source.CurrencyRepository
 import com.github.nacabaro.vbhelper.source.ItemsRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import com.github.nacabaro.vbhelper.R
 
 @Composable
 fun ItemsStore(
@@ -52,7 +54,7 @@ fun ItemsStore(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
-            Text("No items")
+            Text(stringResource(R.string.items_no_items))
         }
     } else {
         Column() {
@@ -62,7 +64,10 @@ fun ItemsStore(
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = "${currentCurrency.value} credits",
+                    text = stringResource(
+                        R.string.items_store_credits,
+                        currentCurrency.value
+                    ),
                     modifier = Modifier
                         .padding(8.dp)
                 )
@@ -94,14 +99,15 @@ fun ItemsStore(
                 scope.launch {
                     Toast.makeText(
                         application.applicationContext,
-                        purchaseItem(
-                            application.container.db,
-                            myItems[selectedElementIndex!!],
-                            currencyRepository
+                        application.getString(
+                            purchaseItem(
+                                application.container.db,
+                                myItems[selectedElementIndex!!],
+                                currencyRepository
+                            )
                         ),
                         Toast.LENGTH_SHORT
-                    ).show(
-                    )
+                    ).show()
                 }
             },
             onClickCancel = { selectedElementIndex = null }
@@ -113,9 +119,9 @@ suspend fun purchaseItem(
     db: AppDatabase,
     item: ItemDtos.ItemsWithQuantities,
     currencyRepository: CurrencyRepository
-): String {
-    if (currencyRepository.currencyValue.first() < item.price) {
-        return "Not enough credits"
+): Int {
+    return if (currencyRepository.currencyValue.first() < item.price) {
+        R.string.items_not_enough_credits
     } else {
         db
             .itemDao()
@@ -129,6 +135,6 @@ suspend fun purchaseItem(
                 currencyRepository.currencyValue.first() - item.price
             )
 
-        return "Purchase successful!"
+        R.string.items_purchase_success
     }
 }

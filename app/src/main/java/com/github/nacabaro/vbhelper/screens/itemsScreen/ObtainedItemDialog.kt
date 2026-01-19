@@ -19,6 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
+import androidx.compose.ui.res.stringResource
+import com.github.nacabaro.vbhelper.R
 
 @Composable
 fun ObtainedItemDialog(
@@ -82,7 +84,10 @@ fun ObtainedItemDialog(
                         textAlign = TextAlign.Center,
                         fontSize = MaterialTheme.typography.bodySmall.fontSize,
                         fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
-                        text = "You have obtained ${obtainedItem.itemAmount} of this item",
+                        text = stringResource(
+                            R.string.obtained_item_you_have,
+                            obtainedItem.itemAmount
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 4.dp)
@@ -91,7 +96,10 @@ fun ObtainedItemDialog(
                         textAlign = TextAlign.Center,
                         fontSize = MaterialTheme.typography.bodySmall.fontSize,
                         fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
-                        text = "You also got $obtainedCurrency credits",
+                        text = stringResource(
+                            R.string.obtained_item_you_also_got_credits,
+                            obtainedCurrency
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 4.dp)
@@ -101,7 +109,7 @@ fun ObtainedItemDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                     ) {
-                        Text(text = "Dismiss")
+                        Text(text = stringResource(R.string.obtained_item_dismiss))
                     }
                 }
             }

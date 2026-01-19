@@ -17,11 +17,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.source.ItemsRepository
+import com.github.nacabaro.vbhelper.R
+
 
 @Composable
 fun MyItems(
@@ -39,7 +42,7 @@ fun MyItems(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
-            Text("No items")
+            Text(stringResource(R.string.items_no_items))
         }
     } else {
         LazyVerticalGrid(

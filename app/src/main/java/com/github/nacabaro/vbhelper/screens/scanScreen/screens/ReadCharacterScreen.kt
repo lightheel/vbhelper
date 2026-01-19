@@ -11,9 +11,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.nacabaro.vbhelper.components.TopBanner
+import com.github.nacabaro.vbhelper.R
 
 @Composable
 fun ReadCharacterScreen(
@@ -23,7 +25,7 @@ fun ReadCharacterScreen(
     Scaffold(
         topBar = {
             TopBanner(
-                text = "Read character",
+                text = stringResource(R.string.read_character_title),
                 onBackClick = onClickCancel
             )
         }
@@ -36,12 +38,12 @@ fun ReadCharacterScreen(
                 .fillMaxSize()
         ) {
             Text(
-                text = "Prepare your device!",
+                text = stringResource(R.string.read_character_prepare_device),
                 textAlign = TextAlign.Center
             )
 
             Text(
-                text = "Go to connect and when ready press confirm!",
+                text = stringResource(R.string.read_character_go_to_connect),
                 textAlign = TextAlign.Center
             )
 
@@ -52,7 +54,7 @@ fun ReadCharacterScreen(
             Button(
                 onClick = onClickConfirm,
             ) {
-                Text("Confirm")
+                Text(stringResource(R.string.read_character_confirm))
             }
         }
     }

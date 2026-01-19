@@ -12,10 +12,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.github.nacabaro.vbhelper.components.TopBanner
+import com.github.nacabaro.vbhelper.R
 
 @Composable
 fun ChooseConnectOption(
@@ -26,7 +28,7 @@ fun ChooseConnectOption(
     Scaffold(
         topBar = {
             TopBanner(
-                text = "Scan a Vital Bracelet",
+                text = stringResource(R.string.scan_title),
                 onBackClick = {
                     navController.popBackStack()
                 }
@@ -41,13 +43,13 @@ fun ChooseConnectOption(
                 .padding(contentPadding)
         ) {
             ScanButton(
-                text = "Vital Bracelet to App",
+                text = stringResource(R.string.scan_vb_to_app),
                 disabled = onClickRead == null,
                 onClick = onClickRead?: {  },
             )
             Spacer(modifier = Modifier.height(16.dp))
             ScanButton(
-                text = "App to Vital Bracelet",
+                text = stringResource(R.string.scan_app_to_vb),
                 disabled = onClickWrite == null,
                 onClick = onClickWrite?: {  },
             )

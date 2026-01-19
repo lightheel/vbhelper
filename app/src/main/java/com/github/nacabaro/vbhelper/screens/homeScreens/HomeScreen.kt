@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -39,6 +40,7 @@ import com.github.nacabaro.vbhelper.screens.itemsScreen.ObtainedItemDialog
 import com.github.nacabaro.vbhelper.source.StorageRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.github.nacabaro.vbhelper.R
 
 @Composable
 fun HomeScreen(
@@ -81,7 +83,7 @@ fun HomeScreen(
     Scaffold (
         topBar = {
             TopBanner(
-                text = "VB Helper",
+                text = stringResource(R.string.home_title),
                 onScanClick = {
                     navController.navigate(NavigationItems.Scan.route)
                 },
@@ -99,7 +101,7 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(top = contentPadding.calculateTopPadding())
             ) {
-                Text(text = "Nothing to see here")
+                Text(text = stringResource(R.string.adventure_empty_state))
             }
         } else {
             if (activeMon.value!!.isBemCard) {
@@ -154,7 +156,7 @@ fun HomeScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        text = "One of your characters has finished their adventure mission!",
+                        text = stringResource(R.string.home_adventure_mission_finished),
                         textAlign = TextAlign.Center
                     )
                     Button(
@@ -165,7 +167,7 @@ fun HomeScreen(
                             .padding(8.dp)
                             .fillMaxWidth()
                     ) {
-                        Text(text = "Dismiss")
+                        Text(text = stringResource(R.string.beta_warning_button_dismiss))
                     }
                 }
             }
