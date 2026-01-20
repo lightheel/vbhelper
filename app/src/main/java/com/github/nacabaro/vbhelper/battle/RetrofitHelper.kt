@@ -255,7 +255,7 @@ class RetrofitHelper {
     }
      */
 
-    fun getPVPWinner(context: Context, apiStage: Int, playerID: Int, playerDigi: String, playerStage: Int, critBar: Int, opponentDigi: String, opponentStage: Int, callback: (PVPDataModel) -> Unit) {
+    fun getPVPWinner(context: Context, apiStage: Int, playerID: Long, playerDigi: String, playerStage: Int, critBar: Int, opponentDigi: String, opponentStage: Int, callback: (PVPDataModel) -> Unit) {
 
         try {
             // Create an authenticated Retrofit instance

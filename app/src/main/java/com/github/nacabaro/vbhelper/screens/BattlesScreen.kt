@@ -1097,7 +1097,7 @@ fun MiddleBattleView(
                         RetrofitHelper().getPVPWinner(
                             ctx, 
                             1, 
-                            playerUserId?.toInt() ?: 2, 
+                            playerUserId ?: 2L, 
                             activeCharacter?.name ?: "Player", 
                             playerStage, 
                             opponentStage, 
@@ -2268,7 +2268,7 @@ fun BattlesScreen() {
                                                                 else -> 0
                                                             }
                                                             
-                                                            RetrofitHelper().getPVPWinner(context, 0, userId?.toInt() ?: 2, cardId, apiStage, 0, opponent.charaId, apiStage) { apiResult ->
+                                                            RetrofitHelper().getPVPWinner(context, 0, userId ?: 2L, cardId, apiStage, 0, opponent.charaId, apiStage) { apiResult ->
                                                                 // Update player character HP from API response
                                                                 activeCharacter = activeCharacter?.copy(
                                                                     baseHp = apiResult.playerHP,
@@ -2349,7 +2349,7 @@ fun BattlesScreen() {
                         RetrofitHelper().getPVPWinner(
                             context, 
                             1, 
-                            userId?.toInt() ?: 2, 
+                            userId ?: 2L, 
                             activeCharacter?.name ?: "Player", 
                             playerStage, 
                             opponentStage, 
@@ -2363,7 +2363,7 @@ fun BattlesScreen() {
                             RetrofitHelper().getPVPWinner(
                                 context, 
                                 2, 
-                                userId?.toInt() ?: 2, 
+                                userId ?: 2L, 
                                 activeCharacter?.name ?: "Player", 
                                 playerStage, 
                                 opponentStage, 

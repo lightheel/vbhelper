@@ -9,5 +9,5 @@ interface PVPService {
     // This method returns a Call object with a generic
     // type of DataModel, which represents
     // the data model for the response.
-    fun getwinner(@Query("apiStage") apiStage: Int, @Query("playerID") playerID: Int, @Query("playerDigi") playerDigi: String, @Query("playerStage") playerStage: Int, @Query("critBar") critBar: Int, @Query("opponentDigi") opponentDigi: String, @Query("opponentStage") opponentStage: Int): Call<PVPDataModel>
+    fun getwinner(@Query("apiStage") apiStage: Int, @Query("playerID") playerID: Long, @Query("playerDigi") playerDigi: String, @Query("playerStage") playerStage: Int, @Query("critBar") critBar: Int, @Query("opponentDigi") opponentDigi: String, @Query("opponentStage") opponentStage: Int): Call<PVPDataModel>
 }
