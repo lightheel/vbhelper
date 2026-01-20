@@ -14,7 +14,8 @@ class AuthRepository(
 ) {
     private companion object {
         val IS_AUTHENTICATED = booleanPreferencesKey("is_authenticated")
-        val AUTH_TOKEN = stringPreferencesKey("auth_token")
+        val AUTH_TOKEN = stringPreferencesKey("auth_token") // Nacatech token (for re-authentication)
+        val SESSION_TOKEN = stringPreferencesKey("session_token") // Session token (for API calls)
         val USER_ID = longPreferencesKey("user_id")
     }
 
@@ -28,16 +29,24 @@ class AuthRepository(
             preferences[AUTH_TOKEN]
         }
 
+    val sessionToken: Flow<String?> = dataStore.data
+        .map { preferences ->
+            preferences[SESSION_TOKEN]
+        }
+
     val userId: Flow<Long?> = dataStore.data
         .map { preferences ->
             preferences[USER_ID]
         }
 
-    suspend fun setAuthenticated(isAuthenticated: Boolean, token: String? = null, userId: Long? = null) {
+    suspend fun setAuthenticated(isAuthenticated: Boolean, nacatechToken: String? = null, sessionToken: String? = null, userId: Long? = null) {
         dataStore.edit { preferences ->
             preferences[IS_AUTHENTICATED] = isAuthenticated
-            if (token != null) {
-                preferences[AUTH_TOKEN] = token
+            if (nacatechToken != null) {
+                preferences[AUTH_TOKEN] = nacatechToken
+            }
+            if (sessionToken != null) {
+                preferences[SESSION_TOKEN] = sessionToken
             }
             if (userId != null) {
                 preferences[USER_ID] = userId
@@ -49,6 +58,7 @@ class AuthRepository(
         dataStore.edit { preferences ->
             preferences[IS_AUTHENTICATED] = false
             preferences.remove(AUTH_TOKEN)
+            preferences.remove(SESSION_TOKEN)
             preferences.remove(USER_ID)
         }
     }

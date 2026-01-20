@@ -72,6 +72,7 @@ import com.github.nacabaro.vbhelper.battle.AnimatedSpriteImage
 import com.github.nacabaro.vbhelper.battle.HitEffectOverlay
 import com.github.nacabaro.vbhelper.battle.BattleAuthContainer
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.collect
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 //import kotlin.math.sin
@@ -805,7 +806,7 @@ fun MiddleBattleView(
                 ) {
                     // Enemy HP bar (top)
                     LinearProgressIndicator(
-                        progress = battleSystem.opponentHP / (opponentCharacter?.baseHp?.toFloat() ?: 100f),
+                        progress = { battleSystem.opponentHP / (opponentCharacter?.baseHp?.toFloat() ?: 100f) },
                         modifier = getLandscapeModifier(),
                         color = Color.Red,
                         trackColor = Color.Gray
@@ -1017,7 +1018,7 @@ fun MiddleBattleView(
         ) {
             // Critical bar
             LinearProgressIndicator(
-                progress = battleSystem.critBarProgress / 100f,
+                progress = { battleSystem.critBarProgress / 100f },
                 modifier = getLandscapeModifier(),
                 color = Color.Yellow,
                 trackColor = Color.Gray
@@ -1035,7 +1036,7 @@ fun MiddleBattleView(
                 ) {
                     // Player HP bar
                     LinearProgressIndicator(
-                        progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+                        progress = { battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f) },
                         modifier = getLandscapeModifier(),
                         color = Color.Green,
                         trackColor = Color.Gray
@@ -1215,7 +1216,7 @@ fun PlayerBattleView(
                 ) {
             // Health bar
             LinearProgressIndicator(
-                progress = battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+                progress = { battleSystem.playerHP / (activeCharacter?.baseHp?.toFloat() ?: 100f) },
                 modifier = getLandscapeModifier(),
                 color = Color.Green,
                 trackColor = Color.Gray
@@ -1401,7 +1402,7 @@ fun EnemyBattleView(
                 ) {
         // Enemy HP bar
         LinearProgressIndicator(
-            progress = battleSystem.opponentHP / (activeCharacter?.baseHp?.toFloat() ?: 100f),
+            progress = { battleSystem.opponentHP / (activeCharacter?.baseHp?.toFloat() ?: 100f) },
                         modifier = getLandscapeModifier(),
             color = Color.Red,
             trackColor = Color.Gray
@@ -1765,11 +1766,20 @@ fun BattlesScreen() {
                 // Exchange token with battle server
                 RetrofitHelper().authenticate(context, token) { response ->
                     if (response.success) {
-                        // Token already marked as processed before API call, just extract userId
-                        // Extract userId from response
+                        // Extract userId and sessionToken from response
                         val extractedUserId = response.userInfo?.userId?.toLongOrNull()
+                        val sessionToken = response.sessionToken
+                        
+                        println("BATTLESCREEN: Authentication successful, userId: $extractedUserId, sessionToken: ${if (sessionToken != null) "present" else "missing"}")
+                        
+                        // Store both nacatech token (for re-auth) and sessionToken (for API calls)
                         kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
-                            battleAuthContainer.authRepository.setAuthenticated(true, token, extractedUserId)
+                            battleAuthContainer.authRepository.setAuthenticated(
+                                isAuthenticated = true,
+                                nacatechToken = token,
+                                sessionToken = sessionToken,
+                                userId = extractedUserId
+                            )
                         }
                         // Update UI state on main thread
                         kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
@@ -1877,16 +1887,23 @@ fun BattlesScreen() {
                     kotlinx.coroutines.CoroutineScope(Dispatchers.Main).launch {
                         if (response.success) {
                             val extractedUserId = response.userInfo?.userId?.toLongOrNull()
-                            // Update stored userId
+                            val sessionToken = response.sessionToken
+                            
+                            // Update stored userId and sessionToken
                             if (extractedUserId != null) {
                                 kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
-                                    authRepository.setAuthenticated(true, storedToken, extractedUserId)
+                                    authRepository.setAuthenticated(
+                                        isAuthenticated = true,
+                                        nacatechToken = storedToken,
+                                        sessionToken = sessionToken,
+                                        userId = extractedUserId
+                                    )
                                 }
                             }
                             isAuthenticated = true
                             isCheckingAuth = false
                             userId = extractedUserId
-                            println("BATTLESCREEN: Got userId from validation: $extractedUserId")
+                            println("BATTLESCREEN: Got userId from validation: $extractedUserId, sessionToken: ${if (sessionToken != null) "present" else "missing"}")
                         } else {
                             println("BATTLESCREEN: Token validation failed: ${response.message}")
                             // Check if it's a critical error that requires re-authentication
@@ -1996,6 +2013,28 @@ fun BattlesScreen() {
         
         onDispose {
             lifecycleOwner?.lifecycle?.removeObserver(observer)
+        }
+    }
+    
+    // Watch auth repository state changes to detect when token is cleared (e.g., expired token)
+    LaunchedEffect(Unit) {
+        battleAuthContainer.authRepository.isAuthenticated.collect { authState ->
+            if (!authState && isAuthenticated) {
+                // Auth state was cleared (e.g., by RetrofitHelper due to expired token)
+                println("BATTLESCREEN: Auth state cleared, triggering re-authentication")
+                isAuthenticated = false
+                isCheckingAuth = false
+                // Open auth URL to get a fresh token
+                val authUrl = "http://auth.nacatech.es/begin?app=443654920&redirect_uri=vbhelper://auth?token="
+                val authIntent = Intent(Intent.ACTION_VIEW, Uri.parse(authUrl))
+                try {
+                    context.startActivity(authIntent)
+                    println("BATTLESCREEN: Opened auth URL after token expiration: $authUrl")
+                } catch (e: Exception) {
+                    println("BATTLESCREEN: Failed to open auth URL: ${e.message}")
+                    e.printStackTrace()
+                }
+            }
         }
     }
     
