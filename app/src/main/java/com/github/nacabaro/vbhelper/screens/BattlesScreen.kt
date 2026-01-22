@@ -2502,9 +2502,14 @@ fun BattlesScreen() {
                                     println("BATTLESCREEN: Clicked opponent: ${clickedOpponent.name} (${clickedOpponent.charaId}), baseHp: ${clickedOpponent.baseHp}")
                                     
                                     // Update player character HP from API response
+                                    // Use playerMaxHP from API if available, otherwise use current HP as fallback
+                                    // NOTE: Server should provide playerMaxHP for resumed matches since DB stats use different scaling
+                                    val playerMaxHp = apiResult.playerMaxHP ?: apiResult.playerHP
+                                    println("BATTLESCREEN: Resuming match - playerMaxHP from API: ${apiResult.playerMaxHP}, using: $playerMaxHp")
+                                    
                                     activeCharacter = activeCharacter?.copy(
-                                        baseHp = apiResult.playerHP,
-                                        currentHp = apiResult.playerHP
+                                        baseHp = playerMaxHp, // Use max HP from API (or current HP as fallback)
+                                        currentHp = apiResult.playerHP // Current HP from API
                                     )
                                     
                                     // Find the actual opponent from the match
@@ -2583,9 +2588,13 @@ fun BattlesScreen() {
                                     println("BATTLESCREEN: Selected opponent for resume: ${actualOpponent.name} (${actualOpponent.charaId}), baseHp: ${actualOpponent.baseHp}, currentHp: ${apiResult.opponentHP}")
                                     
                                     // Update opponent with correct HP from match
-                                    // Use the actual baseHp from the opponent, but set currentHp to the match HP
+                                    // Use opponentMaxHP from API if available, otherwise use opponent's baseHp from opponentsList
+                                    // NOTE: Server should provide opponentMaxHP for resumed matches since DB stats use different scaling
+                                    val opponentMaxHp = apiResult.opponentMaxHP ?: actualOpponent.baseHp
+                                    println("BATTLESCREEN: Resuming match - opponentMaxHP from API: ${apiResult.opponentMaxHP}, using: $opponentMaxHp")
+                                    
                                     selectedOpponent = actualOpponent.copy(
-                                        baseHp = actualOpponent.baseHp, // Keep original baseHp
+                                        baseHp = opponentMaxHp, // Use max HP from API (or opponent's baseHp as fallback)
                                         currentHp = apiResult.opponentHP // Use current HP from match
                                     )
                                     

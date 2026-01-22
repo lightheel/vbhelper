@@ -10,5 +10,7 @@ data class PVPDataModel (
     val playerAttackDamage: Int,
     val opponentAttackDamage: Int,
     val winner: String,
-    val opponentCharaId: String? = null  // TODO: Server will add this - opponent's charaId from the match
+    val opponentCharaId: String? = null,  // Server provides opponent's charaId from the match
+    val playerMaxHP: Int? = null,  // Server should provide max HP for resumed matches
+    val opponentMaxHP: Int? = null  // Server should provide max HP for resumed matches
 ):java.io.Serializable
