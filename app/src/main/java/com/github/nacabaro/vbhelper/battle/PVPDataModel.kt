@@ -9,5 +9,6 @@ data class PVPDataModel (
     val playerAttackHit: Boolean,
     val playerAttackDamage: Int,
     val opponentAttackDamage: Int,
-    val winner: String
+    val winner: String,
+    val opponentCharaId: String? = null  // TODO: Server will add this - opponent's charaId from the match
 ):java.io.Serializable

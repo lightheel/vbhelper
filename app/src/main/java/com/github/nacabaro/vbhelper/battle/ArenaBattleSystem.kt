@@ -160,9 +160,9 @@ class ArenaBattleSystem {
         _opponentHP = opponentHP
     }
 
-    fun initializeHP(playerMaxHP: Float, opponentMaxHP: Float) {
-        _playerHP = playerMaxHP
-        _opponentHP = opponentMaxHP
+    fun initializeHP(playerHP: Float, opponentHP: Float) {
+        _playerHP = playerHP
+        _opponentHP = opponentHP
     }
 
     fun completeAttackAnimation(playerDamage: Float = 0f, opponentDamage: Float = 0f) {

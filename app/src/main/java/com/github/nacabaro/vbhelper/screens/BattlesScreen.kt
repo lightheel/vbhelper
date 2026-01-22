@@ -95,6 +95,9 @@ import com.github.nacabaro.vbhelper.di.VBHelper
 import kotlinx.coroutines.Dispatchers
 //import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.material3.AlertDialog
 
 @Composable
 fun isLandscapeMode(): Boolean {
@@ -238,10 +241,11 @@ fun BattleScreen(
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
     
     // Initialize HP when battle starts
+    // Use currentHp if available (for resumed matches), otherwise use baseHp (for new matches)
     LaunchedEffect(activeCharacter, opponentCharacter) {
-        val playerMaxHP = activeCharacter?.baseHp?.toFloat() ?: 100f
-        val opponentMaxHP = opponentCharacter?.baseHp?.toFloat() ?: 100f
-        battleSystem.initializeHP(playerMaxHP, opponentMaxHP)
+        val playerHP = activeCharacter?.currentHp?.toFloat() ?: activeCharacter?.baseHp?.toFloat() ?: 100f
+        val opponentHP = opponentCharacter?.currentHp?.toFloat() ?: opponentCharacter?.baseHp?.toFloat() ?: 100f
+        battleSystem.initializeHP(playerHP, opponentHP)
     }
     
     // Start background music when battle starts
@@ -805,17 +809,17 @@ fun MiddleBattleView(
                     horizontalAlignment = getLandscapeHorizontalAlignment()
                 ) {
                     // Enemy HP bar (top)
-                    LinearProgressIndicator(
+            LinearProgressIndicator(
                         progress = { battleSystem.opponentHP / (opponentCharacter?.baseHp?.toFloat() ?: 100f) },
                         modifier = getLandscapeModifier(),
                         color = Color.Red,
-                        trackColor = Color.Gray
-                    )
+                trackColor = Color.Gray
+            )
 
                     Spacer(modifier = Modifier.height(4.dp))
 
                     // Enemy HP display numbers
-                    Text(
+            Text(
                         text = "Enemy HP: ${battleSystem.opponentHP.toInt()}/${opponentCharacter?.baseHp ?: 100}",
                         fontSize = getLandscapeFontSize(),
                         color = Color.White,
@@ -883,7 +887,7 @@ fun MiddleBattleView(
                         (shake * shakeAmount.value).dp
                     } else {
                         0.dp
-                    }
+                }
                 
                 AnimatedSpriteImage(
                         characterId = opponentCharacter?.charaId ?: "dim011_mon01",
@@ -1292,7 +1296,7 @@ fun PlayerBattleView(
                     (shake * shakeAmount.value).dp
                 } else {
                     0.dp
-                }
+            }
             
             AnimatedSpriteImage(
                 characterId = activeCharacter?.charaId ?: "dim011_mon01",
@@ -1652,6 +1656,15 @@ fun BattlesScreen() {
     // Random background set selection
     var selectedBackgroundSet by remember { mutableStateOf(0) }
     
+    // Resume/Quit match dialog state
+    var showResumeDialog by remember { mutableStateOf(false) }
+    var existingMatchState by remember { mutableStateOf<com.github.nacabaro.vbhelper.battle.PVPDataModel?>(null) }
+    var pendingOpponentForResume by remember { mutableStateOf<APIBattleCharacter?>(null) }
+    var pendingCardIdForResume by remember { mutableStateOf<String?>(null) }
+    var pendingApiStageForResume by remember { mutableStateOf<Int?>(null) }
+    // Store the original opponent from the match (not the clicked one)
+    var originalMatchOpponent by remember { mutableStateOf<APIBattleCharacter?>(null) }
+    
     // Sprite animation tester state
     /*
     var showSpriteTester by remember { mutableStateOf(false) }
@@ -1726,15 +1739,15 @@ fun BattlesScreen() {
                     try {
                         // Create a new list to trigger UI recomposition
                         opponentsList = ArrayList(opponents.opponentsList)
-                    } catch (e: Exception) {
-                        Log.d(TAG, "Error processing opponents data: ${e.message}")
-                        e.printStackTrace()
+                        } catch (e: Exception) {
+                            Log.d(TAG, "Error processing opponents data: ${e.message}")
+                            e.printStackTrace()
+                        }
                     }
+                } catch (e: Exception) {
+                    Log.d(TAG,"Error calling getOpponents: ${e.message}")
+                    e.printStackTrace()
                 }
-            } catch (e: Exception) {
-                Log.d(TAG,"Error calling getOpponents: ${e.message}")
-                e.printStackTrace()
-            }
         } else {
             println("BATTLESCREEN: Cannot load opponents - activeUserCharacter: $currentCharacter")
             println("BATTLESCREEN: canBattle: $canBattle")
@@ -1810,11 +1823,11 @@ fun BattlesScreen() {
                                 try {
                                     context.startActivity(authIntent)
                                     println("BATTLESCREEN: Opened auth URL after token expiration: $authUrl")
-                                } catch (e: Exception) {
+                        } catch (e: Exception) {
                                     println("BATTLESCREEN: Failed to open auth URL: ${e.message}")
-                                    e.printStackTrace()
-                                }
-                            }
+                            e.printStackTrace()
+                        }
+                    }
                         } else {
                             // For other errors, remove from processed set to allow retry with a new token
                             println("BATTLESCREEN: Authentication failed, removing token from processed set to allow retry")
@@ -2165,7 +2178,7 @@ fun BattlesScreen() {
     }
 
     val backButton = @Composable {
-        Button(
+                Button(
             onClick = { currentView = "main" }
         ) {
             Text("Back")
@@ -2252,10 +2265,10 @@ fun BattlesScreen() {
                                             verticalArrangement = Arrangement.spacedBy(4.dp)
                                         ) {
                                             items(opponentsList) { opponent ->
-                                                Button(
-                                                    onClick = {
+                                Button(
+                                    onClick = {
                                                         activeCardId?.let { cardId ->
-                                                            selectedOpponent = opponent
+                                            selectedOpponent = opponent
                                                             // Randomly select background set (0, 1, or 2)
                                                             selectedBackgroundSet = kotlin.random.Random.nextInt(3)
                                                             
@@ -2269,22 +2282,62 @@ fun BattlesScreen() {
                                                             }
                                                             
                                                             RetrofitHelper().getPVPWinner(context, 0, userId ?: 2L, cardId, apiStage, 0, opponent.charaId, apiStage) { apiResult ->
-                                                                // Update player character HP from API response
-                                                                activeCharacter = activeCharacter?.copy(
-                                                                    baseHp = apiResult.playerHP,
-                                                                    currentHp = apiResult.playerHP
-                                                                )
-                                                                currentView = "battle-main"
+                                                                // Check if there's an existing match
+                                                                when {
+                                                                    apiResult.status.contains("Existing match found", ignoreCase = true) -> {
+                                                                        // Show resume/quit dialog
+                                                                        // When resuming, we need to find the actual opponent from the match
+                                                                        // For now, we'll use the clicked opponent, but we need to look it up from opponentsList
+                                                                        // The server should return the opponent charaId in the response, but since it doesn't,
+                                                                        // we'll try to find it by matching the opponent HP or look it up after rejoin
+                                                                        existingMatchState = apiResult
+                                                                        pendingOpponentForResume = opponent
+                                                                        pendingCardIdForResume = cardId
+                                                                        pendingApiStageForResume = apiStage
+                                                                        // Store the clicked opponent temporarily, but we'll update it when resuming
+                                                                        originalMatchOpponent = null // Will be set when we rejoin
+                                                                        showResumeDialog = true
+                                                                    }
+                                                                    apiResult.status == "Match setup." -> {
+                                                                        // New match created - proceed normally
+                                                                        activeCharacter = activeCharacter?.copy(
+                                                                            baseHp = apiResult.playerHP,
+                                                                            currentHp = apiResult.playerHP
+                                                                        )
+                                                                        currentView = "battle-main"
+                                                                    }
+                                                                    apiResult.status == "Match resumed." -> {
+                                                                        // Match was resumed (shouldn't happen on first call, but handle it)
+                                                                        activeCharacter = activeCharacter?.copy(
+                                                                            baseHp = apiResult.playerHP,
+                                                                            currentHp = apiResult.playerHP
+                                                                        )
+                                                                        selectedOpponent = opponent.copy(
+                                                                            baseHp = apiResult.opponentHP,
+                                                                            currentHp = apiResult.opponentHP
+                                                                        )
+                                                currentView = "battle-main"
+                                            }
+                                                                    else -> {
+                                                                        // Other status - log and proceed
+                                                                        println("BATTLESCREEN: Unexpected status: ${apiResult.status}")
+                                                                        activeCharacter = activeCharacter?.copy(
+                                                                            baseHp = apiResult.playerHP,
+                                                                            currentHp = apiResult.playerHP
+                                                                        )
+                                                                        currentView = "battle-main"
+                                                                    }
+                                                                }
                                                             }
                                                         } ?: run {
                                                             println("BATTLESCREEN: No active card ID found in database")
                                                         }
                                                     },
                                                     modifier = Modifier.fillMaxWidth()
-                                                ) {
-                                                    Text("Battle ${opponent.name}")
-                                                }
-                                            }
+                                ) {
+                                    Text("Battle ${opponent.name}")
+                                }
+                            }
                                         }
                                     } else {
                                         Text("No opponents available for your stage", 
@@ -2422,8 +2475,211 @@ fun BattlesScreen() {
                 }
             }
         }
+        
+        // Resume/Quit Match Dialog
+        if (showResumeDialog && existingMatchState != null) {
+            ResumeMatchDialog(
+                matchState = existingMatchState!!,
+                onResume = {
+                    // User chose to resume - call API with action="rejoin"
+                    // Note: We need to pass the opponent, but the server should use the one from the stored match
+                    // After rejoin, we need to find the actual opponent from the opponents list
+                    pendingCardIdForResume?.let { cardId ->
+                        pendingOpponentForResume?.let { clickedOpponent ->
+                            pendingApiStageForResume?.let { apiStage ->
+                                RetrofitHelper().getPVPWinner(
+                                    context, 
+                                    0, 
+                                    userId ?: 2L, 
+                                    cardId, 
+                                    apiStage, 
+                                    0, 
+                                    clickedOpponent.charaId, 
+                                    apiStage,
+                                    "rejoin"
+                                ) { apiResult ->
+                                    println("BATTLESCREEN: Resuming match - opponentHP from API: ${apiResult.opponentHP}")
+                                    println("BATTLESCREEN: Clicked opponent: ${clickedOpponent.name} (${clickedOpponent.charaId}), baseHp: ${clickedOpponent.baseHp}")
+                                    
+                                    // Update player character HP from API response
+                                    activeCharacter = activeCharacter?.copy(
+                                        baseHp = apiResult.playerHP,
+                                        currentHp = apiResult.playerHP
+                                    )
+                                    
+                                    // Find the actual opponent from the match
+                                    println("BATTLESCREEN: Checking for opponent charaId - opponentCharaId: ${apiResult.opponentCharaId}, winner: '${apiResult.winner}'")
+                                    val actualOpponent = if (apiResult.opponentCharaId != null) {
+                                        // Server provides opponent charaId - use it directly (most reliable)
+                                        println("BATTLESCREEN: Server provided opponent charaId: ${apiResult.opponentCharaId}")
+                                        opponentsList.find { it.charaId == apiResult.opponentCharaId } ?: run {
+                                            println("BATTLESCREEN: WARNING: Opponent charaId from server not found in opponentsList, using clicked opponent")
+                                            clickedOpponent
+                                        }
+                                    } else if (apiResult.winner.isNotEmpty() && apiResult.winner.contains("|")) {
+                                        println("BATTLESCREEN: Winner field contains pipe, attempting to parse: '${apiResult.winner}'")
+                                        // Try to extract opponent charaId from winner field
+                                        // Format appears to be: "playerDigi|playerStage|opponentDigi|opponentStage"
+                                        try {
+                                            val parts = apiResult.winner.split("|")
+                                            if (parts.size >= 3) {
+                                                val extractedOpponentCharaId = parts[2] // Third part is opponentDigi
+                                                println("BATTLESCREEN: Extracted opponent charaId from winner field: $extractedOpponentCharaId")
+                                                opponentsList.find { it.charaId == extractedOpponentCharaId } ?: run {
+                                                    println("BATTLESCREEN: WARNING: Extracted opponent charaId not found in opponentsList, using clicked opponent")
+                                                    clickedOpponent
+                                                }
+                                            } else {
+                                                println("BATTLESCREEN: Winner field format unexpected, falling back to HP matching")
+                                                null // Will fall through to HP matching
+                                            }
+                                        } catch (e: Exception) {
+                                            println("BATTLESCREEN: Error parsing winner field: ${e.message}")
+                                            null // Will fall through to HP matching
+                                        }
+                                    } else {
+                                        println("BATTLESCREEN: Winner field is empty or doesn't contain pipe, winner='${apiResult.winner}'")
+                                        null // Will fall through to HP matching
+                                    } ?: run {
+                                        // Fallback: Try to match by HP - but prioritize the clicked opponent if it matches
+                                        println("BATTLESCREEN: All opponent identification methods failed, using HP matching fallback")
+                                        run {
+                                            // First, check if the clicked opponent matches the HP criteria
+                                            // This is the most likely match since the user clicked on it
+                                            val clickedOpponentMatches = run {
+                                                val hpDiff = clickedOpponent.baseHp - apiResult.opponentHP
+                                                hpDiff >= 0 && hpDiff <= (clickedOpponent.baseHp * 0.5)
+                                            }
+                                            
+                                            if (clickedOpponentMatches) {
+                                                println("BATTLESCREEN: Clicked opponent matches HP criteria, using it")
+                                                clickedOpponent
+                                            } else {
+                                                // If clicked opponent doesn't match, search for others
+                                                println("BATTLESCREEN: Clicked opponent doesn't match HP, searching for match")
+                                                opponentsList.filter { opp ->
+                                                    // Only consider opponents of the same stage
+                                                    opp.stage == clickedOpponent.stage
+                                                }.find { opp ->
+                                                    // Match by checking if the opponent's baseHp is >= the current opponentHP
+                                                    // and the difference is reasonable (opponent has taken some damage but not too much)
+                                                    val hpDiff = opp.baseHp - apiResult.opponentHP
+                                                    hpDiff >= 0 && hpDiff <= (opp.baseHp * 0.5) // Allow up to 50% damage
+                                                } ?: run {
+                                                    // If we can't find a match, try a broader search
+                                                    println("BATTLESCREEN: Could not find opponent by HP matching, trying broader search")
+                                                    opponentsList.find { opp ->
+                                                        opp.stage == clickedOpponent.stage && 
+                                                        opp.baseHp >= apiResult.opponentHP
+                                                    } ?: run {
+                                                        println("BATTLESCREEN: Still no match, using clicked opponent as fallback")
+                                                        clickedOpponent
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    println("BATTLESCREEN: Selected opponent for resume: ${actualOpponent.name} (${actualOpponent.charaId}), baseHp: ${actualOpponent.baseHp}, currentHp: ${apiResult.opponentHP}")
+                                    
+                                    // Update opponent with correct HP from match
+                                    // Use the actual baseHp from the opponent, but set currentHp to the match HP
+                                    selectedOpponent = actualOpponent.copy(
+                                        baseHp = actualOpponent.baseHp, // Keep original baseHp
+                                        currentHp = apiResult.opponentHP // Use current HP from match
+                                    )
+                                    
+                                    showResumeDialog = false
+                                    existingMatchState = null
+                                    originalMatchOpponent = selectedOpponent
+                                    currentView = "battle-main"
+                                }
+                            }
+                        }
+                    }
+                },
+                onQuit = {
+                    // User chose to quit - call API with action="quit"
+                    pendingCardIdForResume?.let { cardId ->
+                        pendingOpponentForResume?.let { opponent ->
+                            pendingApiStageForResume?.let { apiStage ->
+                                RetrofitHelper().getPVPWinner(
+                                    context, 
+                                    0, 
+                                    userId ?: 2L, 
+                                    cardId, 
+                                    apiStage, 
+                                    0, 
+                                    opponent.charaId, 
+                                    apiStage,
+                                    "quit"
+                                ) { apiResult ->
+                                    // New match created - proceed normally
+                                    activeCharacter = activeCharacter?.copy(
+                                        baseHp = apiResult.playerHP,
+                                        currentHp = apiResult.playerHP
+                                    )
+                                    showResumeDialog = false
+                                    existingMatchState = null
+                                    currentView = "battle-main"
+                                }
+                            }
+                        }
+                    }
+                },
+                onDismiss = {
+                    showResumeDialog = false
+                    existingMatchState = null
+                    pendingOpponentForResume = null
+                    pendingCardIdForResume = null
+                    pendingApiStageForResume = null
+                }
+            )
+        }
     }
 } 
+
+@Composable
+fun ResumeMatchDialog(
+    matchState: com.github.nacabaro.vbhelper.battle.PVPDataModel,
+    onResume: () -> Unit,
+    onQuit: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Ongoing Match Found", fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column {
+                Text("You have an ongoing match:")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Round: ${matchState.currentRound + 1}", fontWeight = FontWeight.Bold)
+                Text("Your HP: ${matchState.playerHP}")
+                Text("Opponent HP: ${matchState.opponentHP}")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("What would you like to do?")
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onResume,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
+            ) {
+                Text("Resume Match")
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onQuit,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+            ) {
+                Text("Quit & Start New")
+            }
+        }
+    )
+}
 
 @Composable
 fun AnimatedBattleBackground(

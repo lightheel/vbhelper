@@ -256,6 +256,10 @@ class RetrofitHelper {
      */
 
     fun getPVPWinner(context: Context, apiStage: Int, playerID: Long, playerDigi: String, playerStage: Int, critBar: Int, opponentDigi: String, opponentStage: Int, callback: (PVPDataModel) -> Unit) {
+        getPVPWinner(context, apiStage, playerID, playerDigi, playerStage, critBar, opponentDigi, opponentStage, null, callback)
+    }
+
+    fun getPVPWinner(context: Context, apiStage: Int, playerID: Long, playerDigi: String, playerStage: Int, critBar: Int, opponentDigi: String, opponentStage: Int, action: String?, callback: (PVPDataModel) -> Unit) {
 
         try {
             // Create an authenticated Retrofit instance
@@ -271,7 +275,7 @@ class RetrofitHelper {
 
             // Call the getwinner() method of the ApiService
             // to make an API request.
-            val call: Call<PVPDataModel> = service.getwinner(apiStage, playerID, playerDigi, playerStage, critBar, opponentDigi, opponentStage)
+            val call: Call<PVPDataModel> = service.getwinner(apiStage, playerID, playerDigi, playerStage, critBar, opponentDigi, opponentStage, action)
 
             // Use the enqueue() method of the Call object to
             // make an asynchronous API request.
