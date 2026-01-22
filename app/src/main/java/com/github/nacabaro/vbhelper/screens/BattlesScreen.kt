@@ -2409,10 +2409,43 @@ fun BattlesScreen() {
                             selectedOpponent?.name ?: "Opponent", 
                             opponentStage
                         ) { apiResult ->
-                            winnerName = apiResult.winner ?: "Unknown"
+                            // Winner might be empty in first call, but we can check HP values
+                            // If opponentHP is negative, player won. If playerHP is negative or 0, player lost.
+                            val playerWonFromHP = apiResult.opponentHP <= 0 && apiResult.playerHP > 0
+                            
+                            // Also check winner field if it's not empty
+                            val playerWonFromWinner = activeCardId?.let { cardId ->
+                                val winner = apiResult.winner ?: ""
+                                if (winner.isNotEmpty()) {
+                                    if (winner.contains("|")) {
+                                        // Pipe-separated format: first part is the winner
+                                        val winnerParts = winner.split("|")
+                                        val winnerCharaId = winnerParts.getOrNull(0) ?: ""
+                                        winnerCharaId.contains(cardId, ignoreCase = true)
+                                    } else {
+                                        // Simple format: check if winner contains player's charaId or matches player name
+                                        winner.contains(cardId, ignoreCase = true) ||
+                                        winner.equals(activeCharacter?.name, ignoreCase = true)
+                                    }
+                                } else {
+                                    false
+                                }
+                            } ?: false
+                            
+                            // Use HP-based determination if winner field is empty, otherwise use winner field
+                            val playerWon = if (apiResult.winner.isNullOrEmpty()) {
+                                playerWonFromHP
+                            } else {
+                                playerWonFromWinner
+                            }
+                            
+                            println("BATTLESCREEN: Battle result (first call) - winner: '${apiResult.winner}', playerHP: ${apiResult.playerHP}, opponentHP: ${apiResult.opponentHP}, playerWonFromHP: $playerWonFromHP, playerWonFromWinner: $playerWonFromWinner, final playerWon: $playerWon")
+                            
+                            // Store winner name for display (will be updated in cleanup call if available)
+                            winnerName = apiResult.winner ?: if (playerWon) "You" else "Opponent"
                             isWinnerLoaded = true
                             
-                            // Then send the cleanup call
+                            // Then send the cleanup call - this will have the actual winner name
                             RetrofitHelper().getPVPWinner(
                                 context, 
                                 2, 
@@ -2423,6 +2456,85 @@ fun BattlesScreen() {
                                 selectedOpponent?.name ?: "Opponent", 
                                 opponentStage
                             ) { cleanupResult ->
+                                // Update winner name from cleanup call if available
+                                if (cleanupResult.winner.isNotEmpty()) {
+                                    winnerName = cleanupResult.winner
+                                }
+                                
+                                // Determine final winner from cleanup call (most reliable)
+                                // Primary method: Check HP values (opponentHP <= 0 means opponent lost = player won)
+                                // Secondary method: Check winner name (if winner doesn't match opponent, player won)
+                                val opponentName = selectedOpponent?.name ?: ""
+                                val winner = cleanupResult.winner ?: ""
+                                
+                                // Primary: HP-based determination (most reliable)
+                                // If opponentHP <= 0, opponent is dead = player won
+                                // If playerHP <= 0, player is dead = player lost
+                                val playerWonFromHP = cleanupResult.opponentHP <= 0 && cleanupResult.playerHP > 0
+                                
+                                // Secondary: Winner name-based determination (only if HP check is inconclusive)
+                                val playerWonFromName = if (winner.isNotEmpty() && opponentName.isNotEmpty()) {
+                                    // If winner matches opponent name, player lost. Otherwise, player won.
+                                    !winner.equals(opponentName, ignoreCase = true)
+                                } else if (winner.isNotEmpty()) {
+                                    // Check if winner matches player's charaId
+                                    activeCardId?.let { cardId ->
+                                        if (winner.contains("|")) {
+                                            val winnerParts = winner.split("|")
+                                            val winnerCharaId = winnerParts.getOrNull(0) ?: ""
+                                            winnerCharaId.contains(cardId, ignoreCase = true)
+                                        } else {
+                                            winner.contains(cardId, ignoreCase = true)
+                                        }
+                                    } ?: false
+                                } else {
+                                    false
+                                }
+                                
+                                // Use HP as primary (most reliable), name as fallback only if HP values are both positive
+                                val finalPlayerWon = if (cleanupResult.opponentHP <= 0 || cleanupResult.playerHP <= 0) {
+                                    // HP clearly indicates winner
+                                    playerWonFromHP
+                                } else {
+                                    // Both have HP (shouldn't happen in cleanup, but use name as fallback)
+                                    playerWonFromName
+                                }
+                                
+                                println("BATTLESCREEN: Battle result (cleanup call) - winner: '${cleanupResult.winner}', playerHP: ${cleanupResult.playerHP}, opponentHP: ${cleanupResult.opponentHP}, finalPlayerWon: $finalPlayerWon")
+                                
+                                // Update battle stats in database using the most reliable determination
+                                kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                                    try {
+                                        val application = context.applicationContext as VBHelper
+                                        val database = application.container.db
+                                        val activeChar = database.userCharacterDao().getActiveCharacter()
+                                        
+                                        if (activeChar != null) {
+                                            // Get the full UserCharacter entity to update
+                                            val userCharacter = database.userCharacterDao().getCharacter(activeChar.id)
+                                            
+                                            // Update battle stats
+                                            if (finalPlayerWon) {
+                                                userCharacter.currentPhaseBattlesWon += 1
+                                                userCharacter.totalBattlesWon += 1
+                                                println("BATTLESCREEN: Player won - updated wins: currentPhase=${userCharacter.currentPhaseBattlesWon}, total=${userCharacter.totalBattlesWon}")
+                                            } else {
+                                                userCharacter.currentPhaseBattlesLost += 1
+                                                userCharacter.totalBattlesLost += 1
+                                                println("BATTLESCREEN: Player lost - updated losses: currentPhase=${userCharacter.currentPhaseBattlesLost}, total=${userCharacter.totalBattlesLost}")
+                                            }
+                                            
+                                            // Save updated character to database
+                                            database.userCharacterDao().updateCharacter(userCharacter)
+                                            println("BATTLESCREEN: Updated battle stats in database")
+                                        } else {
+                                            println("BATTLESCREEN: WARNING: Could not find active character to update battle stats")
+                                        }
+                                    } catch (e: Exception) {
+                                        println("BATTLESCREEN: Error updating battle stats: ${e.message}")
+                                        e.printStackTrace()
+                                    }
+                                }
                             }
                         }
                     }
