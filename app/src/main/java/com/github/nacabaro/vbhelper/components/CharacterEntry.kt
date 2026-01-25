@@ -152,7 +152,8 @@ fun ItemDisplay(
 fun SpecialMissionsEntry(
     specialMission: SpecialMissions,
     modifier: Modifier = Modifier,
-    onClickCard: () -> Unit = {  },
+    onClickMission: (Long) -> Unit = {  },
+    onClickCollect: (Long) -> Unit = {  }
 ) {
     val textValue = when (specialMission.missionType) {
         SpecialMission.Type.NONE -> stringResource(R.string.special_mission_none)
@@ -219,10 +220,12 @@ fun SpecialMissionsEntry(
     Card(
         modifier = modifier,
         shape = androidx.compose.material.MaterialTheme.shapes.small,
-        onClick = if (specialMission.status == SpecialMission.Status.COMPLETED || specialMission.status == SpecialMission.Status.FAILED) {
-            onClickCard
+        onClick = if (specialMission.status == SpecialMission.Status.COMPLETED) {
+            { onClickCollect(specialMission.id) }
+        } else if (specialMission.status == SpecialMission.Status.UNAVAILABLE) {
+            { }
         } else {
-            {  }
+            { onClickMission(specialMission.id) }
         },
         colors = CardDefaults.cardColors(
             containerColor = color

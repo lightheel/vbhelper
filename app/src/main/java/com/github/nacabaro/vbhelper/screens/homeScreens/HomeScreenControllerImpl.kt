@@ -33,13 +33,18 @@ class HomeScreenControllerImpl(
         }
     }
 
-    override fun clearSpecialMission(missionId: Long, missionCompletion: SpecialMission.Status, onCleared: (ItemDtos.PurchasedItem?, Int?) -> Unit) {
+    override fun clearSpecialMission(missionId: Long, onCleared: (ItemDtos.PurchasedItem?, Int?) -> Unit) {
         componentActivity.lifecycleScope.launch {
+            val missionStatus = database
+                .specialMissionDao()
+                .getSpecialMission(missionId)
+                .first()
+
             database
                 .specialMissionDao()
                 .clearSpecialMission(missionId)
 
-            if (missionCompletion == SpecialMission.Status.COMPLETED) {
+            if (missionStatus.status == SpecialMission.Status.COMPLETED) {
                 val randomItem = database
                     .itemDao()
                     .getAllItems()
@@ -73,7 +78,6 @@ class HomeScreenControllerImpl(
             } else {
                 onCleared(null, null)
             }
-
         }
     }
 }
