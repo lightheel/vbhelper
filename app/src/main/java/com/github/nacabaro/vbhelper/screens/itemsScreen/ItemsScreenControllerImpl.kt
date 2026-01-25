@@ -11,6 +11,8 @@ import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -52,9 +54,16 @@ class ItemsScreenControllerImpl (
                 var vbCharacterData: VBCharacterData? = null
 
                 if (characterData.characterType == DeviceType.BEDevice) {
-                    beCharacterData = database.userCharacterDao().getBeData(characterId)
+                    beCharacterData = database
+                        .userCharacterDao()
+                        .getBeData(characterId)
+                        .firstOrNull()
+
                 } else if (characterData.characterType == DeviceType.VBDevice) {
-                    vbCharacterData = database.userCharacterDao().getVbData(characterId)
+                    vbCharacterData = database
+                        .userCharacterDao()
+                        .getVbData(characterId)
+                        .firstOrNull()
                 }
 
                 if (
@@ -161,7 +170,7 @@ class ItemsScreenControllerImpl (
         var firstUnavailableMissionSlot: Long = 0
         var watchId = 0
 
-        for ((index, mission) in availableSpecialMissions.withIndex()) {
+        for ((index, mission) in availableSpecialMissions.first().withIndex()) {
             if (
                 mission.status == SpecialMission.Status.UNAVAILABLE
             ) {

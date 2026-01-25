@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.github.nacabaro.vbhelper.domain.card.Card
+import com.github.nacabaro.vbhelper.dtos.CardDtos
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -34,4 +35,15 @@ interface CardDao {
 
     @Query("DELETE FROM Card WHERE id = :id")
     suspend fun deleteCard(id: Long)
+
+    @Query("""
+        SELECT 
+            c.logo as cardIcon,
+            c.logoWidth as cardIconWidth,
+            c.logoHeight as cardIconHeight
+        FROM Card c
+        JOIN CardCharacter cc ON cc.cardId = c.id
+        WHERE cc.id = :charaId
+    """)
+    fun getCardIconByCharaId(charaId: Long): Flow<CardDtos.CardIcon>
 }
