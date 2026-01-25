@@ -24,4 +24,10 @@ object CardDtos {
         val characterHp: Int,
         val steps: Int,
     )
+
+    data class CardIcon (
+        val cardIcon: ByteArray,
+        val cardIconWidth: Int,
+        val cardIconHeight: Int
+    )
 }

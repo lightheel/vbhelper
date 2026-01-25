@@ -26,6 +26,7 @@ import java.util.Locale
 fun BEBEmHomeScreen(
     activeMon: CharacterDtos.CharacterWithSprites,
     beData: BECharacterData,
+    cardIcon: BitmapData,
     transformationHistory: List<CharacterDtos.TransformationHistory>,
     contentPadding: PaddingValues
 ) {
@@ -46,6 +47,7 @@ fun BEBEmHomeScreen(
                 ),
                 multiplier = 8,
                 shape = androidx.compose.material.MaterialTheme.shapes.small,
+                cardIcon = cardIcon,
                 modifier = Modifier
                     .weight(1f)
                     .aspectRatio(1f)

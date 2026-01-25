@@ -53,7 +53,7 @@ interface UserCharacterDao {
         WHERE monId = :monId
     """
     )
-    suspend fun getTransformationHistory(monId: Long): List<CharacterDtos.TransformationHistory>?
+    fun getTransformationHistory(monId: Long): Flow<List<CharacterDtos.TransformationHistory>>
 
     @Query(
         """
@@ -110,13 +110,13 @@ interface UserCharacterDao {
     suspend fun getCharacter(id: Long): UserCharacter
 
     @Query("SELECT * FROM BECharacterData WHERE id = :id")
-    suspend fun getBeData(id: Long): BECharacterData
+    fun getBeData(id: Long): Flow<BECharacterData>
 
     @Query("SELECT * FROM VBCharacterData WHERE id = :id")
-    suspend fun getVbData(id: Long): VBCharacterData
+    fun getVbData(id: Long): Flow<VBCharacterData>
 
     @Query("SELECT * FROM SpecialMissions WHERE characterId = :id")
-    suspend fun getSpecialMissions(id: Long): List<SpecialMissions>
+    fun getSpecialMissions(id: Long): Flow<List<SpecialMissions>>
 
     @Query(
         """
@@ -143,7 +143,7 @@ interface UserCharacterDao {
         LIMIT 1
     """
     )
-    suspend fun getActiveCharacter(): CharacterDtos.CharacterWithSprites?
+    fun getActiveCharacter(): Flow<CharacterDtos.CharacterWithSprites?>
 
     @Query("DELETE FROM UserCharacter WHERE id = :id")
     fun deleteCharacterById(id: Long)

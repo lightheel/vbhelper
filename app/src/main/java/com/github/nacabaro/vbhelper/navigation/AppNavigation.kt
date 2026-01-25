@@ -1,13 +1,12 @@
 package com.github.nacabaro.vbhelper.navigation
 
-import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -99,20 +98,14 @@ fun AppNavigation(
             composable(NavigationItems.Scan.route) {
                 val characterIdString = it.arguments?.getString("characterId")
                 var characterId by remember { mutableStateOf(characterIdString?.toLongOrNull()) }
-                Log.d("ScanScreen", "characterId: $characterId")
                 val launchedFromHomeScreen = (characterIdString?.toLongOrNull() == null)
 
                 if (characterId == null) {
                     val context = LocalContext.current.applicationContext as VBHelper
                     val storageRepository = StorageRepository(context.container.db)
-
-                    LaunchedEffect(characterId) {
-                        if (characterId == null) {
-                            val characterData = storageRepository.getActiveCharacter()
-                            if (characterData != null) {
-                                characterId = characterData.id
-                            }
-                        }
+                    val characterData by storageRepository.getActiveCharacter().collectAsState(null)
+                    if (characterData != null) {
+                        characterId = characterData!!.id
                     }
                 }
 

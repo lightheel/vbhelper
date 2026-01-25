@@ -55,6 +55,7 @@ class ToNfcConverter(
         val vbData = database
             .userCharacterDao()
             .getVbData(characterId)
+            .first()
 
         val paddedTransformationArray = generateTransformationHistory(characterId, 9)
 
@@ -116,6 +117,7 @@ class ToNfcConverter(
         val specialMissions = database
             .userCharacterDao()
             .getSpecialMissions(characterId)
+            .first()
 
         val watchSpecialMissions = specialMissions.map {
             SpecialMission(
@@ -175,6 +177,7 @@ class ToNfcConverter(
         val beData = database
             .userCharacterDao()
             .getBeData(characterId)
+            .first()
 
         val paddedTransformationArray = generateTransformationHistory(characterId)
 
@@ -237,7 +240,8 @@ class ToNfcConverter(
     ): Array<NfcCharacter.Transformation> {
         val transformationHistory = database
             .userCharacterDao()
-            .getTransformationHistory(characterId)!!
+            .getTransformationHistory(characterId)
+            .first()
             .map {
                 val date = Date(it.transformationDate)
                 val calendar = android.icu.util.GregorianCalendar(TimeZone.getTimeZone("UTC"))

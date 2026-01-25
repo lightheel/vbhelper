@@ -31,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 @Composable
 fun VBDiMHomeScreen(
     activeMon: CharacterDtos.CharacterWithSprites,
+    cardIcon: BitmapData,
     vbData: VBCharacterData,
     specialMissions: List<SpecialMissions>,
     homeScreenController: HomeScreenControllerImpl,
@@ -53,6 +54,7 @@ fun VBDiMHomeScreen(
                     width = activeMon.spriteWidth,
                     height = activeMon.spriteHeight
                 ),
+                cardIcon = cardIcon,
                 multiplier = 8,
                 shape = androidx.compose.material.MaterialTheme.shapes.small,
                 modifier = Modifier

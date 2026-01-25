@@ -26,6 +26,7 @@ import kotlin.text.format
 @Composable
 fun BEDiMHomeScreen(
     activeMon: CharacterDtos.CharacterWithSprites,
+    cardIcon: BitmapData,
     beData: BECharacterData,
     transformationHistory: List<CharacterDtos.TransformationHistory>,
     contentPadding: PaddingValues
@@ -45,6 +46,7 @@ fun BEDiMHomeScreen(
                     width = activeMon.spriteWidth,
                     height = activeMon.spriteHeight
                 ),
+                cardIcon = cardIcon,
                 multiplier = 8,
                 shape = androidx.compose.material.MaterialTheme.shapes.small,
                 modifier = Modifier
