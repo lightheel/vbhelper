@@ -2335,7 +2335,7 @@ fun BattlesScreen() {
                                                     },
                                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text("Battle ${opponent.name}")
+                                    Text("Battle ${opponent.displayName?.takeIf { it.isNotBlank() } ?: opponent.name}")
                                 }
                             }
                                         }

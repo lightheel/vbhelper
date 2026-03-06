@@ -9,5 +9,6 @@ data class APIBattleCharacter(
     val baseHp: Int,
     val currentHp: Int,
     val baseBp: Float,
-    val baseAp: Float
+    val baseAp: Float,
+    val displayName: String? = null
 )
