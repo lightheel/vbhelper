@@ -19,19 +19,19 @@ class StorageRepository (
         return db.userCharacterDao().getCharacterWithSprites(id)
     }
 
-    suspend fun getCharacterBeData(id: Long): BECharacterData {
+    fun getCharacterBeData(id: Long): Flow<BECharacterData> {
         return db.userCharacterDao().getBeData(id)
     }
 
-    suspend fun getTransformationHistory(characterId: Long): List<CharacterDtos.TransformationHistory>? {
+    fun getTransformationHistory(characterId: Long): Flow<List<CharacterDtos.TransformationHistory>> {
         return db.userCharacterDao().getTransformationHistory(characterId)
     }
 
-    suspend fun getCharacterVbData(id: Long): VBCharacterData {
+    fun getCharacterVbData(id: Long): Flow<VBCharacterData> {
         return db.userCharacterDao().getVbData(id)
     }
 
-    suspend fun getSpecialMissions(id: Long): List<SpecialMissions> {
+    fun getSpecialMissions(id: Long): Flow<List<SpecialMissions>> {
         return db.userCharacterDao().getSpecialMissions(id)
     }
 
@@ -39,7 +39,7 @@ class StorageRepository (
         return db.itemDao().getItem(id)
     }
 
-    suspend fun getActiveCharacter(): CharacterDtos.CharacterWithSprites? {
+    fun getActiveCharacter(): Flow<CharacterDtos.CharacterWithSprites?> {
         return db.userCharacterDao().getActiveCharacter()
     }
 

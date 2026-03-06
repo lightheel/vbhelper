@@ -43,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 fun CharacterEntry(
     icon: BitmapData,
     modifier: Modifier = Modifier,
+    cardIcon: BitmapData? = null,
     obscure: Boolean = false,
     disabled: Boolean = false,
     shape: Shape = MaterialTheme.shapes.medium,
@@ -55,6 +56,7 @@ fun CharacterEntry(
     val bitmap = remember (icon.bitmap) {
         if(obscure) icon.getObscuredBitmap() else icon.getBitmap()
     }
+    val iconSizeMultiplier = 3
     val imageBitmap = remember(bitmap) { bitmap.asImageBitmap() }
     val density: Float = LocalContext.current.resources.displayMetrics.density
     val dpSize = (icon.width * multiplier / density).dp
@@ -86,7 +88,24 @@ fun CharacterEntry(
                 },
                 modifier = Modifier
                     .size(dpSize)
+                    .align(Alignment.BottomCenter)
             )
+
+            if (cardIcon != null) {
+                val bitmap = remember (icon.bitmap) { cardIcon.getBitmap() }
+                val iconBitmap = remember(bitmap) { bitmap.asImageBitmap() }
+                val dpSize = (icon.width * iconSizeMultiplier /density).dp
+
+                Image(
+                    bitmap = iconBitmap,
+                    contentDescription = "Card icon",
+                    filterQuality = FilterQuality.None,
+                    modifier = Modifier
+                        .size(dpSize)
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                )
+            }
         }
     }
 }
@@ -133,7 +152,8 @@ fun ItemDisplay(
 fun SpecialMissionsEntry(
     specialMission: SpecialMissions,
     modifier: Modifier = Modifier,
-    onClickCard: () -> Unit = {  },
+    onClickMission: (Long) -> Unit = {  },
+    onClickCollect: (Long) -> Unit = {  }
 ) {
     val textValue = when (specialMission.missionType) {
         SpecialMission.Type.NONE -> stringResource(R.string.special_mission_none)
@@ -200,10 +220,12 @@ fun SpecialMissionsEntry(
     Card(
         modifier = modifier,
         shape = androidx.compose.material.MaterialTheme.shapes.small,
-        onClick = if (specialMission.status == SpecialMission.Status.COMPLETED || specialMission.status == SpecialMission.Status.FAILED) {
-            onClickCard
+        onClick = if (specialMission.status == SpecialMission.Status.COMPLETED) {
+            { onClickCollect(specialMission.id) }
+        } else if (specialMission.status == SpecialMission.Status.UNAVAILABLE) {
+            { }
         } else {
-            {  }
+            { onClickMission(specialMission.id) }
         },
         colors = CardDefaults.cardColors(
             containerColor = color

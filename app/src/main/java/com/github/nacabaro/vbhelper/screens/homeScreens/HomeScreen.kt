@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,9 +29,7 @@ import com.github.nacabaro.vbhelper.components.TopBanner
 import com.github.nacabaro.vbhelper.di.VBHelper
 import com.github.nacabaro.vbhelper.utils.DeviceType
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
-import com.github.nacabaro.vbhelper.domain.device_data.SpecialMissions
 import com.github.nacabaro.vbhelper.domain.device_data.VBCharacterData
-import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import com.github.nacabaro.vbhelper.dtos.ItemDtos
 import com.github.nacabaro.vbhelper.navigation.NavigationItems
 import com.github.nacabaro.vbhelper.screens.homeScreens.screens.BEBEmHomeScreen
@@ -38,9 +37,12 @@ import com.github.nacabaro.vbhelper.screens.homeScreens.screens.BEDiMHomeScreen
 import com.github.nacabaro.vbhelper.screens.homeScreens.screens.VBDiMHomeScreen
 import com.github.nacabaro.vbhelper.screens.itemsScreen.ObtainedItemDialog
 import com.github.nacabaro.vbhelper.source.StorageRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import com.github.nacabaro.vbhelper.R
+import com.github.nacabaro.vbhelper.dtos.CardDtos
+import com.github.nacabaro.vbhelper.source.CardRepository
+import com.github.nacabaro.vbhelper.utils.BitmapData
+import kotlinx.coroutines.flow.flowOf
+import kotlin.collections.emptyList
 
 @Composable
 fun HomeScreen(
@@ -49,29 +51,59 @@ fun HomeScreen(
 ) {
     val application = LocalContext.current.applicationContext as VBHelper
     val storageRepository = StorageRepository(application.container.db)
-    val activeMon = remember { mutableStateOf<CharacterDtos.CharacterWithSprites?>(null) }
-    val transformationHistory = remember { mutableStateOf<List<CharacterDtos.TransformationHistory>?>(null) }
-    val beData = remember { mutableStateOf<BECharacterData?>(null) }
-    val vbData = remember { mutableStateOf<VBCharacterData?>(null) }
-    val vbSpecialMissions = remember { mutableStateOf<List<SpecialMissions>>(emptyList()) }
+    val cardRepository = CardRepository(application.container.db)
+
+    val activeMon by storageRepository
+        .getActiveCharacter()
+        .collectAsState(initial = null)
+
+    val cardIconData by (
+        activeMon
+            ?.let { chara ->
+                cardRepository.getCardIconByCharaId(chara.charId)
+            }
+            ?: flowOf<CardDtos.CardIcon?>(null)
+    ).collectAsState(initial = null)
+
+    val transformationHistory by (
+        activeMon
+            ?.let { chara ->
+                storageRepository.getTransformationHistory(chara.id)
+            }
+            ?: flowOf(emptyList())
+    ).collectAsState(initial = emptyList())
+
+    val vbSpecialMissions by (
+        activeMon
+            ?.takeIf { it.characterType == DeviceType.VBDevice }
+            ?.let { chara ->
+                storageRepository.getSpecialMissions(chara.id)
+            }
+            ?: flowOf(emptyList())
+    ).collectAsState(initial = emptyList())
+
+    val vbData by (
+        activeMon
+            ?.takeIf { it.characterType == DeviceType.VBDevice }
+            ?.let { chara ->
+                storageRepository.getCharacterVbData(chara.id)
+            }
+            ?: flowOf<VBCharacterData?>(null)
+    ).collectAsState(initial = null)
+
+    val beData by (
+        activeMon
+            ?.takeIf { it.characterType == DeviceType.BEDevice }
+            ?.let { chara ->
+                storageRepository.getCharacterBeData(chara.id)
+            }
+            ?: flowOf<BECharacterData?>(null)
+    ).collectAsState(initial = null)
+
     var adventureMissionsFinished by rememberSaveable { mutableStateOf(false) }
     var betaWarning by rememberSaveable { mutableStateOf(true) }
     var collectedItem by remember { mutableStateOf<ItemDtos.PurchasedItem?>(null) }
     var collectedCurrency by remember { mutableStateOf<Int?>(null) }
-
-    LaunchedEffect(storageRepository, activeMon, collectedItem) {
-        withContext(Dispatchers.IO) {
-            activeMon.value = storageRepository.getActiveCharacter()
-            if (activeMon.value != null && activeMon.value!!.characterType == DeviceType.BEDevice) {
-                beData.value = storageRepository.getCharacterBeData(activeMon.value!!.id)
-                transformationHistory.value = storageRepository.getTransformationHistory(activeMon.value!!.id)
-            } else if (activeMon.value != null && activeMon.value!!.characterType == DeviceType.VBDevice) {
-                vbData.value = storageRepository.getCharacterVbData(activeMon.value!!.id)
-                vbSpecialMissions.value = storageRepository.getSpecialMissions(activeMon.value!!.id)
-                transformationHistory.value = storageRepository.getTransformationHistory(activeMon.value!!.id)
-            }
-        }
-    }
 
     LaunchedEffect(true) {
         homeScreenController
@@ -93,7 +125,7 @@ fun HomeScreen(
             )
         }
     ) { contentPadding ->
-        if (activeMon.value == null || (beData.value == null && vbData.value == null) || transformationHistory.value == null) {
+        if (activeMon == null || (beData == null && vbData == null) || cardIconData == null || transformationHistory.isEmpty()) {
             Column (
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -104,32 +136,41 @@ fun HomeScreen(
                 Text(text = stringResource(R.string.adventure_empty_state))
             }
         } else {
-            if (activeMon.value!!.isBemCard) {
+            val cardIcon = BitmapData(
+                bitmap = cardIconData!!.cardIcon,
+                width = cardIconData!!.cardIconWidth,
+                height = cardIconData!!.cardIconHeight
+            )
+
+            if (activeMon!!.isBemCard && beData != null) {
                 BEBEmHomeScreen(
-                    activeMon = activeMon.value!!,
-                    beData = beData.value!!,
-                    transformationHistory = transformationHistory.value!!,
-                    contentPadding = contentPadding
-                )
-            } else if (!activeMon.value!!.isBemCard && activeMon.value!!.characterType == DeviceType.BEDevice) {
-                BEDiMHomeScreen(
-                    activeMon = activeMon.value!!,
-                    beData = beData.value!!,
-                    transformationHistory = transformationHistory.value!!,
-                    contentPadding = contentPadding
-                )
-            } else {
-                VBDiMHomeScreen(
-                    activeMon = activeMon.value!!,
-                    vbData = vbData.value!!,
-                    transformationHistory = transformationHistory.value!!,
+                    activeMon = activeMon!!,
+                    beData = beData!!,
+                    transformationHistory = transformationHistory,
                     contentPadding = contentPadding,
-                    specialMissions = vbSpecialMissions.value,
+                    cardIcon = cardIcon
+                )
+            } else if (!activeMon!!.isBemCard && activeMon!!.characterType == DeviceType.BEDevice && beData != null) {
+                BEDiMHomeScreen(
+                    activeMon = activeMon!!,
+                    beData = beData!!,
+                    transformationHistory = transformationHistory,
+                    contentPadding = contentPadding,
+                    cardIcon = cardIcon
+                )
+            } else if (vbData != null) {
+                VBDiMHomeScreen(
+                    activeMon = activeMon!!,
+                    vbData = vbData!!,
+                    transformationHistory = transformationHistory,
+                    contentPadding = contentPadding,
+                    specialMissions = vbSpecialMissions,
                     homeScreenController = homeScreenController,
                     onClickCollect = { item, currency ->
                         collectedItem = item
                         collectedCurrency = currency
-                    }
+                    },
+                    cardIcon = cardIcon
                 )
             }
         }

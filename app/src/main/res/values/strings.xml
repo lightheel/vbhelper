@@ -222,5 +222,8 @@
     <string name="special_mission_wins_progress">Won %1$d battles</string>
     <string name="special_mission_vitals_progress">Earned %1$d vitals</string>
     <string name="special_mission_icon_content_description">Special mission icon</string>
+    <string name="home_special_mission_delete_main">Are you sure you want to delete this special mission with this progress?</string>
+    <string name="home_special_mission_delete_dismiss">Dismiss</string>
+    <string name="home_special_mission_delete_remove">Remove</string>
 
 </resources>
