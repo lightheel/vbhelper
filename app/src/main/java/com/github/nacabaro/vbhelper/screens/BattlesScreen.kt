@@ -2111,7 +2111,7 @@ fun BattlesScreen() {
                 }
                  */
                 
-                val activeChar = database.userCharacterDao().getActiveCharacter()
+                val activeChar = database.userCharacterDao().getActiveCharacter().first()
                 //println("BATTLESCREEN: getActiveCharacter() returned: $activeChar")
                 
                 if (activeChar != null) {
@@ -2507,7 +2507,7 @@ fun BattlesScreen() {
                                     try {
                                         val application = context.applicationContext as VBHelper
                                         val database = application.container.db
-                                        val activeChar = database.userCharacterDao().getActiveCharacter()
+                                        val activeChar = database.userCharacterDao().getActiveCharacter().first()
                                         
                                         if (activeChar != null) {
                                             // Get the full UserCharacter entity to update
