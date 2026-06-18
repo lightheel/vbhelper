@@ -24,7 +24,7 @@ App also comes with a dex that will update every time a new character is added, 
 
     1. Using your phone file manager, rename the XAPK file to ZIP, and extract its contents. You can also do this with any other device, such as Windows, macOS and Linux. 
 
-    2. Once the files are extracted, look for an APK called `com.bandai.vitalbraceletarena.apk`. Copy it somewhere else, you will need it.
+    2. Once the files are extracted, look for the VB arena APK.. Copy it somewhere else, you will need it.
 
 2. Install an APK release for VB Helper. You will find the releases [here](http://github.com/nacabaro/vbhelper/releases). Download the latest release and install its APK.
 
