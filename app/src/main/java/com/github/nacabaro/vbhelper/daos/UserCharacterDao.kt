@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
+import androidx.room.RewriteQueriesToDropUnusedColumns
 import com.github.nacabaro.vbhelper.domain.card.CardCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.UserCharacter
 import com.github.nacabaro.vbhelper.domain.device_data.BECharacterData
@@ -16,6 +17,7 @@ import com.github.nacabaro.vbhelper.dtos.CharacterDtos
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+@RewriteQueriesToDropUnusedColumns
 interface UserCharacterDao {
     @Insert
     fun insertCharacterData(characterData: UserCharacter): Long
@@ -54,6 +56,22 @@ interface UserCharacterDao {
     """
     )
     fun getTransformationHistory(monId: Long): Flow<List<CharacterDtos.TransformationHistory>>
+
+    @Query(
+        """
+        SELECT
+            t.stageId as stageId,
+            c.charaIndex AS monIndex,
+            ca.name as cardName,
+            t.transformationDate AS transformationDate
+        FROM TransformationHistory t
+        JOIN CardCharacter c ON c.id = t.stageId
+        JOIN Card ca ON ca.id = c.cardId
+        WHERE t.monId = :monId
+        ORDER BY t.transformationDate ASC, t.id ASC
+    """
+    )
+    suspend fun getTransformationHistoryForExport(monId: Long): List<CharacterDtos.TransformationHistoryExport>
 
     @Query(
         """
@@ -114,6 +132,9 @@ interface UserCharacterDao {
 
     @Query("SELECT * FROM VBCharacterData WHERE id = :id")
     fun getVbData(id: Long): Flow<VBCharacterData>
+
+    @Query("SELECT * FROM VBCharacterData WHERE id = :id")
+    suspend fun getVbDataOrNull(id: Long): VBCharacterData?
 
     @Query("SELECT * FROM SpecialMissions WHERE characterId = :id")
     fun getSpecialMissions(id: Long): Flow<List<SpecialMissions>>

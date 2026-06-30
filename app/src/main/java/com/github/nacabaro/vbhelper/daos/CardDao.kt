@@ -13,11 +13,17 @@ interface CardDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertNewCard(card: Card): Long
 
+    @Query("SELECT * FROM Card")
+    fun getAllCards(): List<Card>
+
     @Query("SELECT * FROM Card WHERE cardId = :id")
     fun getCardByCardId(id: Int): List<Card>
 
     @Query("SELECT * FROM Card WHERE id = :id")
     fun getCardById(id: Long): Card?
+
+    @Query("SELECT * FROM Card WHERE LOWER(name) = LOWER(:name) LIMIT 1")
+    fun getCardByName(name: String): Card?
 
     @Query(
         """
@@ -29,6 +35,18 @@ interface CardDao {
     """
     )
     fun getCardByCharacterId(id: Long): Flow<Card>
+
+    @Query(
+        """
+        SELECT ca.*
+        FROM Card ca
+        JOIN CardCharacter ch ON ca.id = ch.cardId
+        JOIN UserCharacter uc ON ch.id = uc.charId
+        WHERE uc.id = :id
+        LIMIT 1
+    """
+    )
+    fun getCardByCharacterIdSync(id: Long): Card?
 
     @Query("UPDATE Card SET name = :newName WHERE id = :id")
     suspend fun renameCard(id: Int, newName: String)
